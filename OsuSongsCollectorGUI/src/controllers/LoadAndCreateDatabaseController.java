@@ -5,6 +5,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import application.Comparators;
 import application.Main;
@@ -29,8 +33,11 @@ import javafx.stage.Stage;
 public class LoadAndCreateDatabaseController {
 	private String fullPathToOsuDb;
 	private String pathToSongsFolder;
-	private LoadOsuDbService osuDbService;
-	private CreateSongsDbService songsDbService;
+	private ExecutorService exec = Executors.newSingleThreadExecutor(r -> {
+        Thread t = new Thread(r);
+        t.setDaemon(true); // allows app to exit if tasks are running
+        return t ;
+    });
 	
 	@FXML private ProgressBar testProgressBar;
 	@FXML private Label testStateLabel;
@@ -39,87 +46,82 @@ public class LoadAndCreateDatabaseController {
 		this.fullPathToOsuDb = fullPathToOsuDb;
 		this.pathToSongsFolder = pathToSongsFolder;
 		currentStage.setOnCloseRequest(e -> {
-			this.stopServices(); 
+			this.exec.shutdownNow();
+			try {
+				this.exec.awaitTermination(8, TimeUnit.SECONDS);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 		});
 		this.loadOsuDb();
 	}
 	
-	private class LoadOsuDbService extends Service<OsuDbParser> {
-		@Override
-        protected Task<OsuDbParser> createTask() {
-			return new Task<OsuDbParser>() {
-				@Override
-                protected OsuDbParser call() throws Exception {
-					OsuDbParser osuDb = new OsuDbParser(fullPathToOsuDb, pathToSongsFolder);
-					osuDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork), this);
-					osuDb.startParsing();
-                    return osuDb;
-                }
-            };
-        }
-	}
+	private Task<OsuDbParser> getLoadOsuDbTask() {
+		return new Task<OsuDbParser>() {
+			@Override
+	        protected OsuDbParser call() throws Exception {
+				OsuDbParser osuDb = new OsuDbParser(fullPathToOsuDb, pathToSongsFolder);
+				osuDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork));
+				osuDb.startParsing();
+	            return osuDb;
+	        }
+		};
+    }
 	
-	private class CreateSongsDbService extends Service<SqliteDatabase> {
-		OsuDbParser osuDb;
-		
-		private CreateSongsDbService(OsuDbParser osuDb) {
-			this.osuDb = osuDb;
-		}
-		
-		@Override
-		protected Task<SqliteDatabase> createTask() {
-			return new Task<SqliteDatabase>() {
-				@Override
-				protected SqliteDatabase call() throws Exception {
-					SqliteDatabase songsDb = new SqliteDatabase(Main.DB_NAME);
-					updateProgress(0, 0);
-					songsDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork), this);
-					songsDb.createDatabase();
-					songsDb.createTables();
-					if (this.isCancelled()) {
-						songsDb.cancelThread();
-					}
-					songsDb.insertAllData(osuDb);
-					return songsDb;
+	private Task<SqliteDatabase> getCreateSongsDbTask(OsuDbParser osuDb) {
+		return new Task<SqliteDatabase>() {
+			@Override
+			protected SqliteDatabase call() throws Exception {
+				SqliteDatabase songsDb = new SqliteDatabase(Main.DB_NAME);
+				updateProgress(0, 0);
+				songsDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork));
+				songsDb.createDatabase();
+				songsDb.createTables();
+				if (Thread.currentThread().isInterrupted()) {
+					songsDb.cancelThread();
 				}
-			};
-		}
+				songsDb.insertAllData(osuDb);
+				return songsDb;
+			}
+		};
 	}
 	
 	private void loadOsuDb() {
 		this.testStateLabel.setText("1/2: Loading osu!.db");
-		this.osuDbService = new LoadOsuDbService();
-        this.testProgressBar.progressProperty().bind(this.osuDbService.progressProperty());
-        this.osuDbService.stateProperty().addListener((obs, oldValue, newValue) -> {
+		Task<OsuDbParser> loadOsuDbTask = this.getLoadOsuDbTask();
+		this.testProgressBar.progressProperty().bind(loadOsuDbTask.progressProperty());
+		loadOsuDbTask.stateProperty().addListener((obs, oldValue, newValue) -> {
         	switch (newValue) {
         	case FAILED:
-        		Throwable e = this.osuDbService.getException();
+        		Throwable e = loadOsuDbTask.getException();
         		this.testStateLabel.setText(e.getMessage());
         		break;
         	case SUCCEEDED:
-        		OsuDbParser osuDb = this.osuDbService.getValue();
-				this.createSongsDb(osuDb);
+        		OsuDbParser osuDb = loadOsuDbTask.getValue();
+        		this.createSongsDb(osuDb);
         		break;
 			default:
 				break;
         	}
         });
-        this.osuDbService.start();
+		this.exec.submit(loadOsuDbTask);
 	}
+	
 	
 	private void createSongsDb(OsuDbParser osuDb) {
 		this.testStateLabel.setText("2/2 Creating database");
-		this.songsDbService = new CreateSongsDbService(osuDb);
-		this.testProgressBar.progressProperty().bind(this.songsDbService.progressProperty());
-        this.songsDbService.stateProperty().addListener((obs, oldValue, newValue) -> {
+		Task<SqliteDatabase> createSongsDbTask = this.getCreateSongsDbTask(osuDb);
+		this.testProgressBar.progressProperty().bind(createSongsDbTask.progressProperty());
+		createSongsDbTask.stateProperty().addListener((obs, oldValue, newValue) -> {
         	switch (newValue) {
         	case FAILED:
-        		Throwable e = this.osuDbService.getException();
+        		Throwable e = createSongsDbTask.getException();
         		this.testStateLabel.setText(e.getMessage());
         		break;
         	case SUCCEEDED:
         		this.testStateLabel.setText("All done");
-        		SqliteDatabase songsDb = this.songsDbService.getValue();
+        		SqliteDatabase songsDb = createSongsDbTask.getValue();
         		try {
 					this.loadSongsDisplayStage(songsDb);
 				} catch (IOException e1) {
@@ -134,9 +136,107 @@ public class LoadAndCreateDatabaseController {
 				break;
         	}
         });
-        this.songsDbService.start();
+        this.exec.submit(createSongsDbTask);
 	}
 	
+	
+	
+	
+	
+	
+//	private class LoadOsuDbService extends Service<OsuDbParser> {
+//		@Override
+//        protected Task<OsuDbParser> createTask() {
+//			return new Task<OsuDbParser>() {
+//				@Override
+//                protected OsuDbParser call() throws Exception {
+//					OsuDbParser osuDb = new OsuDbParser(fullPathToOsuDb, pathToSongsFolder);
+//					osuDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork), this);
+//					osuDb.startParsing();
+//                    return osuDb;
+//                }
+//            };
+//        }
+//	}
+//	
+//	private class CreateSongsDbService extends Service<SqliteDatabase> {
+//		OsuDbParser osuDb;
+//		
+//		private CreateSongsDbService(OsuDbParser osuDb) {
+//			this.osuDb = osuDb;
+//		}
+//		
+//		@Override
+//		protected Task<SqliteDatabase> createTask() {
+//			return new Task<SqliteDatabase>() {
+//				@Override
+//				protected SqliteDatabase call() throws Exception {
+//					SqliteDatabase songsDb = new SqliteDatabase(Main.DB_NAME);
+//					updateProgress(0, 0);
+//					songsDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork), this);
+//					songsDb.createDatabase();
+//					songsDb.createTables();
+//					if (this.isCancelled()) {
+//						songsDb.cancelThread();
+//					}
+//					songsDb.insertAllData(osuDb);
+//					return songsDb;
+//				}
+//			};
+//		}
+//	}
+//	
+//	private void loadOsuDb() {
+//		this.testStateLabel.setText("1/2: Loading osu!.db");
+//		this.osuDbService = new LoadOsuDbService();
+//        this.testProgressBar.progressProperty().bind(this.osuDbService.progressProperty());
+//        this.osuDbService.stateProperty().addListener((obs, oldValue, newValue) -> {
+//        	switch (newValue) {
+//        	case FAILED:
+//        		Throwable e = this.osuDbService.getException();
+//        		this.testStateLabel.setText(e.getMessage());
+//        		break;
+//        	case SUCCEEDED:
+//        		OsuDbParser osuDb = this.osuDbService.getValue();
+//				this.createSongsDb(osuDb);
+//        		break;
+//			default:
+//				break;
+//        	}
+//        });
+//        this.osuDbService.start();
+//	}
+//	
+//	private void createSongsDb(OsuDbParser osuDb) {
+//		this.testStateLabel.setText("2/2 Creating database");
+//		this.songsDbService = new CreateSongsDbService(osuDb);
+//		this.testProgressBar.progressProperty().bind(this.songsDbService.progressProperty());
+//        this.songsDbService.stateProperty().addListener((obs, oldValue, newValue) -> {
+//        	switch (newValue) {
+//        	case FAILED:
+//        		Throwable e = this.osuDbService.getException();
+//        		this.testStateLabel.setText(e.getMessage());
+//        		break;
+//        	case SUCCEEDED:
+//        		this.testStateLabel.setText("All done");
+//        		SqliteDatabase songsDb = this.songsDbService.getValue();
+//        		try {
+//					this.loadSongsDisplayStage(songsDb);
+//				} catch (IOException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				} catch (SQLException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
+//        		break;
+//			default:
+//				break;
+//        	}
+//        });
+//        this.songsDbService.start();
+//	}
+//	
 	private void loadSongsDisplayStage(SqliteDatabase songsDb) throws IOException, SQLException {
 		Stage songsDisplayStage = new Stage();
 		FXMLLoader loader = new FXMLLoader();
@@ -155,14 +255,7 @@ public class LoadAndCreateDatabaseController {
 	}
 	
 	// close resources when window is closed during loading
-	private void stopServices() {
-		if (this.osuDbService != null) {
-			this.osuDbService.cancel();
-		}
-		if (this.songsDbService != null) {
-			this.songsDbService.cancel();
-		}
-	}
+	
 }
 
 

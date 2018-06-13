@@ -28,7 +28,6 @@ public class SqliteDatabase {
 	
 	// for threading
 	private BiConsumer<Integer, Integer> progressUpdate = null;
-	private Task<SqliteDatabase> task = null;
 	
 	public SqliteDatabase(String dbName) {
 		this.DB_NAME = dbName;
@@ -54,9 +53,8 @@ public class SqliteDatabase {
 		this.conn.close();
 	}
 	
-	public void setThreadData(BiConsumer<Integer, Integer> progressUpdate, Task<SqliteDatabase> task) {
+	public void setThreadData(BiConsumer<Integer, Integer> progressUpdate) {
 		this.setProgressUpdate(progressUpdate);
-		this.setTask(task);
 	}
 	
 	
@@ -377,7 +375,7 @@ public class SqliteDatabase {
 	}
 	
 	
-	public void insertAllData(OsuDbParser osuDb) throws SQLException {
+	public void insertAllData(OsuDbParser osuDb) throws SQLException, InterruptedException {
 		this.insertIntoMetadata(osuDb.getOsuVersion(), osuDb.getFolderCount(), osuDb.getPlayerName(), osuDb.getNumberOfBeatmaps(), osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "");
 		
 		int batchSize = 500; // actually much bigger than this
@@ -401,15 +399,22 @@ public class SqliteDatabase {
 		int i = 0;
 		
 		for (List<Beatmap> beatmapSet : songsFolder) {
-			if (this.task != null) {
-    			if (this.task.isCancelled()) {
-    				artistPStatement.cancel();
-    				songPStatement.cancel();
-    				songTagPStatement.cancel();
-    				this.cancelThread();
-    				return;
-    			}
-    		}
+//			if (this.task != null) {
+//    			if (this.task.isCancelled()) {
+//    				artistPStatement.cancel();
+//    				songPStatement.cancel();
+//    				songTagPStatement.cancel();
+//    				this.cancelThread();
+//    				return;
+//    			}
+//    		}
+			if (Thread.currentThread().isInterrupted()) {
+				artistPStatement.cancel();
+				songPStatement.cancel();
+				songTagPStatement.cancel();
+				this.cancelThread();
+				throw new InterruptedException("CreateDatabaseTask is interrupted");
+			}
 			
 			boolean isRanked = false;
 			int rankedIndex = 0;
@@ -481,13 +486,12 @@ public class SqliteDatabase {
 		PreparedStatement beatmapSetPStatement = this.getInsertIntoBeatmapSetPStatement();
 		i = 0;
 		for (List<Beatmap> beatmapSet : songsFolder) {
-			if (this.task != null) {
-    			if (this.task.isCancelled()) {
-    				beatmapSetPStatement.cancel();
-    				this.cancelThread();
-    				return;
-    			}
-    		}
+			
+			if (Thread.currentThread().isInterrupted()) {
+				beatmapSetPStatement.cancel();
+				this.cancelThread();
+				throw new InterruptedException("CreateDatabaseTask is interrupted");
+			}
 			
 			// get the cache values from previous loop
 			List<Integer> value =  rankedMap.get(beatmapSet.get(0).getFolderName());
@@ -525,14 +529,13 @@ public class SqliteDatabase {
 		PreparedStatement beatmapSet_SongTagPStatement = this.getInsertIntoBeatmapSet_SongTagPStatement();
 		i = 0;
 		for (List<Beatmap> beatmapSet : songsFolder) {
-			if (this.task != null) {
-    			if (this.task.isCancelled()) {
-    				beatmapPStatement.cancel();
-    				beatmapSet_SongTagPStatement.cancel();
-    				this.cancelThread();
-    				return;
-    			}
-    		}
+			
+			if (Thread.currentThread().isInterrupted()) {
+				beatmapPStatement.cancel();
+				beatmapSet_SongTagPStatement.cancel();
+				this.cancelThread();
+				throw new InterruptedException("CreateDatabaseTask is interrupted");
+			}
 			
 			List<Integer> value =  rankedMap.get(beatmapSet.get(0).getFolderName());
 			boolean isRanked = value.get(0) == 1 ? true : false;
@@ -574,8 +577,7 @@ public class SqliteDatabase {
 		// change back autoCommit
 		this.getConn().setAutoCommit(true);
 		// if threading, set back to null to prevent inadvertent access later
-		if (this.task != null || this.progressUpdate != null) {
-			this.setTask(null);
+		if (this.progressUpdate != null) {
 			this.setProgressUpdate(null);
 		}
 	}
@@ -810,9 +812,6 @@ public class SqliteDatabase {
 		this.progressUpdate = progressUpdate;
 	}
 	
-	private void setTask(Task<SqliteDatabase> task) {
-		this.task = task;
-	}
 	
 	
 	public class SongsDbData {

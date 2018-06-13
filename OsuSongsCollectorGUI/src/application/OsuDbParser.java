@@ -15,7 +15,6 @@ import javafx.concurrent.Task;
 public class OsuDbParser extends OsuReader{
 	// for threading
 	private BiConsumer<Integer, Integer> progressUpdate = null;
-	private Task<OsuDbParser> task = null;
 	
     // public member
 	private String pathToSongsFolder;
@@ -39,7 +38,7 @@ public class OsuDbParser extends OsuReader{
     }
     
     // public methods
-    public void startParsing() throws IOException {
+    public void startParsing() throws IOException, InterruptedException {
     	try {
 			this.startLoading();
 		} 
@@ -57,9 +56,8 @@ public class OsuDbParser extends OsuReader{
 	   }
    }
     
-    public void setThreadData(BiConsumer<Integer, Integer> progressUpdate, Task<OsuDbParser> task) {
+    public void setThreadData(BiConsumer<Integer, Integer> progressUpdate) {
 		this.setProgressUpdate(progressUpdate);
-		this.setTask(task);
 	}
     
     // private methods
@@ -71,16 +69,18 @@ public class OsuDbParser extends OsuReader{
     	this.setNumberOfBeatmaps(this.readInt());
     }
     
-    private void startLoading() throws IOException {
+    private void startLoading() throws IOException, InterruptedException {
 		this.parseAndSetMetadata();
     	Map<String, List<Beatmap>> folders = new TreeMap<String, List<Beatmap>>();
     	for (int i = 0; i < this.numberOfBeatmaps; i++) {
-    		if (this.task != null) {
-    			if (this.task.isCancelled()) {
-    				return;
-    			}
+//    		if (this.task != null) {
+//    			if (this.task.isCancelled()) {
+//    				return;
+//    			}
+//    		}
+    		if (Thread.currentThread().isInterrupted()) {
+    			throw new InterruptedException("LoadOsuDbTask is interrupted");
     		}
-    		
     		Beatmap beatmap = new Beatmap();
     		this.skipBytes(4);
 			beatmap.setArtistName(this.readString());
@@ -195,10 +195,6 @@ public class OsuDbParser extends OsuReader{
 	
 	private void setProgressUpdate(BiConsumer<Integer, Integer> progressUpdate) {
 		this.progressUpdate = progressUpdate;
-	}
-	
-	private void setTask(Task<OsuDbParser> task) {
-		this.task = task;
 	}
 
 	public String getPathToSongsFolder() {
