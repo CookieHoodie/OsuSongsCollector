@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.TilePane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane focusTraversable="true" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.SaveToOptionController">
+   <center>
+      <HBox alignment="CENTER" prefHeight="67.0" prefWidth="661.0" BorderPane.alignment="CENTER">
+         <children>
+            <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <HBox alignment="BOTTOM_LEFT" minHeight="-Infinity" prefHeight="50.0" prefWidth="200.0">
+                     <children>
+                        <Label fx:id="instructionLabel" alignment="CENTER" minWidth="-Infinity" text="Save to:" HBox.hgrow="ALWAYS">
+                           <HBox.margin>
+                              <Insets />
+                           </HBox.margin>
+                        </Label>
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" minHeight="-Infinity" prefHeight="50.0" prefWidth="500.0">
+                     <children>
+                        <TextField fx:id="chosenPathTextField" editable="false" focusTraversable="false" minWidth="-Infinity" prefWidth="300.0">
+                           <HBox.margin>
+                              <Insets right="5.0" />
+                           </HBox.margin>
+                        </TextField>
+                        <Button fx:id="choosePathButton" minWidth="-Infinity" mnemonicParsing="false" onAction="#promptToChoosePath" prefWidth="100.0" text="Choose path">
+                           <HBox.margin>
+                              <Insets left="5.0" />
+                           </HBox.margin>
+                        </Button>
+                     </children>
+                  </HBox>
+                  <HBox prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <CheckBox fx:id="rememberPathCheckBox" mnemonicParsing="false" text="Remember path" />
+                        <TilePane prefHeight="200.0" prefWidth="200.0" />
+                     </children>
+                  </HBox>
+                  <HBox alignment="CENTER" prefHeight="55.0" prefWidth="410.0">
+                     <children>
+                        <GridPane alignment="CENTER" gridLinesVisible="true">
+                          <columnConstraints>
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                              <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                          </columnConstraints>
+                          <rowConstraints>
+                            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                          </rowConstraints>
+                           <children>
+                              <Label fx:id="testDragLabel1" text="Label1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                              <Label fx:id="testDragLabel2" text="Label2" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                              <Label fx:id="testDragLabel3" text="Label3" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+                           </children>
+                        </GridPane>
+                     </children>
+                  </HBox>
+                  <HBox alignment="BOTTOM_RIGHT" prefHeight="72.0" prefWidth="410.0">
+                     <children>
+                        <Button fx:id="startButton" disable="true" mnemonicParsing="false" onAction="#startCopying" text="Start" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+   </center>
+</BorderPane>
