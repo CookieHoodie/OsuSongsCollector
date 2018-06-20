@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import controllers.InitScreenController;
@@ -42,14 +43,6 @@ public class Main extends Application {
 	}
 	
 	public static void main(String[] args) {
-//		Path oriPath = Paths.get("C:\\Users\\ong", "test1.txt");
-//		Path cpPath = Paths.get("C:\\Users\\ong\\Desktop", "test1cpy.txt");
-//		try {
-//			Files.copy(oriPath, cpPath);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
 		launch(args);
 	}
 }

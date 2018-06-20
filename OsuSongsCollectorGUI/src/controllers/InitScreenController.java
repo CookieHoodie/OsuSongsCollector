@@ -71,7 +71,18 @@ public class InitScreenController {
 					}
 				}
 				else {
-					// GO TO UPDATE SCENE
+					FXMLLoader loader = new FXMLLoader();
+					loader.setLocation(getClass().getResource("/fxml/UpdateDataView.fxml"));
+					BorderPane root;
+					try {
+						root = loader.load();
+						Scene scene = new Scene(root);
+						Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
+						currentStage.setScene(scene);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 				}
 			});
 			checkAllSetService.start();

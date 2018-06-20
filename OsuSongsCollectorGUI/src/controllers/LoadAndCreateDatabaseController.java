@@ -30,6 +30,8 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+
+// TODO: best practice: pass parameter into the tasks and assign them as final
 public class LoadAndCreateDatabaseController {
 	private String fullPathToOsuDb;
 	private String pathToSongsFolder;
@@ -120,7 +122,7 @@ public class LoadAndCreateDatabaseController {
         		this.testStateLabel.setText(e.getMessage());
         		break;
         	case SUCCEEDED:
-        		this.testStateLabel.setText("All done");
+        		this.testStateLabel.setText("Done. Loading required data...");
         		SqliteDatabase songsDb = createSongsDbTask.getValue();
         		try {
 					this.loadSongsDisplayStage(songsDb);
@@ -253,9 +255,7 @@ public class LoadAndCreateDatabaseController {
 		songsDisplayStage.show();
 		currentStage.hide();
 	}
-	
-	// close resources when window is closed during loading
-	
+
 }
 
 
