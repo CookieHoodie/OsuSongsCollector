@@ -40,10 +40,11 @@
                   <TableColumn fx:id="artistNameUnicodeCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Artist (Unicode)" visible="false" />
                   <TableColumn fx:id="songTitleCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Song Title" />
                   <TableColumn fx:id="songTitleUnicodeCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Song Title (Unicode)" visible="false" />
+                  <TableColumn fx:id="creatorNameCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Creator" visible="false" />
                   <TableColumn fx:id="totalTimeCol" editable="false" minWidth="20.0" prefWidth="100.0" sortable="false" text="Approx length" />
                   <TableColumn fx:id="checkBoxCol" minWidth="20.0" prefWidth="100.0" sortable="false">
                      <graphic>
-                        <CheckBox fx:id="selectAllCheckBoxInCheckBoxCol" alignment="CENTER" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" onAction="#selectAll" text="Select all" />
+                        <CheckBox fx:id="selectAllCheckBoxInCheckBoxCol" alignment="CENTER" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" text="Select all" />
                      </graphic>
                   </TableColumn>
                </columns>
@@ -73,6 +74,7 @@
                         <CheckMenuItem fx:id="artistNameUnicodeShowCheckMenuItem" mnemonicParsing="false" text="Artist (Unicode)" />
                         <CheckMenuItem fx:id="songTitleShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Song Title" />
                         <CheckMenuItem fx:id="songTitleUnicodeShowCheckMenuItem" mnemonicParsing="false" text="Song Title (Unicode)" />
+                        <CheckMenuItem fx:id="creatorNameShowCheckMenuItem" mnemonicParsing="false" text="Creator" />
                         <CheckMenuItem fx:id="totalTimeShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Approx length" />
                         <CheckMenuItem fx:id="isDownloadedShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Downloaded Songs" />
                      </items>

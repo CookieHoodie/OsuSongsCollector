@@ -778,14 +778,15 @@ public class SqliteDatabase {
 	public ResultSet getTableInitData() throws SQLException {
 		String sql = "SELECT " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + this.Data.Song.SONG_SOURCE + "," + this.Data.Artist.ARTIST_NAME + "," + this.Data.Artist.ARTIST_NAME_UNICODE + "," + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," 
 				+ this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
-				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(" + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + "\n"
+				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(DISTINCT " + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + ","
+				+ this.Data.BeatmapSet.CREATOR_NAME + "\n"
 				+ "FROM " + this.Data.BeatmapSet.TABLE_NAME + "\n"
 				+ "INNER JOIN " + this.Data.Beatmap.TABLE_NAME + " ON " + this.Data.Beatmap.TABLE_NAME + "." + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
 				+ "INNER JOIN " + this.Data.Artist.TABLE_NAME + " ON " + this.Data.Artist.TABLE_NAME + "." + this.Data.Artist.ARTIST_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.ARTIST_ID + "\n"
 				+ "INNER JOIN " + this.Data.Song.TABLE_NAME + " ON " + this.Data.Song.TABLE_NAME + "." + this.Data.Song.SONG_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.SONG_ID + "\n"
 				+ "INNER JOIN " + this.Data.BeatmapSet_SongTag.TABLE_NAME + " ON " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
 				+ "INNER JOIN " + this.Data.SongTag.TABLE_NAME + " ON " + this.Data.SongTag.TABLE_NAME + "." + this.Data.SongTag.SONG_TAG_ID + " = " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
-				+ "WHERE " + this.Data.BeatmapSet.IS_HIDDEN + " = 0\n"
+//				+ "WHERE " + this.Data.BeatmapSet.IS_HIDDEN + " = 0\n"
 				+ "GROUP BY " + this.Data.BeatmapSet.FOLDER_NAME + ", " + this.Data.BeatmapSet.AUDIO_NAME + "\n"
 				+ "HAVING MAX(" + this.Data.Beatmap.TOTAL_TIME + ")\n"
 				+ "ORDER BY " + this.Data.Beatmap.LAST_MODIFICATION_TIME;
@@ -804,41 +805,41 @@ public class SqliteDatabase {
 		
 	}
 	
-	public ResultSet getHiddenTableInitData() throws SQLException {
-		String sql = "SELECT " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + this.Data.Song.SONG_SOURCE + "," + this.Data.Artist.ARTIST_NAME + "," + this.Data.Artist.ARTIST_NAME_UNICODE + "," + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," 
-				+ this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
-				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(" + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + "\n"
-				+ "FROM " + this.Data.BeatmapSet.TABLE_NAME + "\n"
-				+ "INNER JOIN " + this.Data.Beatmap.TABLE_NAME + " ON " + this.Data.Beatmap.TABLE_NAME + "." + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
-				+ "INNER JOIN " + this.Data.Artist.TABLE_NAME + " ON " + this.Data.Artist.TABLE_NAME + "." + this.Data.Artist.ARTIST_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.ARTIST_ID + "\n"
-				+ "INNER JOIN " + this.Data.Song.TABLE_NAME + " ON " + this.Data.Song.TABLE_NAME + "." + this.Data.Song.SONG_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.SONG_ID + "\n"
-				+ "INNER JOIN " + this.Data.BeatmapSet_SongTag.TABLE_NAME + " ON " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
-				+ "INNER JOIN " + this.Data.SongTag.TABLE_NAME + " ON " + this.Data.SongTag.TABLE_NAME + "." + this.Data.SongTag.SONG_TAG_ID + " = " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
-				+ "WHERE " + this.Data.BeatmapSet.IS_HIDDEN + " = 1\n"
-				+ "GROUP BY " + this.Data.BeatmapSet.FOLDER_NAME + ", " + this.Data.BeatmapSet.AUDIO_NAME + "\n"
-				+ "HAVING MAX(" + this.Data.Beatmap.TOTAL_TIME + ")\n"
-				+ "ORDER BY " + this.Data.Beatmap.LAST_MODIFICATION_TIME;
-		Statement stmt = this.getConn().createStatement();
-		return stmt.executeQuery(sql);
-	}
+//	public ResultSet getHiddenTableInitData() throws SQLException {
+//		String sql = "SELECT " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + this.Data.Song.SONG_SOURCE + "," + this.Data.Artist.ARTIST_NAME + "," + this.Data.Artist.ARTIST_NAME_UNICODE + "," + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," 
+//				+ this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
+//				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(DISTINCT " + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + "," + this.Data.BeatmapSet.CREATOR_NAME + "\n"
+//				+ "FROM " + this.Data.BeatmapSet.TABLE_NAME + "\n"
+//				+ "INNER JOIN " + this.Data.Beatmap.TABLE_NAME + " ON " + this.Data.Beatmap.TABLE_NAME + "." + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+//				+ "INNER JOIN " + this.Data.Artist.TABLE_NAME + " ON " + this.Data.Artist.TABLE_NAME + "." + this.Data.Artist.ARTIST_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.ARTIST_ID + "\n"
+//				+ "INNER JOIN " + this.Data.Song.TABLE_NAME + " ON " + this.Data.Song.TABLE_NAME + "." + this.Data.Song.SONG_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.SONG_ID + "\n"
+//				+ "INNER JOIN " + this.Data.BeatmapSet_SongTag.TABLE_NAME + " ON " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+//				+ "INNER JOIN " + this.Data.SongTag.TABLE_NAME + " ON " + this.Data.SongTag.TABLE_NAME + "." + this.Data.SongTag.SONG_TAG_ID + " = " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
+//				+ "WHERE " + this.Data.BeatmapSet.IS_HIDDEN + " = 1\n"
+//				+ "GROUP BY " + this.Data.BeatmapSet.FOLDER_NAME + ", " + this.Data.BeatmapSet.AUDIO_NAME + "\n"
+//				+ "HAVING MAX(" + this.Data.Beatmap.TOTAL_TIME + ")\n"
+//				+ "ORDER BY " + this.Data.Beatmap.LAST_MODIFICATION_TIME;
+//		Statement stmt = this.getConn().createStatement();
+//		return stmt.executeQuery(sql);
+//	}
 	
-	public ResultSet getDownloadedTableInitData() throws SQLException {
-		String sql = "SELECT " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + this.Data.Song.SONG_SOURCE + "," + this.Data.Artist.ARTIST_NAME + "," + this.Data.Artist.ARTIST_NAME_UNICODE + "," + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," 
-				+ this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
-				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(" + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + "\n"
-				+ "FROM " + this.Data.BeatmapSet.TABLE_NAME + "\n"
-				+ "INNER JOIN " + this.Data.Beatmap.TABLE_NAME + " ON " + this.Data.Beatmap.TABLE_NAME + "." + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
-				+ "INNER JOIN " + this.Data.Artist.TABLE_NAME + " ON " + this.Data.Artist.TABLE_NAME + "." + this.Data.Artist.ARTIST_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.ARTIST_ID + "\n"
-				+ "INNER JOIN " + this.Data.Song.TABLE_NAME + " ON " + this.Data.Song.TABLE_NAME + "." + this.Data.Song.SONG_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.SONG_ID + "\n"
-				+ "INNER JOIN " + this.Data.BeatmapSet_SongTag.TABLE_NAME + " ON " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
-				+ "INNER JOIN " + this.Data.SongTag.TABLE_NAME + " ON " + this.Data.SongTag.TABLE_NAME + "." + this.Data.SongTag.SONG_TAG_ID + " = " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
-				+ "WHERE " + this.Data.BeatmapSet.IS_DOWNLOADED + " = 1\n"
-				+ "GROUP BY " + this.Data.BeatmapSet.FOLDER_NAME + ", " + this.Data.BeatmapSet.AUDIO_NAME + "\n"
-				+ "HAVING MAX(" + this.Data.Beatmap.TOTAL_TIME + ")\n"
-				+ "ORDER BY " + this.Data.Beatmap.LAST_MODIFICATION_TIME;
-		Statement stmt = this.getConn().createStatement();
-		return stmt.executeQuery(sql);
-	}
+//	public ResultSet getDownloadedTableInitData() throws SQLException {
+//		String sql = "SELECT " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + this.Data.Song.SONG_SOURCE + "," + this.Data.Artist.ARTIST_NAME + "," + this.Data.Artist.ARTIST_NAME_UNICODE + "," + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," 
+//				+ this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
+//				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(DISTINCT " + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + "," + this.Data.BeatmapSet.CREATOR_NAME + "\n"
+//				+ "FROM " + this.Data.BeatmapSet.TABLE_NAME + "\n"
+//				+ "INNER JOIN " + this.Data.Beatmap.TABLE_NAME + " ON " + this.Data.Beatmap.TABLE_NAME + "." + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+//				+ "INNER JOIN " + this.Data.Artist.TABLE_NAME + " ON " + this.Data.Artist.TABLE_NAME + "." + this.Data.Artist.ARTIST_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.ARTIST_ID + "\n"
+//				+ "INNER JOIN " + this.Data.Song.TABLE_NAME + " ON " + this.Data.Song.TABLE_NAME + "." + this.Data.Song.SONG_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.SONG_ID + "\n"
+//				+ "INNER JOIN " + this.Data.BeatmapSet_SongTag.TABLE_NAME + " ON " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+//				+ "INNER JOIN " + this.Data.SongTag.TABLE_NAME + " ON " + this.Data.SongTag.TABLE_NAME + "." + this.Data.SongTag.SONG_TAG_ID + " = " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
+//				+ "WHERE " + this.Data.BeatmapSet.IS_DOWNLOADED + " = 1\n"
+//				+ "GROUP BY " + this.Data.BeatmapSet.FOLDER_NAME + ", " + this.Data.BeatmapSet.AUDIO_NAME + "\n"
+//				+ "HAVING MAX(" + this.Data.Beatmap.TOTAL_TIME + ")\n"
+//				+ "ORDER BY " + this.Data.Beatmap.LAST_MODIFICATION_TIME;
+//		Statement stmt = this.getConn().createStatement();
+//		return stmt.executeQuery(sql);
+//	}
 	
 	public void updateMetadata(int metadataID, String[] items, String[] results) throws Exception, SQLException {
 		if (items.length != results.length) {

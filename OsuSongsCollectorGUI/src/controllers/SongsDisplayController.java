@@ -11,13 +11,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import application.SqliteDatabase;
+import controllers.SongsDisplayController.TableViewData;
+import javafx.animation.PauseTransition;
+import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
@@ -26,6 +31,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -45,18 +51,19 @@ import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import javafx.util.Duration;
 
 public class SongsDisplayController {
 	private SqliteDatabase songsDb;
-	private ObservableList<TableViewData> hiddenSongsObsList = FXCollections.observableArrayList();
-	private ObservableList<TableViewData> downloadedSongsObsList = FXCollections.observableArrayList();
 	private ObservableList<TableViewData> initSongsObsList;
+	private FilteredList<TableViewData> initSongsFilteredList;
 	
 	@FXML private TableView<TableViewData> testTable;
 	@FXML private TableColumn<TableViewData, String> songSourceCol;
@@ -64,6 +71,7 @@ public class SongsDisplayController {
 	@FXML private TableColumn<TableViewData, String> artistNameUnicodeCol;
 	@FXML private TableColumn<TableViewData, String> songTitleCol;
 	@FXML private TableColumn<TableViewData, String> songTitleUnicodeCol;
+	@FXML private TableColumn<TableViewData, String> creatorNameCol;
 	@FXML private TableColumn<TableViewData, String> totalTimeCol;
 	@FXML private TableColumn<TableViewData, Boolean> checkBoxCol;
 	
@@ -86,9 +94,11 @@ public class SongsDisplayController {
 	@FXML private CheckMenuItem artistNameUnicodeShowCheckMenuItem;
 	@FXML private CheckMenuItem songTitleShowCheckMenuItem;
 	@FXML private CheckMenuItem songTitleUnicodeShowCheckMenuItem;
+	@FXML private CheckMenuItem creatorNameShowCheckMenuItem;
 	@FXML private CheckMenuItem totalTimeShowCheckMenuItem;
 	@FXML private CheckMenuItem isDownloadedShowCheckMenuItem;
 	@FXML private Menu displayMenuInViewMenu;
+	@FXML private ToggleGroup displayToggleGroup;
 	@FXML private RadioMenuItem unhiddenSongsRadioMenuItemInDisplayMenu;
 	@FXML private RadioMenuItem hiddenSongsRadioMenuItemInDisplayMenu;
 	@FXML private RadioMenuItem downloadedSongsRadioMenuItemInDisplayMenu;
@@ -99,19 +109,13 @@ public class SongsDisplayController {
 	private final String numOfSelectedSongsLabelText = "Selected: ";
 	private int isSelectedCounter = 0;
 	
-	// TODO: consider hidden and downloaded implementation
-	
 	// TODO: save those (and maybe saveFolder) in a different table Configuration
 	// and check the corresponding items in controller instead of fxml
-	// TODO: if only unicode column is chosen, use original value if empty
 	// TODO: set help text on approx length
 	
 	@FXML private void initialize() {
-		// TODO: render English if unicode is absent and only unicode is set to visible
-		// let user choose what col to be viewed
 		this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
         this.artistNameCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("artistName"));
-//        this.artistNameUnicodeCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("artistNameUnicode"));
         this.artistNameUnicodeCol.setCellValueFactory(value -> {
         	if (value.getValue().artistNameUnicodeProperty().get().isEmpty() && !this.artistNameCol.isVisible()) {
         		return value.getValue().artistNameProperty();
@@ -119,13 +123,13 @@ public class SongsDisplayController {
         	return value.getValue().artistNameUnicodeProperty();
         });
         this.songTitleCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songTitle"));
-//        this.songTitleUnicodeCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songTitleUnicode"));
         this.songTitleUnicodeCol.setCellValueFactory(value -> {
         	if (value.getValue().songTitleUnicodeProperty().get().isEmpty() && !this.songTitleCol.isVisible()) {
         		return value.getValue().songTitleProperty();
         	}
         	return value.getValue().songTitleUnicodeProperty();
         });
+        this.creatorNameCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("creatorName"));
         this.totalTimeCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("totalTime"));
         this.checkBoxCol.setCellValueFactory(new PropertyValueFactory<TableViewData, Boolean>("isSelected"));
         this.checkBoxCol.setCellFactory(tc -> new CheckBoxTableCell<>());
@@ -133,6 +137,20 @@ public class SongsDisplayController {
 //        this.testTable.getSelectionModel().selectedItemProperty().addListener((obs, wasSelected, isSelected) -> {
 //        	System.out.println(obs);
 //        });
+        this.testTable.setRowFactory(value -> {
+        	return new TableRow<TableViewData>() {
+        		@Override protected void updateItem(TableViewData item, boolean empty) {
+        			super.updateItem(item, empty);
+    				if (item != null && item.isDownloadedProperty().get()) {
+        				setStyle("-fx-background-color:#c0bcf2");
+        			}
+        			else {
+        				setStyle("");
+        			}
+        		}
+        		
+        	};
+        });
         
         this.songSourceShowCheckMenuItem.selectedProperty().addListener((obs, oldValue, newValue) -> {
         	if (newValue) {
@@ -179,6 +197,15 @@ public class SongsDisplayController {
         	}
         });
         
+        this.creatorNameShowCheckMenuItem.selectedProperty().addListener((obs, oldValue, newValue) -> {
+        	if (newValue) {
+        		this.creatorNameCol.setVisible(true);
+        	}
+        	else {
+        		this.creatorNameCol.setVisible(false);
+        	}
+        });
+        
         this.totalTimeShowCheckMenuItem.selectedProperty().addListener((obs, oldValue, newValue) -> {
         	if (newValue) {
         		this.totalTimeCol.setVisible(true);
@@ -187,40 +214,36 @@ public class SongsDisplayController {
         		this.totalTimeCol.setVisible(false);
         	}
         });
-        this.testTable.setRowFactory(value -> {
-        	return new TableRow<TableViewData>() {
-        		@Override protected void updateItem(TableViewData item, boolean empty) {
-        			super.updateItem(item, empty);
-        			if (item != null && item.isDownloadedProperty().get()) {
-        				setStyle("-fx-background-color:lightcoral");
-        			}
-        			else {
-        				setStyle("");
-        			}
-        		}
-        	};
+        
+        this.isDownloadedShowCheckMenuItem.selectedProperty().addListener((obs, oldValue, newValue) -> {
+        	// throw error if filteredList is not initialized as the list is needed to perform operation here
+        	if (this.initSongsFilteredList == null) {
+        		throw new RuntimeException("MenuItem is modified before GUI is shown");
+        	}
+        	
+        	this.initSongsFilteredList.setPredicate(new CustomPredicate(this.testSearchText.getText()));
         });
         
         // set selected items to 0
         this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + this.isSelectedCounter);
-	}
-	
-	@FXML private void selectAll(ActionEvent event) {
-		if(this.selectAllCheckBoxInCheckBoxCol.isSelected()) {
-			this.testTable.getItems().forEach(row -> {
-				if (!row.isSelectedProperty().get()) {
-					row.isSelectedProperty().set(true);
-				}
-			});
-        } 
-        else {
-        	this.testTable.getItems().forEach(row -> {
-    			if (row.isSelectedProperty().get()) {
-    				row.isSelectedProperty().set(false);
-    			}
-    		});
-        }
-        this.testTable.refresh();
+        
+        // selectAll
+        this.selectAllCheckBoxInCheckBoxCol.selectedProperty().addListener((obs, oldValue, newValue) -> {
+        	if (newValue) {
+        		this.testTable.getItems().forEach(row -> {
+    				if (!row.isSelectedProperty().get()) {
+    					row.isSelectedProperty().set(true);
+    				}
+    			});
+        	}
+        	else {
+        		this.testTable.getItems().forEach(row -> {
+        			if (row.isSelectedProperty().get()) {
+        				row.isSelectedProperty().set(false);
+        			}
+        		});
+        	}
+        });
 	}
 	
 	public void initData(Stage currentStage, SqliteDatabase connectedSongsDb) throws SQLException {
@@ -236,17 +259,11 @@ public class SongsDisplayController {
 		this.initTableView();
 	}
 	
+	
 	private void initTableView() throws SQLException {
-		// items must be in the sam
-//		String[] items = {this.songsDb.Data.BeatmapSet.BEATMAP_SET_AUTO_ID 
-//				, this.songsDb.Data.Song.SONG_SOURCE, this.songsDb.Data.Artist.ARTIST_NAME
-//        		, this.songsDb.Data.Artist.ARTIST_NAME_UNICODE, this.songsDb.Data.Song.SONG_TITLE
-//        		, this.songsDb.Data.Song.SONG_TITLE_UNICODE,  this.songsDb.Data.Beatmap.TOTAL_TIME
-//        		, this.songsDb.Data.Beatmap.LAST_MODIFICATION_TIME, this.songsDb.Data.BeatmapSet.IS_DOWNLOADED
-//        		, this.songsDb.Data.BeatmapSet.IS_HIDDEN, this.songsDb.Data.BeatmapSet.FOLDER_NAME
-//        		, this.songsDb.Data.BeatmapSet.AUDIO_NAME, this.songsDb.Data.SongTag.SONG_TAG_NAME};
         ResultSet tableInitDataRs = this.songsDb.getTableInitData();
-        ObservableList<TableViewData> data = FXCollections.observableArrayList();
+       
+        ObservableList<TableViewData> initSongsObsList = FXCollections.observableArrayList(TableViewData.extractor());
         while (tableInitDataRs.next()) {
 //        	data.add(new TableViewData(
 //        			tableInitDataRs.getInt(this.songsDb.Data.BeatmapSet.BEATMAP_SET_AUTO_ID)
@@ -278,7 +295,8 @@ public class SongsDisplayController {
         			, false
         			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.FOLDER_NAME)
         			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.AUDIO_NAME)
-        			, tableInitDataRs.getString(this.songsDb.Data.SongTag.SONG_TAG_NAME)
+        			, tableInitDataRs.getString(this.songsDb.Data.SongTag.SONG_TAG_NAME).replaceAll(",", " ")
+        			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.CREATOR_NAME)
         			);
         	// TODO: this is flawful! change this implementation alltogether
         	t.isSelectedProperty().addListener((obs, oldValue, newValue) -> {
@@ -290,112 +308,41 @@ public class SongsDisplayController {
         		}
         		this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + this.isSelectedCounter);
         	});
-        	data.add(t);
+        	initSongsObsList.add(t);
 
         }
-        this.initSongsObsList = data;
-        this.testTable.setItems(data);
-        
-        ResultSet hiddenTableInitDataRs = this.songsDb.getHiddenTableInitData();
-        while (hiddenTableInitDataRs.next()) {
-        	this.hiddenSongsObsList.add(new TableViewData(
-        			hiddenTableInitDataRs.getInt(this.songsDb.Data.BeatmapSet.BEATMAP_SET_AUTO_ID)
-					, hiddenTableInitDataRs.getString(this.songsDb.Data.Song.SONG_SOURCE)
-        			, hiddenTableInitDataRs.getString(this.songsDb.Data.Artist.ARTIST_NAME)
-        			, hiddenTableInitDataRs.getString(this.songsDb.Data.Artist.ARTIST_NAME_UNICODE)
-        			, hiddenTableInitDataRs.getString(this.songsDb.Data.Song.SONG_TITLE)
-        			, hiddenTableInitDataRs.getString(this.songsDb.Data.Song.SONG_TITLE_UNICODE)
-        			, hiddenTableInitDataRs.getInt(this.songsDb.Data.Beatmap.TOTAL_TIME)
-        			, hiddenTableInitDataRs.getLong(this.songsDb.Data.Beatmap.LAST_MODIFICATION_TIME)
-        			, hiddenTableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_DOWNLOADED)
-        			, hiddenTableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_HIDDEN)
-        			, false
-        			, hiddenTableInitDataRs.getString(this.songsDb.Data.BeatmapSet.FOLDER_NAME)
-        			, hiddenTableInitDataRs.getString(this.songsDb.Data.BeatmapSet.AUDIO_NAME)
-        			, hiddenTableInitDataRs.getString(this.songsDb.Data.SongTag.SONG_TAG_NAME)
-        			));
-        }
-        
-        ResultSet downloadedTableInitDataRs = this.songsDb.getDownloadedTableInitData();
-        while (downloadedTableInitDataRs.next()) {
-        	this.downloadedSongsObsList.add(new TableViewData(
-        			downloadedTableInitDataRs.getInt(this.songsDb.Data.BeatmapSet.BEATMAP_SET_AUTO_ID)
-					, downloadedTableInitDataRs.getString(this.songsDb.Data.Song.SONG_SOURCE)
-        			, downloadedTableInitDataRs.getString(this.songsDb.Data.Artist.ARTIST_NAME)
-        			, downloadedTableInitDataRs.getString(this.songsDb.Data.Artist.ARTIST_NAME_UNICODE)
-        			, downloadedTableInitDataRs.getString(this.songsDb.Data.Song.SONG_TITLE)
-        			, downloadedTableInitDataRs.getString(this.songsDb.Data.Song.SONG_TITLE_UNICODE)
-        			, downloadedTableInitDataRs.getInt(this.songsDb.Data.Beatmap.TOTAL_TIME)
-        			, downloadedTableInitDataRs.getLong(this.songsDb.Data.Beatmap.LAST_MODIFICATION_TIME)
-        			, downloadedTableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_DOWNLOADED)
-        			, downloadedTableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_HIDDEN)
-        			, false
-        			, downloadedTableInitDataRs.getString(this.songsDb.Data.BeatmapSet.FOLDER_NAME)
-        			, downloadedTableInitDataRs.getString(this.songsDb.Data.BeatmapSet.AUDIO_NAME)
-        			, downloadedTableInitDataRs.getString(this.songsDb.Data.SongTag.SONG_TAG_NAME)
-        			));
-        }
+        FilteredList<TableViewData> initSongsFilteredList = new FilteredList<TableViewData>(initSongsObsList, new CustomPredicate(""));
+        PauseTransition pause = new PauseTransition(Duration.millis(180));
+        this.testSearchText.textProperty().addListener((obs, oldValue, newValue) -> {
+        	pause.setOnFinished(event -> {
+        		initSongsFilteredList.setPredicate(new CustomPredicate(newValue));
+        	});
+            pause.playFromStart();
+        	
+        });
+        this.initSongsObsList = initSongsObsList;
+        this.initSongsFilteredList = initSongsFilteredList;
+        this.testTable.setItems(initSongsFilteredList);
 	}
 	
 	@FXML private void searchDb(ActionEvent event) throws FileNotFoundException, SQLException {
 		for (TableViewData row : this.testTable.getItems()) {
-			if (row.isDownloadedProperty().get()) {
-				System.out.println(row.songTitleProperty().get() + " - d" + row.isDownloadedProperty().get());
-			}
+				System.out.println(row.songTitleProperty().get());
 			
 		}
-//		String text = this.testSearchText.getText();
-//		
-//			
-//		String[] items = {this.songsDb.Data.BeatmapSet.TABLE_NAME + "." + this.songsDb.Data.BeatmapSet.BEATMAP_SET_AUTO_ID
-//				, this.songsDb.Data.Song.SONG_SOURCE, this.songsDb.Data.Artist.ARTIST_NAME
-//        		, this.songsDb.Data.Artist.ARTIST_NAME_UNICODE, this.songsDb.Data.Song.SONG_TITLE
-//        		, this.songsDb.Data.Song.SONG_TITLE_UNICODE,  this.songsDb.Data.Beatmap.TOTAL_TIME
-//        		, this.songsDb.Data.Beatmap.LAST_MODIFICATION_TIME, this.songsDb.Data.BeatmapSet.IS_DOWNLOADED
-//        		, this.songsDb.Data.BeatmapSet.IS_HIDDEN, this.songsDb.Data.BeatmapSet.FOLDER_NAME
-//        		, this.songsDb.Data.BeatmapSet.AUDIO_NAME, "group_concat(" + this.songsDb.Data.SongTag.SONG_TAG_NAME + ")"};
-//		String[] searchedStrings = text.split("\\s+");
-//		String[] orderBy = {this.songsDb.Data.Beatmap.LAST_MODIFICATION_TIME};
-//		
-//		ObservableList<TableViewData> data = FXCollections.observableArrayList();
-//		ResultSet rs = this.songsDb.searchAll(items, searchedStrings, orderBy);
-//		// TODO: change this implementation so that selected items state are saved
-//		while (rs.next()) {
-//			data.add(new TableViewData(
-//					rs.getInt(items[0])
-//					, rs.getString(items[1])
-//        			, rs.getString(items[2])
-//        			, rs.getString(items[3])
-//        			, rs.getString(items[4])
-//        			, rs.getString(items[5])
-//        			, rs.getInt(items[6])
-//        			, rs.getLong(items[7])
-//        			, rs.getBoolean(items[8])
-//        			, rs.getBoolean(items[9])
-//        			, false
-//        			, rs.getString(items[10])
-//        			, rs.getString(items[11])
-//        			, rs.getString(items[12])
-//        			));
-//		}
-//		this.testTable.setItems(data);
 	}
 	
 	
 	// testCopySongButton
 	@FXML private void copySong(ActionEvent event) throws SQLException, IOException {
-//		boolean isAnySelected = false;
-//		int selectedSongsSize = 0;
 		List<TableViewData> selectedSongsList = new ArrayList<TableViewData>();
 		for (TableViewData row : this.testTable.getItems()) {
 			if (row.isSelectedProperty().get()) {
-//				isAnySelected = true;
-//				break;
 				selectedSongsList.add(row);
-//				selectedSongsSize++;
 			}
 		}
 		if (selectedSongsList.size() == 0) {
+			// TODO: change to reflect in GUI
 			System.out.println("No row is chosen");
 		}
 		else {
@@ -416,90 +363,104 @@ public class SongsDisplayController {
 	
 	// hideUnhideButton
 	@FXML private void hideUnhideSelectedSongs(ActionEvent event) throws SQLException {
-		// TODO: instead of looping through the whole list everytime,
-		// in the listener add the songs to selectedObsList
-		// and execute in task if the list is large
 		// TODO: account for selectAll also (probably wanna change the whole implementation)
-		if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
+		try {
 			String[] items = {this.songsDb.Data.BeatmapSet.IS_HIDDEN};
-			Boolean[] results = {true};
+			this.songsDb.getConn().setAutoCommit(false);
 			PreparedStatement updateBeatmapSetBooleanPStatement = this.songsDb.getUpdateBeatmapSetBooleanPreparedStatement(items);
-			for (Iterator<TableViewData> rowIter = this.testTable.getItems().iterator(); rowIter.hasNext();) {
-				TableViewData row = rowIter.next();
-				if (row.isSelectedProperty().get()) {
-					row.isSelectedProperty().set(false);
-					row.isHiddenProperty().set(true);
-					this.hiddenSongsObsList.add(row);
-					rowIter.remove();
-					this.songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, row.beatmapSetAutoIDProperty().get(), results);
+			if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
+				Boolean[] results = {true};
+				// !! iterate over obsList instead of filteredList 
+				// otherwise because of the predicate in displaySongs method, index out of bound error and stuff will occur.
+				for (TableViewData row : this.initSongsObsList) {
+					if (row.isSelectedProperty().get()) {
+						row.isSelectedProperty().set(false);
+						row.isHiddenProperty().set(true);
+						this.songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, row.beatmapSetAutoIDProperty().get(), results);
+					}
+				}
+			}
+			else if (this.hiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
+				Boolean[] results = {false};
+				for (TableViewData row : this.initSongsObsList) {
+					if (row.isSelectedProperty().get()) {
+						row.isSelectedProperty().set(false);
+						row.isHiddenProperty().set(false);
+						this.songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, row.beatmapSetAutoIDProperty().get(), results);
+					}
 				}
 			}
 			updateBeatmapSetBooleanPStatement.executeBatch();
 		}
-		else if (this.hiddenSongsRadioMenuItemInDisplayMenu.isSelected()) { 
-			String[] items = {this.songsDb.Data.BeatmapSet.IS_HIDDEN};
-			Boolean[] results = {false};
-			PreparedStatement updateBeatmapSetBooleanPStatement = this.songsDb.getUpdateBeatmapSetBooleanPreparedStatement(items);
-			for (Iterator<TableViewData> rowIter = this.testTable.getItems().iterator(); rowIter.hasNext();) {
-				TableViewData row = rowIter.next();
-				if (row.isSelectedProperty().get()) {
-					row.isSelectedProperty().set(false);
-					row.isHiddenProperty().set(false);
-					this.initSongsObsList.add(row);
-					// TODO: sort it as original after adding this
-					rowIter.remove();
-					this.songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, row.beatmapSetAutoIDProperty().get(), results);
-				}
-			}
-			updateBeatmapSetBooleanPStatement.executeBatch();
+		finally {
+			this.songsDb.getConn().setAutoCommit(true);
 		}
 	}
 	
 	@FXML private void displaySongs(ActionEvent event) {
+		this.testSearchText.clear();
 		if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
-			if (this.testTable.getItems() != this.initSongsObsList) {
-				this.testTable.setItems(this.initSongsObsList);
-				this.hideUnhideButton.setText("Hide");
-				if (!this.hideUnhideButton.isVisible()) {
-					this.hideUnhideButton.setVisible(true);
-				}
-				if (!this.checkBoxCol.isVisible()) {
-					this.checkBoxCol.setVisible(true);
-				}
-			}
+			this.hideUnhideButton.setText("Hide");
+			this.isDownloadedShowCheckMenuItem.setVisible(true);
+			this.hideUnhideButton.setVisible(true);
+			this.checkBoxCol.setVisible(true);
 		}
 		else if (this.hiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
-			if (this.testTable.getItems() != this.hiddenSongsObsList) {
-				this.testTable.setItems(this.hiddenSongsObsList);
-				this.hideUnhideButton.setText("Unhide");
-				if (!this.hideUnhideButton.isVisible()) {
-					this.hideUnhideButton.setVisible(true);
-				}
-				if (!this.checkBoxCol.isVisible()) {
-					this.checkBoxCol.setVisible(true);
-				}
-			}
+			this.hideUnhideButton.setText("Unhide");
+			this.isDownloadedShowCheckMenuItem.setVisible(false);
+			this.hideUnhideButton.setVisible(true);
+			this.checkBoxCol.setVisible(true);
 		}
 		// TODO: label showing number of downloaded songs
 		else if (this.downloadedSongsRadioMenuItemInDisplayMenu.isSelected()) {
-			if (this.testTable.getItems() != this.downloadedSongsObsList) {
-				this.testTable.setItems(this.downloadedSongsObsList);
-				if (this.hideUnhideButton.isVisible()) {
-					this.hideUnhideButton.setVisible(false);
-				}
-				if (this.checkBoxCol.isVisible()) {
-					this.checkBoxCol.setVisible(false);
-				}
-			}
+			this.isDownloadedShowCheckMenuItem.setVisible(false);
+			this.hideUnhideButton.setVisible(false);
+			this.checkBoxCol.setVisible(false);
 		}
+		
+		this.initSongsFilteredList.setPredicate(new CustomPredicate(""));
 	}
 	
-	// viewHiddenSongsViewMenuItem
-//	@FXML private void viewHiddenSongs(ActionEvent event) {
-//		this.testTable.setItems(this.hiddenSongsObsList);
-//		this.hideUnhideButton.setText("Unhide");
-//		this.testTable.refresh();
-//	}
+	private class CustomPredicate implements Predicate<TableViewData> { 
+		private final String searchedText;
+		
+		public CustomPredicate(String searchedText) {
+			this.searchedText = searchedText;
+		}
+		
+		@Override public boolean test(TableViewData row) {
+			boolean displayCondition = true;
+			if (unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
+				// account for showing downloaded or not here as it involves rows. Other related MenuItems are set in initialize method
+				if (isDownloadedShowCheckMenuItem.isSelected()) {
+					displayCondition = row.isHiddenProperty().get() ? false : true;
+				}
+				else {
+					displayCondition = row.isHiddenProperty().get() || row.isDownloadedProperty().get() ? false : true;
+				}
+			}
+			else if (hiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
+				displayCondition = row.isHiddenProperty().get() ? true : false;
+			}
+			else if (downloadedSongsRadioMenuItemInDisplayMenu.isSelected()) {
+				displayCondition = row.isDownloadedProperty().get() ? true : false;
+			}
+			
+			if (this.searchedText.isEmpty()) {
+				return displayCondition && true;
+			}
+			String[] items = {row.songSourceProperty().get(), row.artistNameProperty().get()
+    				, row.artistNameUnicodeProperty().get(), row.songTitleProperty().get()
+    				, row.songTitleUnicodeProperty().get(), row.songTagNamesProperty().get()
+    				, row.creatorNameProperty().get()};
+    		String itemsStr = String.join(" ", items).toLowerCase();
+    		String[] words = searchedText.toLowerCase().split("\\s+");
+    		if (Arrays.stream(words).parallel().allMatch(itemsStr::contains)) {
+    			return displayCondition && true;
+    		}
+    		return displayCondition && false;
+		}
+	}
 	
 //	class CustomCheckBoxCell extends TableCell<TableViewData, Boolean>
 //    {
@@ -549,9 +510,10 @@ public class SongsDisplayController {
 		private final SimpleStringProperty folderName;
 		private final SimpleStringProperty audioName;
 		private final SimpleStringProperty songTagNames;
+		private final SimpleStringProperty creatorName;
 		
-		private TableViewData(int beatmapSetAutoID, String songSource, String artistName, String artistNameUnicode, String songTitle, String songTitleUnicode, int totalTime
-				, long lastModificationTime, boolean isDownloaded, boolean isHidden, boolean isSelected, String folderName, String audioName, String songTagNames) {
+		public TableViewData(int beatmapSetAutoID, String songSource, String artistName, String artistNameUnicode, String songTitle, String songTitleUnicode, int totalTime
+				, long lastModificationTime, boolean isDownloaded, boolean isHidden, boolean isSelected, String folderName, String audioName, String songTagNames, String creatorName) {
 			this.beatmapSetAutoID = new SimpleIntegerProperty(beatmapSetAutoID);
 			this.songSource = new SimpleStringProperty(songSource);
 			this.artistName = new SimpleStringProperty(artistName);
@@ -572,9 +534,14 @@ public class SongsDisplayController {
 			this.folderName = new SimpleStringProperty(folderName);
 			this.audioName = new SimpleStringProperty(audioName);
 			this.songTagNames = new SimpleStringProperty(songTagNames);
+			this.creatorName = new SimpleStringProperty(creatorName);
 //			this.isSelected.addListener((obs, wasSelected, nowSelected) -> {
 //				System.out.println(songTitle + " - " + wasSelected + " -> " + nowSelected);
 //			});
+		}
+		
+		public static Callback<TableViewData, Observable[]> extractor() {
+		   return (TableViewData p) -> new Observable[]{p.isDownloadedProperty(), p.isHiddenProperty(), p.isSelectedProperty()};
 		}
 
 		public SimpleBooleanProperty isDownloadedProperty() {
@@ -643,6 +610,10 @@ public class SongsDisplayController {
 		
 		public SimpleStringProperty songTagNamesProperty() {
 			return songTagNames;
+		}
+		
+		public SimpleStringProperty creatorNameProperty() {
+			return creatorName;
 		}
 
 //		public String getSongSource() {

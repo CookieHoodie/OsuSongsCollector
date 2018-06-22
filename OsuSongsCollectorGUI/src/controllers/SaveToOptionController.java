@@ -59,7 +59,7 @@ public class SaveToOptionController {
 	private String pathToSongsFolder = "";
 	private String saveFolder = "";
 	
-	private Task<List<TableViewData>> task;
+	private Task<Void> task;
 	
 	// TODO: figure out a way to update the observableList (isdownloaded) according to what's been copied. 
 	// the List selectedDataList may need to be modified to do this.
@@ -151,7 +151,7 @@ public class SaveToOptionController {
 			this.songsDb.updateMetadata(this.metadataID, items, results);
 		}
 		
-		Task<List<TableViewData>> copySongsTask = new CopySongsTask(this.selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText()); 
+		Task<Void> copySongsTask = new CopySongsTask(this.selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText()); 
 		this.task = copySongsTask;
 		this.downloadProgressBar.progressProperty().bind(copySongsTask.progressProperty());
 		copySongsTask.messageProperty().addListener((obs, oldValue, newValue) -> {
@@ -172,11 +172,10 @@ public class SaveToOptionController {
 	}
 	
 	
-	private class CopySongsTask extends Task<List<TableViewData>> {
+	private class CopySongsTask extends Task<Void> {
 		private final String pathToSongsFolderInTask;
 		private final String destinationFolder;
 		private final List<TableViewData> selectedSongsListInTask;
-		private List<TableViewData> failedSongs = new ArrayList<TableViewData>();
 		
 		public CopySongsTask(List<TableViewData> selectedSongsList, String pathToSongsFolder, String destinationFolder) {
 			this.selectedSongsListInTask = selectedSongsList;
@@ -185,73 +184,64 @@ public class SaveToOptionController {
 		}
 		
 		@Override
-        protected List<TableViewData> call() throws Exception {
+        protected Void call() throws Exception {
 //			int currentProgress = 0;
 //			boolean isCompleted = true;
 			updateProgress(0, 0);
 			int totalProgress = this.selectedSongsListInTask.size();
 			String[] items = {songsDb.Data.BeatmapSet.IS_DOWNLOADED};
 			Boolean[] results = {true};
-			PreparedStatement updateBeatmapSetBooleanPStatement = songsDb.getUpdateBeatmapSetBooleanPreparedStatement(items);
-			for (int i = 0; i < totalProgress; i++) {
-				if (!isCancelled()) {
-					TableViewData row = this.selectedSongsListInTask.get(i);
-					if (row.isSelectedProperty().get()) {
-						int beatmapSetAutoID = row.beatmapSetAutoIDProperty().get();
-						Path oriPath = Paths.get(this.pathToSongsFolderInTask, row.folderNameProperty().get(), row.audioNameProperty().get());
-						// TODO: if unicode, use english if empty
-						// with also option to 
-						// let user choose how to deal with duplicated files (such as using length)
-						// warn user if they change the order of the filename as old files does not recognize the previous one
-						String fileName = row.artistNameProperty().get().trim().replaceAll("[\\\\/:*?\"<>|]", "_") + " - " + row.songTitleProperty().get().trim().replaceAll("[\\\\/:*?\"<>|]", "_") + row.audioNameProperty().get().substring(row.audioNameProperty().get().lastIndexOf('.'));
-						Path cpPath = Paths.get(this.destinationFolder, fileName);
-						try {
-							Files.copy(oriPath, cpPath);
-							songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, beatmapSetAutoID, results);
-							Platform.runLater(() -> {
-								row.isDownloadedProperty().set(true);
-								row.isSelectedProperty().set(false);
-							}); 
-							updateProgress(i + 1, totalProgress);
-							updateMessage(fileName + " --- Done");
-						}
-						catch (UnsupportedOperationException e) {
-							// TODO: throw all these exceptions instead
-						}
-						catch (FileAlreadyExistsException e) {
-							// TODO: change according to user option
-						}
-						catch (IOException e) {
+			try {
+				songsDb.getConn().setAutoCommit(false);
+				PreparedStatement updateBeatmapSetBooleanPStatement = songsDb.getUpdateBeatmapSetBooleanPreparedStatement(items);
+				for (int i = 0; i < totalProgress; i++) {
+					if (!isCancelled()) {
+						TableViewData row = this.selectedSongsListInTask.get(i);
+						if (row.isSelectedProperty().get()) {
+							int beatmapSetAutoID = row.beatmapSetAutoIDProperty().get();
+							Path oriPath = Paths.get(this.pathToSongsFolderInTask, row.folderNameProperty().get(), row.audioNameProperty().get());
+							// TODO: if unicode, use english if empty
+							// with also option to 
+							// let user choose how to deal with duplicated files (such as using length)
+							// warn user if they change the order of the filename as old files does not recognize the previous one
+							String fileName = row.artistNameProperty().get().trim().replaceAll("[\\\\/:*?\"<>|]", "_") + " - " + row.songTitleProperty().get().trim().replaceAll("[\\\\/:*?\"<>|]", "_") + row.audioNameProperty().get().substring(row.audioNameProperty().get().lastIndexOf('.'));
+							Path cpPath = Paths.get(this.destinationFolder, fileName);
+							try {
+								Files.copy(oriPath, cpPath);
+								songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, beatmapSetAutoID, results);
+								Platform.runLater(() -> {
+									row.isDownloadedProperty().set(true);
+									row.isSelectedProperty().set(false);
+								}); 
+								updateProgress(i + 1, totalProgress);
+								updateMessage(fileName + " --- Done");
+							}
+							catch (UnsupportedOperationException e) {
+								// TODO: throw all these exceptions instead
+							}
+							catch (FileAlreadyExistsException e) {
+								// TODO: change according to user option
+							}
+							catch (IOException e) {
+								
+							}
+							catch (SecurityException e) {
+								
+							}
 							
 						}
-						catch (SecurityException e) {
-							
-						}
-						
 					}
-//					currentProgress++;
+					else {
+						updateMessage((i+1) + " songs are copied, " + (totalProgress-i-1) + " are cancelled.");
+						break;
+					}
 				}
-				else {
-					updateMessage((i+1) + " songs are copied, " + (totalProgress-i-1) + " are cancelled.");
-					break;
-				}
-//				else {
-//					if (i + 1 != totalProgress) {
-//						isCompleted = false;
-//					}
-//					break;
-//				}
+				updateBeatmapSetBooleanPStatement.executeBatch();
 			}
-//			if (!isCompleted) {
-//				for (int i = currentProgress; i < totalProgress; i++) {
-//					TableViewData row = this.tableViewObservableListInTask.get(i);
-//					if (row.isSelectedProperty().get()) {
-//						this.failedSongs.add(row);
-//					}
-//				}
-//			}
-			updateBeatmapSetBooleanPStatement.executeBatch();
-			return this.failedSongs;
+			finally {
+				songsDb.getConn().setAutoCommit(true);
+			}
+			return null;
         }
     }
 	
