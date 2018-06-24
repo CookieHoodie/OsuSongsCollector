@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,8 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
+import application.Comparators;
+import application.Comparators.SongTitleComparator;
 import application.SqliteDatabase;
 import controllers.SongsDisplayController.TableViewData;
 import javafx.animation.PauseTransition;
@@ -32,6 +35,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -41,6 +45,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -64,6 +69,7 @@ public class SongsDisplayController {
 	private SqliteDatabase songsDb;
 	private ObservableList<TableViewData> initSongsObsList;
 	private FilteredList<TableViewData> initSongsFilteredList;
+	private SortedList<TableViewData> initSongsSortedList;
 	
 	@FXML private TableView<TableViewData> testTable;
 	@FXML private TableColumn<TableViewData, String> songSourceCol;
@@ -72,15 +78,15 @@ public class SongsDisplayController {
 	@FXML private TableColumn<TableViewData, String> songTitleCol;
 	@FXML private TableColumn<TableViewData, String> songTitleUnicodeCol;
 	@FXML private TableColumn<TableViewData, String> creatorNameCol;
-	@FXML private TableColumn<TableViewData, String> totalTimeCol;
+	@FXML private TableColumn<TableViewData, Integer> totalTimeCol;
 	@FXML private TableColumn<TableViewData, Boolean> checkBoxCol;
 	
 	@FXML private TextField testSearchText;
-	@FXML private Button testSearchButton;
 	@FXML private Button testCopySongButton;
 	@FXML private Button hideUnhideButton;
 	@FXML private CheckBox selectAllCheckBoxInCheckBoxCol;
 	@FXML private Label numOfSelectedSongsLabel;
+	@FXML private ComboBox<Comparator<TableViewData>> orderByComboBox;
 	
 	@FXML private Menu fileMenu;
 	@FXML private MenuItem checkNewSongsFileMenuItem;
@@ -112,6 +118,9 @@ public class SongsDisplayController {
 	// TODO: save those (and maybe saveFolder) in a different table Configuration
 	// and check the corresponding items in controller instead of fxml
 	// TODO: set help text on approx length
+	// TODO: add rotating screen while changing view, searching, etc.
+	// TODO: allow user to select and copy words but not edit
+	// TODO: search length < and > in search bar
 	
 	@FXML private void initialize() {
 		this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
@@ -130,7 +139,15 @@ public class SongsDisplayController {
         	return value.getValue().songTitleUnicodeProperty();
         });
         this.creatorNameCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("creatorName"));
-        this.totalTimeCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("totalTime"));
+        this.totalTimeCol.setCellValueFactory(new PropertyValueFactory<TableViewData, Integer>("totalTime"));
+        this.totalTimeCol.setCellFactory(value -> {
+        	return new TableCell<TableViewData, Integer>() {
+        		@Override protected void updateItem(Integer totalTime, boolean empty) {
+        			super.updateItem(totalTime, empty);
+					setText(totalTime == null ? "" : TableViewData.totalTimeToString(totalTime));
+        		}
+        	};
+        });
         this.checkBoxCol.setCellValueFactory(new PropertyValueFactory<TableViewData, Boolean>("isSelected"));
         this.checkBoxCol.setCellFactory(tc -> new CheckBoxTableCell<>());
 //        this.checkBoxCol.setCellFactory(tc -> new CustomCheckBoxCell());
@@ -151,6 +168,17 @@ public class SongsDisplayController {
         		
         	};
         });
+        
+        Comparator<TableViewData> lastModificationTimeComparator = new Comparators.LastModificationTimeComparator();
+        ObservableList<Comparator<TableViewData>> orderByComparatorsObsList = FXCollections.observableArrayList(
+        		new Comparators.SongTitleComparator(),
+        		new Comparators.ArtistNameComparator(),
+        		new Comparators.CreatorNameComparator(),
+        		new Comparators.TotalTimeComparator(),
+        		lastModificationTimeComparator
+        );
+        this.orderByComboBox.setItems(orderByComparatorsObsList);
+        this.orderByComboBox.getSelectionModel().select(lastModificationTimeComparator);
         
         this.songSourceShowCheckMenuItem.selectedProperty().addListener((obs, oldValue, newValue) -> {
         	if (newValue) {
@@ -318,20 +346,20 @@ public class SongsDisplayController {
         		initSongsFilteredList.setPredicate(new CustomPredicate(newValue));
         	});
             pause.playFromStart();
-        	
         });
+        
+        SortedList<TableViewData> initSongsSortedList = new SortedList<TableViewData>(initSongsFilteredList);
+        
+        
         this.initSongsObsList = initSongsObsList;
         this.initSongsFilteredList = initSongsFilteredList;
-        this.testTable.setItems(initSongsFilteredList);
+        this.initSongsSortedList = initSongsSortedList;
+        this.testTable.setItems(initSongsSortedList);
 	}
 	
-	@FXML private void searchDb(ActionEvent event) throws FileNotFoundException, SQLException {
-		for (TableViewData row : this.testTable.getItems()) {
-				System.out.println(row.songTitleProperty().get());
-			
-		}
+	@FXML private void testSort(ActionEvent event) {
+		this.initSongsSortedList.setComparator(this.orderByComboBox.getSelectionModel().getSelectedItem());
 	}
-	
 	
 	// testCopySongButton
 	@FXML private void copySong(ActionEvent event) throws SQLException, IOException {
@@ -446,6 +474,7 @@ public class SongsDisplayController {
 				displayCondition = row.isDownloadedProperty().get() ? true : false;
 			}
 			
+			// TODO: allows comparator < and > for length related or date?
 			if (this.searchedText.isEmpty()) {
 				return displayCondition && true;
 			}
@@ -502,7 +531,8 @@ public class SongsDisplayController {
 		private final SimpleStringProperty artistNameUnicode;
 		private final SimpleStringProperty songTitle;
 		private final SimpleStringProperty songTitleUnicode;
-		private final SimpleStringProperty totalTime;
+//		private final SimpleIntegerProperty previewTime;
+		private final SimpleIntegerProperty totalTime;
 		private final SimpleLongProperty lastModificationTime;
 		private SimpleBooleanProperty isDownloaded;
 		private SimpleBooleanProperty isHidden;
@@ -512,6 +542,7 @@ public class SongsDisplayController {
 		private final SimpleStringProperty songTagNames;
 		private final SimpleStringProperty creatorName;
 		
+		// TODO: add previewTime, ranked?, last play time
 		public TableViewData(int beatmapSetAutoID, String songSource, String artistName, String artistNameUnicode, String songTitle, String songTitleUnicode, int totalTime
 				, long lastModificationTime, boolean isDownloaded, boolean isHidden, boolean isSelected, String folderName, String audioName, String songTagNames, String creatorName) {
 			this.beatmapSetAutoID = new SimpleIntegerProperty(beatmapSetAutoID);
@@ -520,13 +551,7 @@ public class SongsDisplayController {
 			this.artistNameUnicode = new SimpleStringProperty(artistNameUnicode);
 			this.songTitle = new SimpleStringProperty(songTitle);
 			this.songTitleUnicode = new SimpleStringProperty(songTitleUnicode);
-			this.totalTime = new SimpleStringProperty(
-					String.format("%02d:%02d", 
-						    TimeUnit.MILLISECONDS.toMinutes(totalTime),
-						    TimeUnit.MILLISECONDS.toSeconds(totalTime) - 
-						    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalTime))
-						)
-					);
+			this.totalTime = new SimpleIntegerProperty(totalTime);
 			this.lastModificationTime = new SimpleLongProperty(lastModificationTime);
 			this.isDownloaded = new SimpleBooleanProperty(isDownloaded);
 			this.isHidden = new SimpleBooleanProperty(isHidden);
@@ -535,13 +560,18 @@ public class SongsDisplayController {
 			this.audioName = new SimpleStringProperty(audioName);
 			this.songTagNames = new SimpleStringProperty(songTagNames);
 			this.creatorName = new SimpleStringProperty(creatorName);
-//			this.isSelected.addListener((obs, wasSelected, nowSelected) -> {
-//				System.out.println(songTitle + " - " + wasSelected + " -> " + nowSelected);
-//			});
 		}
 		
 		public static Callback<TableViewData, Observable[]> extractor() {
 		   return (TableViewData p) -> new Observable[]{p.isDownloadedProperty(), p.isHiddenProperty(), p.isSelectedProperty()};
+		}
+		
+		public static String totalTimeToString(int totalTime) {
+			return String.format("%02d:%02d", 
+				    TimeUnit.MILLISECONDS.toMinutes(totalTime),
+				    TimeUnit.MILLISECONDS.toSeconds(totalTime) - 
+				    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(totalTime))
+				    );
 		}
 
 		public SimpleBooleanProperty isDownloadedProperty() {
@@ -592,7 +622,7 @@ public class SongsDisplayController {
 			return songTitleUnicode;
 		}
 
-		public SimpleStringProperty totalTimeProperty() {
+		public SimpleIntegerProperty totalTimeProperty() {
 			return totalTime;
 		}
 
@@ -615,6 +645,7 @@ public class SongsDisplayController {
 		public SimpleStringProperty creatorNameProperty() {
 			return creatorName;
 		}
+		
 
 //		public String getSongSource() {
 //			return songSource.get();
@@ -662,114 +693,3 @@ public class SongsDisplayController {
 	}
 }
 
-//public class SongsDisplayController {
-//	private SqliteDatabase songsDb;
-//	private Stage currentStage;
-//	private TableColumn<TableViewData, String> songTitleCol = new TableColumn<TableViewData, String>("Song Title");
-//	private TableColumn<TableViewData, String> artistNameCol = new TableColumn<TableViewData, String>("Artist");
-//	private TableColumn<TableViewData, String> songSourceCol = new TableColumn<TableViewData, String>("Source");
-//	private TableColumn<TableViewData, Integer> totalTimeCol = new TableColumn<TableViewData, Integer>("Approx length");
-//	
-//	@FXML private TextField testSearchText;
-//	@FXML private Button testSearchButton;
-//	@FXML private TableView<TableViewData> testTable;
-//	
-//	public void initData(Stage currentStage, SqliteDatabase connectedSongsDb) throws SQLException {
-//		this.songsDb = connectedSongsDb;
-//		this.currentStage = currentStage;
-//		currentStage.setOnCloseRequest(e -> {
-//			try {
-//				this.songsDb.closeConnection();
-//			} catch (SQLException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			}
-//		});
-//		this.initTableView();
-//	}
-//	
-//	@FXML private void searchDb(ActionEvent event) throws FileNotFoundException, SQLException {
-//		String text = this.testSearchText.getText();
-//		
-//			
-//			String[] items = {this.songsDb.Data.Song.SONG_TITLE, this.songsDb.Data.Artist.ARTIST_NAME};
-//			String[] searchedStrings = text.split("\\s+");
-//			String[] orderBy = {this.songsDb.Data.Beatmap.LAST_MODIFICATION_TIME};
-//			ResultSet rs = this.songsDb.searchAll(items, searchedStrings, orderBy);
-//			while (rs.next()) {
-//				System.out.println(rs.getString(this.songsDb.Data.Song.SONG_TITLE) + "\t" + rs.getString(this.songsDb.Data.Artist.ARTIST_NAME));
-//			}
-//			System.out.println("--------------------------------------------------------------------------------");
-////			this.songsDb.testSearch();
-//	}
-//	
-//	private void initTableView() throws SQLException {
-//        String[] items = {this.songsDb.Data.Song.SONG_SOURCE, this.songsDb.Data.Song.SONG_TITLE
-//        		, this.songsDb.Data.Song.SONG_TITLE_UNICODE, this.songsDb.Data.Artist.ARTIST_NAME
-//        		, this.songsDb.Data.Artist.ARTIST_NAME_UNICODE, this.songsDb.Data.Beatmap.TOTAL_TIME};
-//        ResultSet rs = this.songsDb.getTableInitData(items);
-//        ObservableList<TableViewData> data = FXCollections.observableArrayList();
-//        while (rs.next()) {
-//        	data.add(new TableViewData(
-//        			rs.getString(items[0])
-//        			, rs.getString(items[1])
-//        			, rs.getString(items[2])
-//        			, rs.getString(items[3])
-//        			, rs.getString(items[4])
-//        			, rs.getInt(items[5])
-//        			));
-//        }
-//        this.songTitleCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songTitle"));
-//        this.artistNameCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("artistName"));
-//        this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
-//        this.totalTimeCol.setCellValueFactory(new PropertyValueFactory<TableViewData, Integer>("totalTime"));
-//        this.testTable.setItems(data);
-//        this.testTable.getColumns().addAll(this.songTitleCol, this.artistNameCol, this.songSourceCol, this.totalTimeCol);
-//	}
-//	
-//	public static class TableViewData {
-//		private final SimpleStringProperty songSource;
-//		private final SimpleStringProperty songTitle;
-//		private final SimpleStringProperty songTitleUnicode;
-//		private final SimpleStringProperty artistName;
-//		private final SimpleStringProperty artistNameUnicode;
-//		private final SimpleIntegerProperty totalTime;
-//		
-//		private TableViewData(String songSource, String songTitle, String songTitleUnicode, String artistName, String artistNameUnicode, int totalTime) {
-//			this.songSource = new SimpleStringProperty(songSource);
-//			this.songTitle = new SimpleStringProperty(songTitle);
-//			this.songTitleUnicode = new SimpleStringProperty(songTitleUnicode);
-//			this.artistName = new SimpleStringProperty(artistName);
-//			this.artistNameUnicode = new SimpleStringProperty(artistNameUnicode);
-//			this.totalTime = new SimpleIntegerProperty(totalTime);
-//		}
-//
-//		public String getSongSource() {
-//			return songSource.get();
-//		}
-//
-//
-//		public String getSongTitle() {
-//			return songTitle.get();
-//		}
-//
-//
-//		public String getSongTitleUnicode() {
-//			return songTitleUnicode.get();
-//		}
-//
-//
-//		public String getArtistName() {
-//			return artistName.get();
-//		}
-//
-//
-//		public String getArtistNameUnicode() {
-//			return artistNameUnicode.get();
-//		}
-//		
-//		public Integer getTotalTime() {
-//			return totalTime.get();
-//		}
-//	}
-//}
