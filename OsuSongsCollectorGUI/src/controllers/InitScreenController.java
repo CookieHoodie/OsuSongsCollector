@@ -1,6 +1,8 @@
 package controllers;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
@@ -29,18 +31,38 @@ public class InitScreenController {
 	            protected Boolean call() throws Exception {
 					// To come to here, songsDb must hv existed
 					songsDb.connect();
-					ResultSet rs = songsDb.selectMetadata();
-					if (rs.next()) {
-						int folderCount = rs.getInt("FolderCount");
-						int numberOfBeatmaps = rs.getInt("NumberOfBeatmaps");
-						String pathToOsuDb = rs.getString("PathToOsuDb");
-						String pathToSongsFolder = rs.getString("PathToSongsFolder");
-						OsuDbParser osuDb = new OsuDbParser(pathToOsuDb, pathToSongsFolder);
-						osuDb.startParsingMetadataOnly();
-						if (osuDb.getFolderCount() != folderCount || osuDb.getNumberOfBeatmaps() != numberOfBeatmaps) {
-							return false;
+					ResultSet metadataRs = songsDb.selectMetadata();
+					if (metadataRs.next()) {
+						// TODO: might need to change this to check everything instead of just metadata
+						// if the check can be fast
+						int folderCount = metadataRs.getInt(songsDb.Data.Metadata.FOLDER_COUNT);
+						int numberOfBeatmaps = metadataRs.getInt(songsDb.Data.Metadata.NUMBER_OF_BEATMAPS);
+						ResultSet configRs = songsDb.selectConfig();
+						if (configRs.next()) {
+							String pathToOsuDb = configRs.getString(songsDb.Data.Config.PATH_TO_OSU_DB);
+							String pathToSongsFolder = configRs.getString(songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
+							OsuDbParser osuDbMeta = new OsuDbParser(pathToOsuDb, pathToSongsFolder);
+							osuDbMeta.startParsingMetadataOnly();
+							if (osuDbMeta.getFolderCount() != folderCount || osuDbMeta.getNumberOfBeatmaps() != numberOfBeatmaps) {
+								return false;
+							}
+							
+							
+							Path p = Paths.get(pathToSongsFolder);
+							String t = Paths.get(p.getParent().toString(), Main.OSU_DB_NAME).toString();
+							System.out.println("Start parsing osuDB");
+							OsuDbParser osuDb = new OsuDbParser(t, pathToSongsFolder);
+							osuDb.startParsing();
+							System.out.println(osuDb.getFolderCount());
+							songsDb.updateData(osuDb);
+							
+							
+							
+							return true;
 						}
-						return true;
+						else {
+							throw new SQLException("Failed to retrieve config");
+						}
 					}
 					else {
 						throw new SQLException("Failed to retrieve metadata");

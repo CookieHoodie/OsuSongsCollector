@@ -94,7 +94,7 @@ public class SaveToOptionController {
 	private boolean isOptionsSet = true;
 	
 	// all initially from db, should not be changed
-	private int metadataID;
+	private int configID;
 	private String pathToSongsFolder = "";
 	private String saveFolder = "";
 	
@@ -123,11 +123,11 @@ public class SaveToOptionController {
 		this.currentStage = currentStage;
 		this.selectedSongsList = selectedSongsList;
 		// get metadata from database to initialize some needed variables
-		ResultSet rs = this.songsDb.selectMetadata();
+		ResultSet rs = this.songsDb.selectConfig();
 		if (rs.next()) {
-			this.metadataID = rs.getInt(this.songsDb.Data.Metadata.METADATA_ID);
-			this.saveFolder = rs.getString(this.songsDb.Data.Metadata.SAVE_FOLDER);
-			this.pathToSongsFolder = rs.getString(this.songsDb.Data.Metadata.PATH_TO_SONGS_FOLDER);
+			this.configID = rs.getInt(this.songsDb.Data.Config.CONFIG_ID);
+			this.saveFolder = rs.getString(this.songsDb.Data.Config.SAVE_FOLDER);
+			this.pathToSongsFolder = rs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
 			if (!this.saveFolder.isEmpty()) {
 				this.chosenPathTextField.setText(this.saveFolder);
 				this.rememberPathCheckBox.setSelected(true);
@@ -194,9 +194,9 @@ public class SaveToOptionController {
 	// start Button
 	@FXML private void startCopying(ActionEvent event) throws SQLException, Exception {
 		if (this.rememberPathCheckBox.isSelected() && !this.chosenPathTextField.getText().equals(this.saveFolder)) {
-			String[] items = {this.songsDb.Data.Metadata.SAVE_FOLDER};
+			String[] items = {this.songsDb.Data.Config.SAVE_FOLDER};
 			String[] results = {this.chosenPathTextField.getText()};
-			this.songsDb.updateMetadata(this.metadataID, items, results);
+			this.songsDb.updateConfigString(this.configID, items, results);
 		}
 		
 		ComboBoxChoice prefix = this.prefixComboBox.getSelectionModel().getSelectedItem();
