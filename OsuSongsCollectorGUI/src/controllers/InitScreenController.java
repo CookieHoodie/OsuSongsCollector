@@ -22,6 +22,8 @@ public class InitScreenController {
 	@FXML private Label welcomeLabel;
 	
 	private SqliteDatabase songsDb;
+	private String pathToOsuDb;
+	private String pathToSongsFolder;
 	
 	private class CheckOsuDbUpdateService extends Service<Boolean> {
 		@Override
@@ -39,24 +41,18 @@ public class InitScreenController {
 						int numberOfBeatmaps = metadataRs.getInt(songsDb.Data.Metadata.NUMBER_OF_BEATMAPS);
 						ResultSet configRs = songsDb.selectConfig();
 						if (configRs.next()) {
-							String pathToOsuDb = configRs.getString(songsDb.Data.Config.PATH_TO_OSU_DB);
-							String pathToSongsFolder = configRs.getString(songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
+							pathToOsuDb = configRs.getString(songsDb.Data.Config.PATH_TO_OSU_DB);
+							pathToSongsFolder = configRs.getString(songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
+							// TODO: change back to this
 							OsuDbParser osuDbMeta = new OsuDbParser(pathToOsuDb, pathToSongsFolder);
+//							Path p = Paths.get(pathToSongsFolder);
+//							String t = Paths.get(p.getParent().toString(), Main.OSU_DB_NAME).toString();
+//							OsuDbParser osuDbMeta = new OsuDbParser(t, pathToSongsFolder);
 							osuDbMeta.startParsingMetadataOnly();
+							
 							if (osuDbMeta.getFolderCount() != folderCount || osuDbMeta.getNumberOfBeatmaps() != numberOfBeatmaps) {
 								return false;
 							}
-							
-							
-							Path p = Paths.get(pathToSongsFolder);
-							String t = Paths.get(p.getParent().toString(), Main.OSU_DB_NAME).toString();
-							System.out.println("Start parsing osuDB");
-							OsuDbParser osuDb = new OsuDbParser(t, pathToSongsFolder);
-							osuDb.startParsing();
-							System.out.println(osuDb.getFolderCount());
-							songsDb.updateData(osuDb);
-							
-							
 							
 							return true;
 						}
@@ -78,7 +74,6 @@ public class InitScreenController {
 		// if db exists, check for any new songs or deleted songs
 		if (songsDb.isDbExist()) {
 			CheckOsuDbUpdateService checkAllSetService = new CheckOsuDbUpdateService();
-			// TODO: account for on failed and etc.
 			checkAllSetService.setOnSucceeded(e -> {
 				boolean isUpToDate = checkAllSetService.getValue();
 				if (isUpToDate) {
@@ -93,19 +88,17 @@ public class InitScreenController {
 					}
 				}
 				else {
-					FXMLLoader loader = new FXMLLoader();
-					loader.setLocation(getClass().getResource("/fxml/UpdateDataView.fxml"));
-					BorderPane root;
 					try {
-						root = loader.load();
-						Scene scene = new Scene(root);
-						Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
-						currentStage.setScene(scene);
+						this.loadUpdateDataView();
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
 					}
 				}
+			});
+			
+			checkAllSetService.setOnFailed(e -> {
+				this.welcomeLabel.setText(checkAllSetService.getException().getMessage());
 			});
 			checkAllSetService.start();
 		}
@@ -144,5 +137,23 @@ public class InitScreenController {
 		setSongsFolderStage.setScene(scene);
 		setSongsFolderStage.show();
 		primaryStage.hide();;
+	}
+	
+	private void loadUpdateDataView() throws IOException {
+		Stage updateDataStage = new Stage();
+		FXMLLoader loader = new FXMLLoader();
+		loader.setLocation(getClass().getResource("/fxml/UpdateDataView.fxml"));
+		BorderPane root = loader.load();
+		Scene scene = new Scene(root);
+		Stage primaryStage = (Stage) this.welcomeLabel.getScene().getWindow();
+		UpdateDataController ctr = loader.<UpdateDataController>getController();
+		
+		updateDataStage.setTitle(primaryStage.getTitle());
+		updateDataStage.setScene(scene);
+		// the last two paths must have already initialized to come to here
+		ctr.initDataAndStart(updateDataStage, this.songsDb, this.pathToOsuDb, this.pathToSongsFolder);
+		updateDataStage.setScene(scene);
+		updateDataStage.show();
+		primaryStage.hide();
 	}
 }

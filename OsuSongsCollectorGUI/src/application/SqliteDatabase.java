@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -179,10 +180,11 @@ public class SqliteDatabase {
 				+ this.Data.Beatmap.TOTAL_TIME + " INTEGER,"
 				+ this.Data.Beatmap.PREVIEW_TIME + " INTEGER,"
 				+ this.Data.Beatmap.THREAD_ID + " INTEGER,"
-				+ this.Data.Beatmap.GRADE_STANDARD + " INTEGER,"
-				+ this.Data.Beatmap.GRADE_TAIKO + " INTEGER,"
-				+ this.Data.Beatmap.GRADE_CTB + " INTEGER,"
-				+ this.Data.Beatmap.GRADE_MANIA + " INTEGER,"
+				+ this.Data.Beatmap.NAME_OF_OSU_FILE + " TEXT,"
+//				+ this.Data.Beatmap.GRADE_STANDARD + " INTEGER,"
+//				+ this.Data.Beatmap.GRADE_TAIKO + " INTEGER,"
+//				+ this.Data.Beatmap.GRADE_CTB + " INTEGER,"
+//				+ this.Data.Beatmap.GRADE_MANIA + " INTEGER,"
 				+ this.Data.Beatmap.IS_UNPLAYED + " BOOLEAN,"
 				+ this.Data.Beatmap.LAST_PLAYED_TIME + " INTEGER,"
 				+ "FOREIGN KEY (" + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + ") REFERENCES " + this.Data.BeatmapSet.TABLE_NAME + "(" + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + ")" + " ON UPDATE CASCADE ON DELETE CASCADE"
@@ -223,6 +225,8 @@ public class SqliteDatabase {
 		sql = "CREATE INDEX IF NOT EXISTS idx_total_time ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.TOTAL_TIME + ");";
 		stmt.execute(sql);
 		sql = "CREATE INDEX IF NOT EXISTS idx_preview_time ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.PREVIEW_TIME + ");";
+		stmt.execute(sql);
+		sql = "CREATE INDEX IF NOT EXISTS idx_name_of_osu_file ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.NAME_OF_OSU_FILE + ");";
 		stmt.execute(sql);
 		sql = "CREATE INDEX IF NOT EXISTS idx_last_played_time ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.LAST_PLAYED_TIME + ");";
 		stmt.execute(sql);
@@ -369,13 +373,14 @@ public class SqliteDatabase {
 				+ this.Data.Beatmap.TOTAL_TIME + ","
 				+ this.Data.Beatmap.PREVIEW_TIME + ","
 				+ this.Data.Beatmap.THREAD_ID + ","
-				+ this.Data.Beatmap.GRADE_STANDARD + ","
-				+ this.Data.Beatmap.GRADE_TAIKO + ","
-				+ this.Data.Beatmap.GRADE_CTB + ","
-				+ this.Data.Beatmap.GRADE_MANIA + ","
+				+ this.Data.Beatmap.NAME_OF_OSU_FILE + ","
+//				+ this.Data.Beatmap.GRADE_STANDARD + ","
+//				+ this.Data.Beatmap.GRADE_TAIKO + ","
+//				+ this.Data.Beatmap.GRADE_CTB + ","
+//				+ this.Data.Beatmap.GRADE_MANIA + ","
 				+ this.Data.Beatmap.IS_UNPLAYED + ","
 				+ this.Data.Beatmap.LAST_PLAYED_TIME
-				+ ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ ") VALUES(?,?,?,?,?,?,?,?,?,?)";
 		return this.getConn().prepareStatement(sql);
 	}
 	
@@ -387,10 +392,7 @@ public class SqliteDatabase {
 			int totalTime, 
 			int previewTime, 
 			int threadID, 
-			int gradeStandard, 
-			int gradeTaiko, 
-			int gradeCTB, 
-			int gradeMania, 
+			String nameOfOsuFile,
 			boolean isUnplayed, 
 			long lastPlayedTime
 			) throws SQLException {
@@ -401,12 +403,9 @@ public class SqliteDatabase {
 		beatmapPStatement.setInt(5, totalTime);
 		beatmapPStatement.setInt(6, previewTime);
 		beatmapPStatement.setInt(7, threadID);
-		beatmapPStatement.setInt(8, gradeStandard);
-		beatmapPStatement.setInt(9, gradeTaiko);
-		beatmapPStatement.setInt(10, gradeCTB);
-		beatmapPStatement.setInt(11, gradeMania);
-		beatmapPStatement.setBoolean(12, isUnplayed);
-		beatmapPStatement.setLong(13, lastPlayedTime);
+		beatmapPStatement.setString(8, nameOfOsuFile);
+		beatmapPStatement.setBoolean(9, isUnplayed);
+		beatmapPStatement.setLong(10, lastPlayedTime);
 		beatmapPStatement.addBatch();
 	}
 	
@@ -777,39 +776,6 @@ public class SqliteDatabase {
 				}
 			}
 			else {
-//				// TODO: seems like the thing after if part is redundant. try to modify that
-//				String folderName = beatmapSet.get(0).getFolderName();
-//				// 99% of the time
-//				if (audioNameList.isEmpty()) {
-//					// no multiple audioFiles, means that the folderName and audioName from 1st element is same as the others
-//					ResultSet beatmapSetAutoIDRs = this.selectBeatmapSetAutoIDFromBeatmapSet(folderName, audioName);
-//					if (beatmapSetAutoIDRs.next()) {
-//						int beatmapSetAutoID = beatmapSetAutoIDRs.getInt(1);
-//						if (dbRecords.remove(beatmapSetAutoID) == null) {
-//							throw new RuntimeException("Cannot find key in map");
-//						}
-//						beatmapCountUsingBeatmapSetAutoIDPStatement.setInt(1, beatmapSetAutoID);
-//						ResultSet countRs = beatmapCountUsingBeatmapSetAutoIDPStatement.executeQuery();
-//						if (countRs.next()) {
-//							int count = countRs.getInt(1);
-//							if (count == beatmapSet.size()) {
-//								continue;
-//							}
-//							else {
-//								modifiedList.add(beatmapSet);
-//							}
-//						}
-//						else {
-//							throw new SQLException("BeatmapSet is found but with no beatmap");
-//						}
-//						
-//					}
-//					// new beatmapSet
-//					else {
-//						updateList.add(beatmapSet);
-//					}
-//				}
-//				else {
 				// very rare case: not ranked and multi-audio
 				String folderName = beatmapSet.get(0).getFolderName();
 				if (atomizedBeatmapSet.size() != audioNameList.size()) {
@@ -860,6 +826,13 @@ public class SqliteDatabase {
 		System.out.println("Update list: " + updateList.size());
 		System.out.println("Modified list: " + modifiedList.size());
 		System.out.println("Deleted: " + dbRecords.size());
+		
+		
+		if (updateList.isEmpty() && modifiedList.isEmpty() && dbRecords.isEmpty()) {
+			return;
+		}
+		
+		
 		System.out.println("Start updating db");
 		// TODO: account for thread forced exit
 		// delete
@@ -873,6 +846,60 @@ public class SqliteDatabase {
 		}
 		
 		
+		// modified songs
+		String getBeatmapAutoIDAndNameOfOsuFileSql = "SELECT " + this.Data.Beatmap.BEATMAP_AUTO_ID 
+				+ "," + this.Data.Beatmap.NAME_OF_OSU_FILE + " FROM "
+				+ this.Data.Beatmap.TABLE_NAME + " WHERE " + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?";
+		PreparedStatement getBeatmapAutoIDAndNameOfOsuFilePStatement = this.getConn().prepareStatement(getBeatmapAutoIDAndNameOfOsuFileSql);
+		
+		String deleteFromBeatmapSql = "DELETE FROM " + this.Data.Beatmap.TABLE_NAME + " WHERE "
+				+ this.Data.Beatmap.BEATMAP_AUTO_ID + " = ?";
+		PreparedStatement deleteFromBeatmapPStatement = this.getConn().prepareStatement(deleteFromBeatmapSql);
+		
+		
+		for (int i = 0; i < modifiedList.size(); i++) {
+			boolean beatmapDeleted = modifiedStatusAndIDList.get(i)[0] == 0 ? true : false;
+			int beatmapSetAutoID = modifiedStatusAndIDList.get(i)[1];
+			List<Beatmap> beatmapSet = modifiedList.get(i);
+			
+			getBeatmapAutoIDAndNameOfOsuFilePStatement.setInt(1, beatmapSetAutoID);
+			ResultSet beatmapAutoIDAndNameOfOsuFileRs = getBeatmapAutoIDAndNameOfOsuFilePStatement.executeQuery();
+			
+			// songsDb has extra beatmaps
+			if (beatmapDeleted) {
+				while (beatmapAutoIDAndNameOfOsuFileRs.next()) {
+					int beatmapAutoID = beatmapAutoIDAndNameOfOsuFileRs.getInt(1);
+					String nameOfOsuFile = beatmapAutoIDAndNameOfOsuFileRs.getString(2);
+					boolean isObsoleteRecord = beatmapSet.stream().noneMatch(beatmap -> beatmap.getNameOfOsuFile().equals(nameOfOsuFile));
+					if (isObsoleteRecord) {
+						deleteFromBeatmapPStatement.setInt(1, beatmapAutoID);
+						deleteFromBeatmapPStatement.executeUpdate();
+					}
+				}
+			}
+			// songsDb has less beatmaps
+			else {
+				while (beatmapAutoIDAndNameOfOsuFileRs.next()) {
+					String nameOfOsuFile = beatmapAutoIDAndNameOfOsuFileRs.getString(2);
+					// this actually modify the list
+					for (Iterator<Beatmap> iter = beatmapSet.iterator(); iter.hasNext();) {
+						Beatmap b = iter.next();
+						if (b.getNameOfOsuFile().equals(nameOfOsuFile)) {
+							iter.remove();
+							break;
+						}
+					}
+				}
+				
+				PreparedStatement beatmapPStatement = this.getInsertIntoBeatmapPStatement();
+				for (Beatmap beatmap : beatmapSet) {
+					this.insertIntoBeatmapBatchWrapper(beatmapPStatement, beatmap, beatmapSetAutoID);
+				}
+				beatmapPStatement.executeBatch();
+			}
+		}
+		
+		
 		// insert new songs
 		int batchSize = 400;
 		// TODO: setAutoCommit to false and use try to make sure it changes back
@@ -882,6 +909,14 @@ public class SqliteDatabase {
 		PreparedStatement songTagPStatement = this.getInsertIntoSongTagPStatement();
 		
 		for (int i = 0; i < updateList.size(); i++) {
+			if (Thread.currentThread().isInterrupted()) {
+				artistPStatement.cancel();
+				songPStatement.cancel();
+				songTagPStatement.cancel();
+				this.closeConnection();
+				throw new InterruptedException("updateDataTask is interrupted");
+			}
+			
 			List<Beatmap> beatmapSet = updateList.get(i);
 			int rankedIndex = updateRankedList.get(i);
 			// if ranked
@@ -915,6 +950,11 @@ public class SqliteDatabase {
 		
 		PreparedStatement beatmapSetPStatement = this.getInsertIntoBeatmapSetPStatement();
 		for (int i = 0; i < updateList.size(); i++) {
+			if (Thread.currentThread().isInterrupted()) {
+				beatmapSetPStatement.cancel();
+				this.closeConnection();
+				throw new InterruptedException("updateDataTask is interrupted");
+			}
 			List<Beatmap> beatmapSet = updateList.get(i);
 			int rankedIndex = updateRankedList.get(i);
 			if (rankedIndex != -1) {
@@ -960,6 +1000,12 @@ public class SqliteDatabase {
 		PreparedStatement beatmapPStatement = this.getInsertIntoBeatmapPStatement();
 		PreparedStatement beatmapSet_SongTagPStatement = this.getInsertIntoBeatmapSet_SongTagPStatement();
 		for (int i = 0; i < updateList.size(); i++) {
+			if (Thread.currentThread().isInterrupted()) {
+				beatmapPStatement.cancel();
+				beatmapSet_SongTagPStatement.cancel();
+				this.closeConnection();
+				throw new InterruptedException("updateDataTask is interrupted");
+			}
 			List<Beatmap> beatmapSet = updateList.get(i);
 			int rankedIndex = updateRankedList.get(i);
 			if (rankedIndex != -1) {
@@ -1006,202 +1052,19 @@ public class SqliteDatabase {
 				this.getConn().commit();
 			}
 		}
-		
 		this.getConn().setAutoCommit(true);
-		System.out.println("finish updating db");
-//		int batchSize = 500; // actually much bigger than this
-//		// 1st int indicates rankedStatus (1 ranked 0 not), 2nd indicates rankedIndex
-//		Map<String, List<Integer>> rankedMap = new TreeMap<String, List<Integer>>();
-//		// must check if ranked 1st in rankedMap b4 accessing this as unranked is not stored
-//		Map<String, String[]> splitSongTags = new TreeMap<String, String[]>();
-//		
-//		List<List<Beatmap>> songsFolder = osuDb.getSongsFolder();
-//		// get all the preparedStatements 1st for batch insert
-//		PreparedStatement artistPStatement = this.getInsertIntoArtistPStatement();
-//		PreparedStatement songPStatement = this.getInsertIntoSongPStatement();
-//		PreparedStatement songTagPStatement = this.getInsertIntoSongTagPStatement();
-//		this.getConn().setAutoCommit(false);
-//		
-//		// for progressBar in UI
-//		int totalProgress = songsFolder.size() * 4;
-//		int currentProgress = 0;
-//		
-//		// var for tracking size of batch
-//		int i = 0;
-//		
-//		for (List<Beatmap> beatmapSet : songsFolder) {
-//			if (Thread.currentThread().isInterrupted()) {
-//				artistPStatement.cancel();
-//				songPStatement.cancel();
-//				songTagPStatement.cancel();
-//				this.cancelThread();
-//				throw new InterruptedException("CreateDatabaseTask is interrupted");
-//			}
-//			
-//			boolean isRanked = false;
-//			int rankedIndex = 0;
-//			// search through the each beatmap in each beatmapSet and see if they are ranked
-//			// if yes, it's pretty safe to assume all metadata (artistName etc.) are the same
-//			// so can go out of loop and directly assign the data to corresponding beatmapSet
-//			for (int j = 0; j < beatmapSet.size() && !isRanked; j++) {
-//				if (beatmapSet.get(j).getRankedStatus() == 4) {
-//					isRanked = true;
-//					// store the index of the beatmap that is ranked. Most of the time this will be 0 but not in some case, so better 
-//					// use this as indication when assigning data to beatmapSet
-//					rankedIndex = j;
-//					break;
-//				}
-//			}
-//			
-//			if (isRanked) {
-//				// all these are for later reference, not now
-//				List<Integer> x = new ArrayList<Integer>();
-//				x.add(1); // 1 means ranked
-//				x.add(rankedIndex); 
-//				rankedMap.put(beatmapSet.get(rankedIndex).getFolderName(), x);
-//				String[] songTagNames = beatmapSet.get(rankedIndex).getSongTags().split("\\s+");
-//				splitSongTags.put(beatmapSet.get(rankedIndex).getFolderName(), songTagNames);
-//				
-//				
-//				// actual storing of data to non-foreign tables
-//				for (String songTagName : songTagNames) {
-//					this.insertIntoSongTagBatch(songTagPStatement, songTagName);
-//				}
-//				this.insertIntoArtistBatch(artistPStatement, beatmapSet.get(rankedIndex).getArtistName(), beatmapSet.get(rankedIndex).getArtistNameUnicode());
-//				this.insertIntoSongBatch(songPStatement, beatmapSet.get(rankedIndex).getSongTitle(), beatmapSet.get(rankedIndex).getSongTitleUnicode(), beatmapSet.get(rankedIndex).getSongSource());
-//			}
-//			else {
-//				// same thing as above, but indicates as unranked
-//				List<Integer> x = new ArrayList<Integer>();
-//				x.add(0);
-//				rankedMap.put(beatmapSet.get(0).getFolderName(), x);
-//				
-//				// as it's unranked, it's safer to loop through each beatmap in the beatmapSet
-//				// as the metadata may scatter among the beatmaps
-//				for (int j = 0; j < beatmapSet.size(); j++) {
-//					String[] songTagNames = beatmapSet.get(j).getSongTags().split("\\s+");
-//					for (String songTagName : songTagNames) {
-//						this.insertIntoSongTagBatch(songTagPStatement, songTagName);
-//					}
-//					this.insertIntoArtistBatch(artistPStatement, beatmapSet.get(j).getArtistName(), beatmapSet.get(j).getArtistNameUnicode());
-//					this.insertIntoSongBatch(songPStatement, beatmapSet.get(j).getSongTitle(), beatmapSet.get(j).getSongTitleUnicode(), beatmapSet.get(j).getSongSource());
-//				}
-//			}
-//			
-//			i++;
-//			// start to insert when batch size is considerable
-//			if (i % batchSize == 0 || i == songsFolder.size()) {
-//				songTagPStatement.executeBatch(); // much more than batch size but not gonna be a problem
-//				artistPStatement.executeBatch();
-//				songPStatement.executeBatch();
-//				this.getConn().commit();
-//			}
-//			
-//			if (this.progressUpdate != null) {
-//				currentProgress++;
-//				progressUpdate.accept(currentProgress, totalProgress);
-//			}
-//		}
-//	
-//		
-//		// now insert beatmapSet which requires data from tables inserted above
-//		PreparedStatement beatmapSetPStatement = this.getInsertIntoBeatmapSetPStatement();
-//		i = 0;
-//		for (List<Beatmap> beatmapSet : songsFolder) {
-//			
-//			if (Thread.currentThread().isInterrupted()) {
-//				beatmapSetPStatement.cancel();
-//				this.cancelThread();
-//				throw new InterruptedException("CreateDatabaseTask is interrupted");
-//			}
-//			
-//			// get the cache values from previous loop
-//			List<Integer> value =  rankedMap.get(beatmapSet.get(0).getFolderName());
-//			boolean isRanked = value.get(0) == 1 ? true : false;
-//			// if ranked, safe to get data from one and insert
-//			if (isRanked) {
-//				Beatmap beatmap = beatmapSet.get(value.get(1));
-//				int artistID = this.selectArtistIDFromArtist(beatmap.getArtistName(), beatmap.getArtistNameUnicode());
-//				int songID = this.selectSongIDFromSong(beatmap.getSongTitle(), beatmap.getSongTitleUnicode(), beatmap.getSongSource());
-//				this.insertIntoBeatmapSetBatch(beatmapSetPStatement, beatmap.getBeatmapSetID(), artistID, songID, beatmap.getCreatorName(), beatmap.getFolderName(), beatmap.getAudioFileName(), false, false);
-//				
-//			}
-//			// if not, better loop through the unranked beatmaps to collect the data
-//			else {
-//				for (Beatmap beatmap : beatmapSet) {
-//					int artistID = this.selectArtistIDFromArtist(beatmap.getArtistName(), beatmap.getArtistNameUnicode());
-//					int songID = this.selectSongIDFromSong(beatmap.getSongTitle(), beatmap.getSongTitleUnicode(), beatmap.getSongSource());
-//					this.insertIntoBeatmapSetBatch(beatmapSetPStatement, beatmap.getBeatmapSetID(), artistID, songID, beatmap.getCreatorName(), beatmap.getFolderName(), beatmap.getAudioFileName(), false, false);
-//				}
-//			}
-//			i++;
-//			if (i % batchSize == 0 || i == songsFolder.size()) {
-//				beatmapSetPStatement.executeBatch();
-//				this.getConn().commit();
-//			}
-//			
-//			if (this.progressUpdate != null) {
-//				currentProgress++;
-//				progressUpdate.accept(currentProgress, totalProgress);
-//			}
-//		}
-//		
-//		// lastly, insert the normalized table and beatmap table which depends on beatmapSet table just inserted
-//		PreparedStatement beatmapPStatement = this.getInsertIntoBeatmapPStatement();
-//		PreparedStatement beatmapSet_SongTagPStatement = this.getInsertIntoBeatmapSet_SongTagPStatement();
-//		i = 0;
-//		for (List<Beatmap> beatmapSet : songsFolder) {
-//			
-//			if (Thread.currentThread().isInterrupted()) {
-//				beatmapPStatement.cancel();
-//				beatmapSet_SongTagPStatement.cancel();
-//				this.cancelThread();
-//				throw new InterruptedException("CreateDatabaseTask is interrupted");
-//			}
-//			
-//			List<Integer> value =  rankedMap.get(beatmapSet.get(0).getFolderName());
-//			boolean isRanked = value.get(0) == 1 ? true : false;
-//			if (isRanked) {
-//				int beatmapSetAutoID = this.selectBeatmapSetAutoIDFromBeatmapSet(beatmapSet.get(value.get(1)).getFolderName(), beatmapSet.get(value.get(1)).getAudioFileName());
-//				String[] songTagNames = splitSongTags.get(beatmapSet.get(value.get(1)).getFolderName());
-//				ResultSet rs = this.selectSongTagIDFromSongTag(songTagNames);
-//				while (rs.next()) {
-//					this.insertIntoBeatmapSet_SongTagBatch(beatmapSet_SongTagPStatement, beatmapSetAutoID, rs.getInt(1));
-//				}
-//				
-//				for (Beatmap beatmap : beatmapSet) {
-//					this.insertIntoBeatmapBatchWrapper(beatmapPStatement, beatmap, beatmapSetAutoID);
-//				}
-//			}
-//			else {
-//				for (Beatmap beatmap : beatmapSet) {
-//					int beatmapSetAutoID = this.selectBeatmapSetAutoIDFromBeatmapSet(beatmap.getFolderName(), beatmap.getAudioFileName());
-//					ResultSet rs = this.selectSongTagIDFromSongTag(beatmap.getSongTags().split("\\s+"));
-//					while (rs.next()) {
-//						this.insertIntoBeatmapSet_SongTagBatch(beatmapSet_SongTagPStatement, beatmapSetAutoID, rs.getInt(1));
-//						
-//					}
-//					this.insertIntoBeatmapBatchWrapper(beatmapPStatement, beatmap, beatmapSetAutoID);
-//				}
-//			}
-//			i++;
-//			if (i % batchSize == 0 || i == songsFolder.size()) {
-//				beatmapPStatement.executeBatch();
-//				beatmapSet_SongTagPStatement.executeBatch();
-//				this.getConn().commit();
-//			}
-//			
-//			if (this.progressUpdate != null) {
-//				currentProgress += 2;
-//				progressUpdate.accept(currentProgress, totalProgress);
-//			}
-//		}
-//		// change back autoCommit
-//		this.getConn().setAutoCommit(true);
-//		// if threading, set back to null to prevent inadvertent access later
-//		if (this.progressUpdate != null) {
-//			this.setProgressUpdate(null);
-//		}
+		
+		// lastly update metadata here so that if disrupted, next start will still have same metadata and probably come here
+		// to update again if no change was done to osuDb between this period
+		ResultSet metadataRs = this.selectMetadata();
+		if (metadataRs.next()) {
+			int metadataID = metadataRs.getInt(this.Data.Metadata.METADATA_ID);
+			this.updateMetadata(metadataID, osuDb.getOsuVersion(), osuDb.getFolderCount(), osuDb.getPlayerName(), osuDb.getNumberOfBeatmaps());
+		}
+		else {
+			throw new SQLException("Metadata does not exist");
+		}
+		
 	}
 	
 	
@@ -1215,10 +1078,11 @@ public class SqliteDatabase {
 				beatmap.getTotalTime(),
 				beatmap.getPreviewTime(),
 				beatmap.getThreadID(),
-				beatmap.getGradeStandard(),
-				beatmap.getGradeTaiko(),
-				beatmap.getGradeCTB(),
-				beatmap.getGradeMania(),
+				beatmap.getNameOfOsuFile(),
+//				beatmap.getGradeStandard(),
+//				beatmap.getGradeTaiko(),
+//				beatmap.getGradeCTB(),
+//				beatmap.getGradeMania(),
 				beatmap.isUnplayed(),
 				beatmap.getLastPlayedTime()
 				);
@@ -1655,10 +1519,11 @@ public class SqliteDatabase {
 			public final String TOTAL_TIME = "TotalTime";
 			public final String PREVIEW_TIME = "PreviewTime";
 			public final String THREAD_ID = "ThreadID";
-			public final String GRADE_STANDARD = "GradeStandard";
-			public final String GRADE_TAIKO = "GradeTaiko";
-			public final String GRADE_CTB = "GradeCTB";
-			public final String GRADE_MANIA = "GradeMania";
+			public final String NAME_OF_OSU_FILE = "NameOfOsuFile";
+//			public final String GRADE_STANDARD = "GradeStandard";
+//			public final String GRADE_TAIKO = "GradeTaiko";
+//			public final String GRADE_CTB = "GradeCTB";
+//			public final String GRADE_MANIA = "GradeMania";
 			public final String IS_UNPLAYED = "IsUnplayed";
 			public final String LAST_PLAYED_TIME = "LastPlayedTime";
 		}

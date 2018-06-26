@@ -5,10 +5,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import application.OsuDbParser;
+import application.SqliteDatabase;
 import javafx.concurrent.Task;
+import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.stage.Stage;
 
 public class UpdateDataController {
+	@FXML private Label instructionLabel;
+	
+	private SqliteDatabase songsDb;
 	private String fullPathToOsuDb;
 	private String pathToSongsFolder;
 	private ExecutorService exec = Executors.newSingleThreadExecutor(r -> {
@@ -17,7 +23,8 @@ public class UpdateDataController {
         return t ;
     });
 	
-	public void initDataAndStart(Stage currentStage, String fullPathToOsuDb, String pathToSongsFolder) {
+	public void initDataAndStart(Stage currentStage, SqliteDatabase songsDb, String fullPathToOsuDb, String pathToSongsFolder) {
+		this.songsDb = songsDb;
 		this.fullPathToOsuDb = fullPathToOsuDb;
 		this.pathToSongsFolder = pathToSongsFolder;
 		currentStage.setOnCloseRequest(e -> {
@@ -29,44 +36,33 @@ public class UpdateDataController {
 				e1.printStackTrace();
 			}
 		});
-//		this.loadOsuDb();
+		this.updateSongsDb();
 	}
 	
-	private Task<OsuDbParser> getLoadOsuDbTask() {
-		return new Task<OsuDbParser>() {
+	private Task<Void> getUpdateSongsDbTask() {
+		return new Task<Void>() {
 			@Override
-	        protected OsuDbParser call() throws Exception {
+	        protected Void call() throws Exception {
 				OsuDbParser osuDb = new OsuDbParser(fullPathToOsuDb, pathToSongsFolder);
 				osuDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork));
 				osuDb.startParsing();
-	            return osuDb;
+				songsDb.updateData(osuDb);
+	            return null;
 	        }
 		};
     }
 	
-//	private void loadOsuDb() {
-//		this.testStateLabel.setText("1/2: Loading osu!.db");
-//		Task<OsuDbParser> loadOsuDbTask = this.getLoadOsuDbTask();
-//		this.testProgressBar.progressProperty().bind(loadOsuDbTask.progressProperty());
-//		loadOsuDbTask.stateProperty().addListener((obs, oldValue, newValue) -> {
-//        	switch (newValue) {
-//        	case FAILED:
-//        		Throwable e = loadOsuDbTask.getException();
-//        		this.testStateLabel.setText(e.getMessage());
-//        		break;
-//        	case SUCCEEDED:
-//        		OsuDbParser osuDb = loadOsuDbTask.getValue();
-//        		this.createSongsDb(osuDb);
-//        		break;
-//			default:
-//				break;
-//        	}
-//        });
-//		this.exec.submit(loadOsuDbTask);
-//	}
 	
 	private void updateSongsDb() {
+		Task<Void> updateSongsDbTask = this.getUpdateSongsDbTask(); 
+		updateSongsDbTask.setOnSucceeded(e -> {
+			this.instructionLabel.setText("Success");
+		});
 		
+		updateSongsDbTask.setOnFailed(e -> {
+			this.instructionLabel.setText(updateSongsDbTask.getException().getMessage());
+		});
+		this.exec.submit(updateSongsDbTask);
 	}
 
 }

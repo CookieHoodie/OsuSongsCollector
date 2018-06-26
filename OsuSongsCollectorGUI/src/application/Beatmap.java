@@ -11,7 +11,7 @@ public class Beatmap {
 //	private String difficulty;
 	private String audioFileName;
 //	private String MD5Hash;
-//	private String nameOfOsuFile;
+	private String nameOfOsuFile;
 	private Byte rankedStatus;
 	private long lastModificationTime;
 //	private float AR;
@@ -23,10 +23,10 @@ public class Beatmap {
 	private int beatmapID;
 	private int beatmapSetID;
 	private int threadID;
-	private Byte gradeStandard;
-	private Byte gradeTaiko;
-	private Byte gradeCTB;
-	private Byte gradeMania;
+//	private Byte gradeStandard;
+//	private Byte gradeTaiko;
+//	private Byte gradeCTB;
+//	private Byte gradeMania;
 //	private Byte gameplayMode;
 	private String songSource;
 	private String songTags;
@@ -83,12 +83,12 @@ public class Beatmap {
 //	public void setMD5Hash(String mD5Hash) {
 //		MD5Hash = mD5Hash;
 //	}
-//	public String getNameOfOsuFile() {
-//		return nameOfOsuFile;
-//	}
-//	public void setNameOfOsuFile(String nameOfOsuFile) {
-//		this.nameOfOsuFile = nameOfOsuFile;
-//	}
+	public String getNameOfOsuFile() {
+		return nameOfOsuFile;
+	}
+	public void setNameOfOsuFile(String nameOfOsuFile) {
+		this.nameOfOsuFile = nameOfOsuFile;
+	}
 	public Byte getRankedStatus() {
 		return rankedStatus;
 	}
@@ -155,30 +155,30 @@ public class Beatmap {
 	public void setThreadID(int threadID) {
 		this.threadID = threadID;
 	}
-	public Byte getGradeStandard() {
-		return gradeStandard;
-	}
-	public void setGradeStandard(Byte gradeStandard) {
-		this.gradeStandard = gradeStandard;
-	}
-	public Byte getGradeTaiko() {
-		return gradeTaiko;
-	}
-	public void setGradeTaiko(Byte gradeTaiko) {
-		this.gradeTaiko = gradeTaiko;
-	}
-	public Byte getGradeCTB() {
-		return gradeCTB;
-	}
-	public void setGradeCTB(Byte gradeCTB) {
-		this.gradeCTB = gradeCTB;
-	}
-	public Byte getGradeMania() {
-		return gradeMania;
-	}
-	public void setGradeMania(Byte gradeMania) {
-		this.gradeMania = gradeMania;
-	}
+//	public Byte getGradeStandard() {
+//		return gradeStandard;
+//	}
+//	public void setGradeStandard(Byte gradeStandard) {
+//		this.gradeStandard = gradeStandard;
+//	}
+//	public Byte getGradeTaiko() {
+//		return gradeTaiko;
+//	}
+//	public void setGradeTaiko(Byte gradeTaiko) {
+//		this.gradeTaiko = gradeTaiko;
+//	}
+//	public Byte getGradeCTB() {
+//		return gradeCTB;
+//	}
+//	public void setGradeCTB(Byte gradeCTB) {
+//		this.gradeCTB = gradeCTB;
+//	}
+//	public Byte getGradeMania() {
+//		return gradeMania;
+//	}
+//	public void setGradeMania(Byte gradeMania) {
+//		this.gradeMania = gradeMania;
+//	}
 //	public Byte getGameplayMode() {
 //		return gameplayMode;
 //	}

@@ -92,9 +92,8 @@ public class OsuDbParser extends OsuReader{
 			this.skipString();
 			beatmap.setAudioFileName(this.readString());
 //			beatmap.setMD5Hash(this.readString());
-//			beatmap.setNameOfOsuFile(this.readString());
 			this.skipString();
-			this.skipString();
+			beatmap.setNameOfOsuFile(this.readString());
 			beatmap.setRankedStatus(this.readByte());
 			this.skipBytes(6); // short * 3
 			beatmap.setLastModificationTime(this.readDate());
@@ -115,11 +114,11 @@ public class OsuDbParser extends OsuReader{
 			beatmap.setBeatmapID(this.readInt());
 			beatmap.setBeatmapSetID(this.readInt());
 			beatmap.setThreadID(this.readInt());
-			beatmap.setGradeStandard(this.readByte());
-			beatmap.setGradeTaiko(this.readByte());
-			beatmap.setGradeCTB(this.readByte());
-			beatmap.setGradeMania(this.readByte());
-			this.skipBytes(7); // 2 + 4 + 1
+//			beatmap.setGradeStandard(this.readByte());
+//			beatmap.setGradeTaiko(this.readByte());
+//			beatmap.setGradeCTB(this.readByte());
+//			beatmap.setGradeMania(this.readByte());
+			this.skipBytes(11); // 2 + 4 + 1 + 4
 //			beatmap.setGameplayMode(this.readByte());
 			beatmap.setSongSource(this.readString());
 			beatmap.setSongTags(this.readString());
