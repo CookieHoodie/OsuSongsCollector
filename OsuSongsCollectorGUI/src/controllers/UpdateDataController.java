@@ -60,7 +60,7 @@ public class UpdateDataController {
 		});
 		
 		updateSongsDbTask.setOnFailed(e -> {
-			this.instructionLabel.setText(updateSongsDbTask.getException().getMessage());
+			this.instructionLabel.setText("Failed: " + updateSongsDbTask.getException().getMessage());
 		});
 		this.exec.submit(updateSongsDbTask);
 	}

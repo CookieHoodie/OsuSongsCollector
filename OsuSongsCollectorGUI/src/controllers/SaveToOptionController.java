@@ -28,8 +28,10 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -44,6 +46,7 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.TilePane;
 import javafx.stage.DirectoryChooser;
@@ -83,9 +86,10 @@ public class SaveToOptionController {
 	@FXML private Button choosePathButton;
 	@FXML private CheckBox rememberPathCheckBox;
 	@FXML private Button startButton;
-	@FXML private ProgressBar downloadProgressBar;
-	@FXML private Button cancelButton;
-	@FXML private TextArea taskDetailsTextArea;
+	@FXML private TextField sampleTextField;
+//	@FXML private ProgressBar downloadProgressBar;
+//	@FXML private Button cancelButton;
+//	@FXML private TextArea taskDetailsTextArea;
 	
 	private Stage currentStage;
 	private SqliteDatabase songsDb;
@@ -98,7 +102,7 @@ public class SaveToOptionController {
 	private String pathToSongsFolder = "";
 	private String saveFolder = "";
 	
-	private Task<Void> task;
+//	private Task<Void> task;
 	
 	// TODO: unselect all checked checkbox after closing stage
 	// TODO: might want to move the progressBar and textField into new scene
@@ -114,7 +118,8 @@ public class SaveToOptionController {
 		this.prefixComboBox.getSelectionModel().select(ComboBoxChoice.ARTIST_NAME);
 		this.suffixComboBox.setItems(prefixSuffixComboBoxObsList);
 		this.suffixComboBox.getSelectionModel().select(ComboBoxChoice.SONG_TITLE);
-		this.taskDetailsTextArea.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
+//		this.taskDetailsTextArea.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
+		this.sampleTextField.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
 	}
 	
 	public void initData(Stage currentStage, SqliteDatabase songsDb, List<TableViewData> selectedSongsList) throws FileNotFoundException, SQLException {
@@ -168,22 +173,22 @@ public class SaveToOptionController {
 		this.isOptionsSet = false;
 		if (prefix == suffix) {
 			if (prefix != ComboBoxChoice.NONE) {
-				this.taskDetailsTextArea.setText("Attributes can't be the same!");
+				this.sampleTextField.setText("Attributes can't be the same!");
 			}
 			else {
-				this.taskDetailsTextArea.setText("No attribute is chosen!");
+				this.sampleTextField.setText("No attribute is chosen!");
 			}
 		}
 		else if (((prefix == ComboBoxChoice.ARTIST_NAME || prefix == ComboBoxChoice.ARTIST_NAME_UNICODE) && (suffix == ComboBoxChoice.ARTIST_NAME || suffix == ComboBoxChoice.ARTIST_NAME_UNICODE))
 				|| ((prefix == ComboBoxChoice.SONG_TITLE || prefix == ComboBoxChoice.SONG_TITLE_UNICODE) && (suffix == ComboBoxChoice.SONG_TITLE || suffix == ComboBoxChoice.SONG_TITLE_UNICODE))) {
-			this.taskDetailsTextArea.setText("Similar attributes is not allowed!");
+			this.sampleTextField.setText("Similar attributes is not allowed!");
 		}
 		else {
 			if (prefix == ComboBoxChoice.NONE || suffix == ComboBoxChoice.NONE) {
-				this.taskDetailsTextArea.setText(prefix.getSample() + suffix.getSample());
+				this.sampleTextField.setText(prefix.getSample() + suffix.getSample());
 			}
 			else {
-				this.taskDetailsTextArea.setText(prefix.getSample() + " - " + suffix.getSample());
+				this.sampleTextField.setText(prefix.getSample() + " - " + suffix.getSample());
 			}
 			this.isOptionsSet = true;
 		}
@@ -202,28 +207,36 @@ public class SaveToOptionController {
 		ComboBoxChoice prefix = this.prefixComboBox.getSelectionModel().getSelectedItem();
 		ComboBoxChoice suffix = this.suffixComboBox.getSelectionModel().getSelectedItem();
 		Task<Void> copySongsTask = new CopySongsTask(this.selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix); 
-		this.task = copySongsTask;
-		this.downloadProgressBar.progressProperty().bind(copySongsTask.progressProperty());
-		copySongsTask.messageProperty().addListener((obs, oldValue, newValue) -> {
-			this.taskDetailsTextArea.appendText(newValue + "\n");
-		});
-		copySongsTask.setOnCancelled(e -> {
-			this.taskDetailsTextArea.appendText("Cancelling. Waiting for the last song to finish...");
-		});
-		copySongsTask.setOnSucceeded(e -> {
-			this.taskDetailsTextArea.appendText("All songs are successfully copied!");
-		});
-		copySongsTask.setOnFailed(e -> {
-			this.taskDetailsTextArea.appendText(copySongsTask.getException().getMessage());
-		});
-		new Thread(copySongsTask).start();
+		
+		FXMLLoader loader = new FXMLLoader();
+		loader.setLocation(getClass().getResource("/fxml/CopySongsView.fxml"));
+		BorderPane root = loader.load();
+		Scene scene = new Scene(root);
+		CopySongsController ctr = loader.<CopySongsController>getController();
+		ctr.initDataAndStart(copySongsTask);
+		this.currentStage.setScene(scene);
+//		this.task = copySongsTask;
+//		this.downloadProgressBar.progressProperty().bind(copySongsTask.progressProperty());
+//		copySongsTask.messageProperty().addListener((obs, oldValue, newValue) -> {
+//			this.taskDetailsTextArea.appendText(newValue + "\n");
+//		});
+//		copySongsTask.setOnCancelled(e -> {
+//			this.taskDetailsTextArea.appendText("Cancelling. Waiting for the last song to finish...");
+//		});
+//		copySongsTask.setOnSucceeded(e -> {
+//			this.taskDetailsTextArea.appendText("All songs are successfully copied!");
+//		});
+//		copySongsTask.setOnFailed(e -> {
+//			this.taskDetailsTextArea.appendText(copySongsTask.getException().getMessage());
+//		});
+//		new Thread(copySongsTask).start();
 	}
 	
 	
-	@FXML private void cancelCopySongs(ActionEvent event) {
-		this.task.cancel();
-	}
-	
+//	@FXML private void cancelCopySongs(ActionEvent event) {
+//		this.task.cancel();
+//	}
+//	
 	private void setStartButtonDisability() {
 		if (this.isPathSet && this.isOptionsSet) {
 			this.startButton.setDisable(false);
@@ -381,6 +394,7 @@ public class SaveToOptionController {
 						}
 						catch (UnsupportedOperationException | IOException | SecurityException e) {
 							updateBeatmapSetBooleanPStatement.executeBatch();
+							songsDb.getConn().commit();
 							throw e;
 						}
 						songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, beatmapSetAutoID, results);
@@ -397,6 +411,7 @@ public class SaveToOptionController {
 					}
 				}
 				updateBeatmapSetBooleanPStatement.executeBatch();
+				songsDb.getConn().commit();
 			}
 			finally {
 				songsDb.getConn().setAutoCommit(true);

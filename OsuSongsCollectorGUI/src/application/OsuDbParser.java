@@ -142,6 +142,7 @@ public class OsuDbParser extends OsuReader{
 			
 //			this.getBeatmaps().add(beatmap);
 			
+			
 			if (this.progressUpdate != null) {
 				progressUpdate.accept(i + 1, numberOfBeatmaps);
 			}

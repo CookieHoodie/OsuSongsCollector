@@ -81,7 +81,7 @@ public class LoadAndCreateDatabaseController {
 				songsDb.createDatabase();
 				songsDb.createTables();
 				if (Thread.currentThread().isInterrupted()) {
-					songsDb.cancelThread();
+					songsDb.cleanUpThread(true);;
 				}
 				songsDb.insertAllData(osuDb);
 				return songsDb;
@@ -93,51 +93,43 @@ public class LoadAndCreateDatabaseController {
 		this.testStateLabel.setText("1/2: Loading osu!.db");
 		Task<OsuDbParser> loadOsuDbTask = this.getLoadOsuDbTask();
 		this.testProgressBar.progressProperty().bind(loadOsuDbTask.progressProperty());
-		loadOsuDbTask.stateProperty().addListener((obs, oldValue, newValue) -> {
-        	switch (newValue) {
-        	case FAILED:
-        		Throwable e = loadOsuDbTask.getException();
-        		this.testStateLabel.setText(e.getMessage());
-        		break;
-        	case SUCCEEDED:
-        		OsuDbParser osuDb = loadOsuDbTask.getValue();
-        		this.createSongsDb(osuDb);
-        		break;
-			default:
-				break;
-        	}
-        });
+		
+		loadOsuDbTask.setOnFailed(event -> {
+			Throwable e = loadOsuDbTask.getException();
+    		this.testStateLabel.setText(e.getMessage());
+		});
+		
+		loadOsuDbTask.setOnSucceeded(e -> {
+			OsuDbParser osuDb = loadOsuDbTask.getValue();
+    		this.createSongsDb(osuDb);
+		});
+		
 		this.exec.submit(loadOsuDbTask);
 	}
 	
 	
 	private void createSongsDb(OsuDbParser osuDb) {
-		this.testStateLabel.setText("2/2 Creating database");
+		this.testStateLabel.setText("2/2 Creating database. This might take a while...");
 		Task<SqliteDatabase> createSongsDbTask = this.getCreateSongsDbTask(osuDb);
 		this.testProgressBar.progressProperty().bind(createSongsDbTask.progressProperty());
-		createSongsDbTask.stateProperty().addListener((obs, oldValue, newValue) -> {
-        	switch (newValue) {
-        	case FAILED:
-        		Throwable e = createSongsDbTask.getException();
-        		this.testStateLabel.setText(e.getMessage());
-        		break;
-        	case SUCCEEDED:
-        		this.testStateLabel.setText("Done. Loading required data...");
-        		SqliteDatabase songsDb = createSongsDbTask.getValue();
-        		try {
-					this.loadSongsDisplayStage(songsDb);
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (SQLException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-        		break;
-			default:
-				break;
-        	}
-        });
+		createSongsDbTask.setOnFailed(event -> {
+			Throwable e = createSongsDbTask.getException();
+    		this.testStateLabel.setText(e.getMessage());
+		});
+		
+		createSongsDbTask.setOnSucceeded(event -> {
+    		this.testStateLabel.setText("Done. Loading required data...");
+    		SqliteDatabase songsDb = createSongsDbTask.getValue();
+    		try {
+				this.loadSongsDisplayStage(songsDb);
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
         this.exec.submit(createSongsDbTask);
 	}
 	
