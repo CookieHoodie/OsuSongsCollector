@@ -14,7 +14,10 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
@@ -59,15 +62,22 @@ public class SetSongsFolderPathController {
 	
 	// continueButton pressed
 	@FXML
-	private void setupDatabaseNewScene(ActionEvent event) throws IOException {
+	private void setupDatabaseNewScene(ActionEvent event) {
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/LoadAndCreateDatabaseView.fxml"));
-		BorderPane root = loader.load();
-		Scene scene = new Scene(root);
-		Stage currentStage = (Stage) this.continueButton.getScene().getWindow();
-		LoadAndCreateDatabaseController ctr = loader.<LoadAndCreateDatabaseController>getController();
-		ctr.initDataAndStart(currentStage, this.fullPathToOsuDb, this.pathToSongsFolder);
-		currentStage.setScene(scene);
+		try {
+			BorderPane root = loader.load();
+			Scene scene = new Scene(root);
+			Stage currentStage = (Stage) this.continueButton.getScene().getWindow();
+			LoadAndCreateDatabaseController ctr = loader.<LoadAndCreateDatabaseController>getController();
+			ctr.initDataAndStart(currentStage, this.fullPathToOsuDb, this.pathToSongsFolder);
+			currentStage.setScene(scene);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			Alert alert = new Alert(AlertType.ERROR, "Failed to load setup screen", ButtonType.OK);
+			alert.showAndWait();
+		}
 	}
 	
 	private boolean fileIsValid(String filename) {

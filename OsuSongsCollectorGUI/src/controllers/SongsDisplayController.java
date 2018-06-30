@@ -42,7 +42,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
@@ -57,6 +59,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
@@ -280,7 +283,6 @@ public class SongsDisplayController {
 			try {
 				this.songsDb.closeConnection();
 			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
 		});
@@ -362,7 +364,7 @@ public class SongsDisplayController {
 	}
 	
 	// testCopySongButton
-	@FXML private void copySong(ActionEvent event) throws SQLException, IOException {
+	@FXML private void copySong(ActionEvent event) {
 		List<TableViewData> selectedSongsList = new ArrayList<TableViewData>();
 		for (TableViewData row : this.testTable.getItems()) {
 			if (row.isSelectedProperty().get()) {
@@ -374,24 +376,36 @@ public class SongsDisplayController {
 			System.out.println("No row is chosen");
 		}
 		else {
-			Stage saveToOptionStage = new Stage();
-			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(getClass().getResource("/fxml/SaveToOptionView.fxml"));
-			BorderPane root = loader.load();
-			Scene scene = new Scene(root);
-			SaveToOptionController ctr = loader.<SaveToOptionController>getController();
-			saveToOptionStage.initModality(Modality.WINDOW_MODAL);
-			saveToOptionStage.initOwner(this.testTable.getScene().getWindow());
-			saveToOptionStage.setTitle("Configuration");
-			saveToOptionStage.setScene(scene);
-			ctr.initData(saveToOptionStage, this.songsDb, selectedSongsList);
-			saveToOptionStage.show();
+			try {
+				Stage saveToOptionStage = new Stage();
+				FXMLLoader loader = new FXMLLoader();
+				loader.setLocation(getClass().getResource("/fxml/SaveToOptionView.fxml"));
+				BorderPane root = loader.load();
+				Scene scene = new Scene(root);
+				SaveToOptionController ctr = loader.<SaveToOptionController>getController();
+				saveToOptionStage.initModality(Modality.WINDOW_MODAL);
+				saveToOptionStage.initOwner(this.testTable.getScene().getWindow());
+				saveToOptionStage.setTitle("Configuration");
+				saveToOptionStage.setScene(scene);
+				ctr.initData(saveToOptionStage, this.songsDb, selectedSongsList);
+				saveToOptionStage.show();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Failed to load copy option screen", ButtonType.OK);
+				alert.showAndWait();
+			}
+			catch (SQLException e) {
+				e.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Error getting data from songs.db", ButtonType.OK);
+				alert.showAndWait();
+			}
 		}
 	}
 	
 	// hideUnhideButton
 	@FXML private void hideUnhideSelectedSongs(ActionEvent event) throws SQLException {
-		// TODO: account for selectAll also (probably wanna change the whole implementation)
+		// TODO: account for selectAll button also (probably wanna change the whole implementation)
 		try {
 			String[] items = {this.songsDb.Data.BeatmapSet.IS_HIDDEN};
 			this.songsDb.getConn().setAutoCommit(false);
@@ -419,6 +433,11 @@ public class SongsDisplayController {
 				}
 			}
 			updateBeatmapSetBooleanPStatement.executeBatch();
+		}
+		catch (SQLException e) {
+			e.printStackTrace();
+			Alert alert = new Alert(AlertType.ERROR, "Failed to update hidden preference in songs.db", ButtonType.OK);
+			alert.showAndWait();
 		}
 		finally {
 			this.songsDb.getConn().setAutoCommit(true);

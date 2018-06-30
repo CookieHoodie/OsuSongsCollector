@@ -24,9 +24,12 @@ import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
@@ -44,6 +47,7 @@ public class LoadAndCreateDatabaseController {
 	@FXML private ProgressBar testProgressBar;
 	@FXML private Label testStateLabel;
 	
+	// TODO: show warning first before closing window
 	public void initDataAndStart(Stage currentStage, String fullPathToOsuDb, String pathToSongsFolder) {
 		this.fullPathToOsuDb = fullPathToOsuDb;
 		this.pathToSongsFolder = pathToSongsFolder;
@@ -52,8 +56,10 @@ public class LoadAndCreateDatabaseController {
 			try {
 				this.exec.awaitTermination(8, TimeUnit.SECONDS);
 			} catch (InterruptedException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
+				// TODO: show more specific instructions when this happen
+				Alert alert = new Alert(AlertType.ERROR, "Program is interrupted without cleaning up while initializing. Relevant files might be corrupted. Consider Reset All to repair.", ButtonType.OK);
+				alert.show();
 			}
 		});
 		this.loadOsuDb();
@@ -96,7 +102,15 @@ public class LoadAndCreateDatabaseController {
 		
 		loadOsuDbTask.setOnFailed(event -> {
 			Throwable e = loadOsuDbTask.getException();
-    		this.testStateLabel.setText(e.getMessage());
+			e.printStackTrace();
+			if (e instanceof FileNotFoundException) {
+				Alert alert = new Alert(AlertType.ERROR, "osu!.db is not found. Please make sure the folder chosen is correct!", ButtonType.OK);
+				alert.showAndWait();
+			}
+			else {
+				Alert alert = new Alert(AlertType.ERROR, "Error loading osu!.db or interrupted", ButtonType.OK);
+				alert.show();
+			}
 		});
 		
 		loadOsuDbTask.setOnSucceeded(e -> {
@@ -113,8 +127,9 @@ public class LoadAndCreateDatabaseController {
 		Task<SqliteDatabase> createSongsDbTask = this.getCreateSongsDbTask(osuDb);
 		this.testProgressBar.progressProperty().bind(createSongsDbTask.progressProperty());
 		createSongsDbTask.setOnFailed(event -> {
-			Throwable e = createSongsDbTask.getException();
-    		this.testStateLabel.setText(e.getMessage());
+			createSongsDbTask.getException().printStackTrace();
+			Alert alert = new Alert(AlertType.ERROR, "Failed to store data from osu!.db", ButtonType.OK);
+			alert.showAndWait();
 		});
 		
 		createSongsDbTask.setOnSucceeded(event -> {
@@ -123,114 +138,19 @@ public class LoadAndCreateDatabaseController {
     		try {
 				this.loadSongsDisplayStage(songsDb);
 			} catch (IOException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
+				alert.showAndWait();
 			} catch (SQLException e1) {
-				// TODO Auto-generated catch block
 				e1.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
+				alert.showAndWait();
 			}
 		});
         this.exec.submit(createSongsDbTask);
 	}
 	
 	
-	
-	
-	
-	
-//	private class LoadOsuDbService extends Service<OsuDbParser> {
-//		@Override
-//        protected Task<OsuDbParser> createTask() {
-//			return new Task<OsuDbParser>() {
-//				@Override
-//                protected OsuDbParser call() throws Exception {
-//					OsuDbParser osuDb = new OsuDbParser(fullPathToOsuDb, pathToSongsFolder);
-//					osuDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork), this);
-//					osuDb.startParsing();
-//                    return osuDb;
-//                }
-//            };
-//        }
-//	}
-//	
-//	private class CreateSongsDbService extends Service<SqliteDatabase> {
-//		OsuDbParser osuDb;
-//		
-//		private CreateSongsDbService(OsuDbParser osuDb) {
-//			this.osuDb = osuDb;
-//		}
-//		
-//		@Override
-//		protected Task<SqliteDatabase> createTask() {
-//			return new Task<SqliteDatabase>() {
-//				@Override
-//				protected SqliteDatabase call() throws Exception {
-//					SqliteDatabase songsDb = new SqliteDatabase(Main.DB_NAME);
-//					updateProgress(0, 0);
-//					songsDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork), this);
-//					songsDb.createDatabase();
-//					songsDb.createTables();
-//					if (this.isCancelled()) {
-//						songsDb.cancelThread();
-//					}
-//					songsDb.insertAllData(osuDb);
-//					return songsDb;
-//				}
-//			};
-//		}
-//	}
-//	
-//	private void loadOsuDb() {
-//		this.testStateLabel.setText("1/2: Loading osu!.db");
-//		this.osuDbService = new LoadOsuDbService();
-//        this.testProgressBar.progressProperty().bind(this.osuDbService.progressProperty());
-//        this.osuDbService.stateProperty().addListener((obs, oldValue, newValue) -> {
-//        	switch (newValue) {
-//        	case FAILED:
-//        		Throwable e = this.osuDbService.getException();
-//        		this.testStateLabel.setText(e.getMessage());
-//        		break;
-//        	case SUCCEEDED:
-//        		OsuDbParser osuDb = this.osuDbService.getValue();
-//				this.createSongsDb(osuDb);
-//        		break;
-//			default:
-//				break;
-//        	}
-//        });
-//        this.osuDbService.start();
-//	}
-//	
-//	private void createSongsDb(OsuDbParser osuDb) {
-//		this.testStateLabel.setText("2/2 Creating database");
-//		this.songsDbService = new CreateSongsDbService(osuDb);
-//		this.testProgressBar.progressProperty().bind(this.songsDbService.progressProperty());
-//        this.songsDbService.stateProperty().addListener((obs, oldValue, newValue) -> {
-//        	switch (newValue) {
-//        	case FAILED:
-//        		Throwable e = this.osuDbService.getException();
-//        		this.testStateLabel.setText(e.getMessage());
-//        		break;
-//        	case SUCCEEDED:
-//        		this.testStateLabel.setText("All done");
-//        		SqliteDatabase songsDb = this.songsDbService.getValue();
-//        		try {
-//					this.loadSongsDisplayStage(songsDb);
-//				} catch (IOException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				} catch (SQLException e1) {
-//					// TODO Auto-generated catch block
-//					e1.printStackTrace();
-//				}
-//        		break;
-//			default:
-//				break;
-//        	}
-//        });
-//        this.songsDbService.start();
-//	}
-//	
 	private void loadSongsDisplayStage(SqliteDatabase songsDb) throws IOException, SQLException {
 		Stage songsDisplayStage = new Stage();
 		FXMLLoader loader = new FXMLLoader();
@@ -240,7 +160,6 @@ public class LoadAndCreateDatabaseController {
 		Stage currentStage = (Stage) this.testStateLabel.getScene().getWindow();
 		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
 		
-//		primaryStage.setScene(scene);
 		songsDisplayStage.setTitle(currentStage.getTitle());
 		songsDisplayStage.setScene(scene);
 		ctr.initData(songsDisplayStage, songsDb);
@@ -249,7 +168,3 @@ public class LoadAndCreateDatabaseController {
 	}
 
 }
-
-
-
-// TODO: exit thread safely

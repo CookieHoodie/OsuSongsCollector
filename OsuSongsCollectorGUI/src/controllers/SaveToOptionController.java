@@ -32,7 +32,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -42,6 +44,7 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.MouseEvent;
@@ -122,7 +125,7 @@ public class SaveToOptionController {
 		this.sampleTextField.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
 	}
 	
-	public void initData(Stage currentStage, SqliteDatabase songsDb, List<TableViewData> selectedSongsList) throws FileNotFoundException, SQLException {
+	public void initData(Stage currentStage, SqliteDatabase songsDb, List<TableViewData> selectedSongsList) throws SQLException {
 		// assigning to member all data passed in
 		this.songsDb = songsDb;
 		this.currentStage = currentStage;
@@ -197,46 +200,41 @@ public class SaveToOptionController {
 	}
 	
 	// start Button
-	@FXML private void startCopying(ActionEvent event) throws SQLException, Exception {
+	@FXML private void startCopying(ActionEvent event) {
 		if (this.rememberPathCheckBox.isSelected() && !this.chosenPathTextField.getText().equals(this.saveFolder)) {
 			String[] items = {this.songsDb.Data.Config.SAVE_FOLDER};
 			String[] results = {this.chosenPathTextField.getText()};
-			this.songsDb.updateConfigString(this.configID, items, results);
+			try {
+				this.songsDb.updateConfigString(this.configID, items, results);
+			}
+			// runtimeException & SQLException should show similar result to user
+			catch (Exception e) {
+				e.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Failed to remember chosen path", ButtonType.OK);
+				alert.show();
+			}
 		}
 		
 		ComboBoxChoice prefix = this.prefixComboBox.getSelectionModel().getSelectedItem();
 		ComboBoxChoice suffix = this.suffixComboBox.getSelectionModel().getSelectedItem();
 		Task<Void> copySongsTask = new CopySongsTask(this.selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix); 
 		
-		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/CopySongsView.fxml"));
-		BorderPane root = loader.load();
-		Scene scene = new Scene(root);
-		CopySongsController ctr = loader.<CopySongsController>getController();
-		ctr.initDataAndStart(copySongsTask);
-		this.currentStage.setScene(scene);
-//		this.task = copySongsTask;
-//		this.downloadProgressBar.progressProperty().bind(copySongsTask.progressProperty());
-//		copySongsTask.messageProperty().addListener((obs, oldValue, newValue) -> {
-//			this.taskDetailsTextArea.appendText(newValue + "\n");
-//		});
-//		copySongsTask.setOnCancelled(e -> {
-//			this.taskDetailsTextArea.appendText("Cancelling. Waiting for the last song to finish...");
-//		});
-//		copySongsTask.setOnSucceeded(e -> {
-//			this.taskDetailsTextArea.appendText("All songs are successfully copied!");
-//		});
-//		copySongsTask.setOnFailed(e -> {
-//			this.taskDetailsTextArea.appendText(copySongsTask.getException().getMessage());
-//		});
-//		new Thread(copySongsTask).start();
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(getClass().getResource("/fxml/CopySongsView.fxml"));
+			BorderPane root = loader.load();
+			Scene scene = new Scene(root);
+			CopySongsController ctr = loader.<CopySongsController>getController();
+			ctr.initDataAndStart(copySongsTask);
+			this.currentStage.setScene(scene);
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+			Alert alert = new Alert(AlertType.ERROR, "Failed to load copy songs screen", ButtonType.OK);
+			alert.showAndWait();
+		}
 	}
 	
-	
-//	@FXML private void cancelCopySongs(ActionEvent event) {
-//		this.task.cancel();
-//	}
-//	
 	private void setStartButtonDisability() {
 		if (this.isPathSet && this.isOptionsSet) {
 			this.startButton.setDisable(false);
@@ -346,7 +344,7 @@ public class SaveToOptionController {
 					fileNameSuffix = row.songTitleProperty().get();
 					break;
 				}
-				default: throw new RuntimeException("Invalid options");
+				default: throw new RuntimeException("Invalid filename options");
 			}
 			return fileNameSuffix;
 		}
@@ -403,7 +401,7 @@ public class SaveToOptionController {
 							row.isSelectedProperty().set(false);
 						}); 
 						updateProgress(i + 1, totalProgress);
-						updateMessage(fileName + " --- Done");
+						updateMessage("(" + i + 1 + "/" + totalProgress + ") " + fileName);
 					}
 					else {
 						updateMessage((i+1) + " songs are copied, " + (totalProgress-i-1) + " are cancelled.");
@@ -420,5 +418,4 @@ public class SaveToOptionController {
         }
     }
 	
-	//TODO: allow cancel button, when it's pressed (or closed is pressed) popup window warning then send isCancelled signal if true
 }

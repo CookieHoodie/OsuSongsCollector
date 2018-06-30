@@ -14,6 +14,9 @@ import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
@@ -80,31 +83,44 @@ public class InitScreenController {
 					try {
 						this.loadSongsDisplayView();
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
+						Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
+						alert.showAndWait();
 					} catch (SQLException e1) {
-						// TODO Auto-generated catch block
+						// this exception comes from initTableData method for populating the tableView
 						e1.printStackTrace();
+						Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
+						alert.showAndWait();
 					}
 				}
 				else {
 					try {
 						this.loadUpdateDataView();
 					} catch (IOException e1) {
-						// TODO Auto-generated catch block
 						e1.printStackTrace();
+						Alert alert = new Alert(AlertType.ERROR, "Failed to load update screen", ButtonType.OK);
+						alert.showAndWait();
 					}
 				}
 			});
 			
 			checkAllSetService.setOnFailed(e -> {
-				this.welcomeLabel.setText(checkAllSetService.getException().getMessage());
+				checkAllSetService.getException().printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Corrupted or interrupted when checking for songs added or deleted", ButtonType.OK);
+				alert.showAndWait();
 			});
 			checkAllSetService.start();
 		}
 		// if not, prompt user for initialization
 		else {
-			this.loadSetSongsFolderPathView();
+			try {
+				this.loadSetSongsFolderPathView();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Failed to load initialization screen", ButtonType.OK);
+				alert.showAndWait();
+			}
 		}
 		
 	}
@@ -148,7 +164,7 @@ public class InitScreenController {
 		Stage primaryStage = (Stage) this.welcomeLabel.getScene().getWindow();
 		UpdateDataController ctr = loader.<UpdateDataController>getController();
 		
-		updateDataStage.setTitle(primaryStage.getTitle());
+		updateDataStage.setTitle("Update Songs Data");
 		updateDataStage.setScene(scene);
 		// the last two paths must have already initialized to come to here
 		ctr.initDataAndStart(updateDataStage, this.songsDb, this.pathToOsuDb, this.pathToSongsFolder);
