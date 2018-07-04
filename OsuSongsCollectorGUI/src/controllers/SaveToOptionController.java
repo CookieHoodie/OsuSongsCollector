@@ -11,7 +11,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.management.RuntimeErrorException;
 
@@ -90,6 +92,7 @@ public class SaveToOptionController {
 	@FXML private CheckBox rememberPathCheckBox;
 	@FXML private Button startButton;
 	@FXML private TextField sampleTextField;
+	@FXML private Button duplicatedSongsCheckButton;
 //	@FXML private ProgressBar downloadProgressBar;
 //	@FXML private Button cancelButton;
 //	@FXML private TextArea taskDetailsTextArea;
@@ -108,9 +111,8 @@ public class SaveToOptionController {
 //	private Task<Void> task;
 	
 	// TODO: unselect all checked checkbox after closing stage
-	// TODO: might want to move the progressBar and textField into new scene
 	// TODO: add option to remove or hide duplicated by examining artist, songTitle, totalTime, and audioName
-	// TODO: add option to not download downloaded songs, otherwise, warning
+	// by adding buttons and screen to show what has been hidden and their criteria to make them marked as duplicated
 	
 	
 	@FXML private void initialize() {
@@ -235,6 +237,77 @@ public class SaveToOptionController {
 		}
 	}
 	
+	// TODO: add option to remove or hide duplicated by examining artist, songTitle, totalTime, and audioName x folderName
+	@FXML private void checkForDuplicatedSongs(ActionEvent event) {
+		Map<Song, List<TableViewData>> duplicatedMap = new HashMap<>();
+		for (TableViewData row : this.selectedSongsList) {
+			Song s = new Song(row.artistNameProperty().get().toLowerCase(), row.songTitleProperty().get().toLowerCase());
+			List<TableViewData> rowList = duplicatedMap.get(s);
+			// if the key doesn't exist
+			if (rowList == null) {
+				rowList = new ArrayList<TableViewData>();
+				rowList.add(row);
+				duplicatedMap.put(s, rowList);
+			}
+			else {
+				rowList.add(row);
+			}
+		}
+		List<List<TableViewData>> possibleDuplicatedList = new ArrayList<List<TableViewData>>();
+		for (List<TableViewData> rowList : duplicatedMap.values()) {
+			// if songs are duplicated by artistName and songTitle
+			if (rowList.size() > 1) {
+				// all these are for checking for rare case where one folder contains several different audio
+				Map<String, List<TableViewData>> sameFolderCheckMap = new HashMap<>();
+				for (TableViewData row : rowList) {
+					List<TableViewData> subRowList = sameFolderCheckMap.get(row.folderNameProperty().get());
+					if (subRowList == null) {
+						subRowList = new ArrayList<TableViewData>();
+						subRowList.add(row);
+						sameFolderCheckMap.put(row.folderNameProperty().get(), subRowList);
+					}
+					else {
+						subRowList.add(row);
+					}
+				}
+				
+				List<TableViewData> groupedList = new ArrayList<TableViewData>();
+				for (List<TableViewData> subRowList : sameFolderCheckMap.values()) {
+					// normal case: means the songs are likely duplicated
+					if (subRowList.size() == 1) {
+						groupedList.add(subRowList.get(0));
+					}
+					// rare case
+					else {
+						// further check whether there are other songs (> 1) with different folder
+						if (sameFolderCheckMap.size() <= 2) {
+							break;
+						}
+					}
+				}
+				if (groupedList.size() != 0) {
+					possibleDuplicatedList.add(groupedList);
+				}
+			}
+		}
+		
+//		System.out.println(possibleDuplicatedList.size());
+//		for (List<TableViewData> l : possibleDuplicatedList) {
+//			for (TableViewData row : l) {
+//				System.out.println(row.artistNameProperty().get() + " - " + row.songTitleProperty().get() + " - " + row.totalTimeProperty().get());
+//			}
+//			System.out.println();
+//		}
+		
+		System.out.println(possibleDuplicatedList.size());
+		for (List<TableViewData> l : possibleDuplicatedList) {
+			for (TableViewData row : l) {
+				System.out.println(row.artistNameProperty().get() + " - " + row.songTitleProperty().get() + " - " + row.totalTimeProperty().get());
+			}
+			System.out.println();
+		}
+	}
+	
 	private void setStartButtonDisability() {
 		if (this.isPathSet && this.isOptionsSet) {
 			this.startButton.setDisable(false);
@@ -242,6 +315,54 @@ public class SaveToOptionController {
 		else {
 			this.startButton.setDisable(true);
 			this.startButton.requestFocus();
+		}
+	}
+	
+	private class Song {
+		private final String artistName;
+		private final String songTitle;
+		
+		public Song(String artistName, String songTitle) {
+			this.artistName = artistName;
+			this.songTitle = songTitle;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime * result + ((artistName == null) ? 0 : artistName.hashCode());
+			result = prime * result + ((songTitle == null) ? 0 : songTitle.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Song other = (Song) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (artistName == null) {
+				if (other.artistName != null)
+					return false;
+			} else if (!artistName.equals(other.artistName))
+				return false;
+			if (songTitle == null) {
+				if (other.songTitle != null)
+					return false;
+			} else if (!songTitle.equals(other.songTitle))
+				return false;
+			return true;
+		}
+
+		private SaveToOptionController getOuterType() {
+			return SaveToOptionController.this;
 		}
 	}
 	
@@ -266,7 +387,7 @@ public class SaveToOptionController {
 				return prefix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + separator + suffix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + audioName.substring(audioName.lastIndexOf('.'));
 			}
 			else {
-				return prefix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + separator + suffix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + " (" + occurance + ")" + audioName.substring(audioName.lastIndexOf('.'));
+				return prefix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + separator + suffix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + " (" + (occurance+1) + ")" + audioName.substring(audioName.lastIndexOf('.'));
 			}
 		}
 		
@@ -364,6 +485,7 @@ public class SaveToOptionController {
 					if (!isCancelled()) {
 						TableViewData row = this.selectedSongsListInTask.get(i);
 						int beatmapSetAutoID = row.beatmapSetAutoIDProperty().get();
+						// TODO: check if exist and if not, log error and continue 
 						Path oriPath = Paths.get(this.pathToSongsFolderInTask, row.folderNameProperty().get(), row.audioNameProperty().get());
 						// TODO: if unicode, use english if empty
 						// warn user if they change the order of the filename as old files does not recognize the previous one

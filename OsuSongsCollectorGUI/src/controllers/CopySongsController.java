@@ -11,6 +11,8 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Alert.AlertType;
 
+// TODO: action after success or failure (not like present where cancel button is still on for click!)
+// TODO: refresh table to reflect downloaded songs
 public class CopySongsController {
 	@FXML private ProgressBar copyProgressBar;
 	@FXML private TextArea copyDetailsTextArea;

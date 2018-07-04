@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import application.OsuDbParser;
 import application.SqliteDatabase;
+import javafx.animation.PauseTransition;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,6 +20,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 
 // TODO: since this is so similar to createDb view, might consider migrating this to that controller or extending it
@@ -43,7 +45,8 @@ public class UpdateDataController {
 			this.exec.shutdownNow();
 			try {
 				this.exec.awaitTermination(8, TimeUnit.SECONDS);
-			} catch (InterruptedException e1) {
+			} 
+			catch (InterruptedException e1) {
 				e1.printStackTrace();
 				// TODO: show more specific instructions when this happen
 				Alert alert = new Alert(AlertType.ERROR, "Program is interrupted without cleaning up while updating data. Relevant files might be corrupted. Consider Reset All to repair.", ButtonType.OK);
@@ -100,7 +103,13 @@ public class UpdateDataController {
 		this.instructionLabel.setText("Updating songs data");
 		
 		updateSongsDbTask.setOnSucceeded(e -> {
-			this.loadSongDisplayViewWrapperForTaskEvent(this.songsDb);
+			this.instructionLabel.setText("Done updating. Loading songs data...");
+			PauseTransition pause = new PauseTransition(Duration.millis(10));
+        	pause.setOnFinished(event -> {
+        		this.loadSongDisplayViewWrapperForTaskEvent(this.songsDb);
+        	});
+        	pause.play();
+			
 		});
 		
 		updateSongsDbTask.setOnFailed(e -> {

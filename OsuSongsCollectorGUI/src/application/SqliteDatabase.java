@@ -36,7 +36,6 @@ public class SqliteDatabase {
 	
 	// for threading
 	private BiConsumer<Integer, Integer> progressUpdate = null;
-	private Object results;
 	
 	public SqliteDatabase(String dbName) {
 		this.DB_NAME = dbName;
@@ -769,117 +768,119 @@ public class SqliteDatabase {
 		Map<Integer, Beatmap> unrankedDataMap = new HashMap<>();
 		List<List<Beatmap>> songsFolder = osuDb.getSongsFolder();
 		
-		
-		for (int i = 0; i < songsFolder.size(); i++) {
-			List<Beatmap> beatmapSet = songsFolder.get(i);
-			boolean isRanked = false;
-			int rankedIndex = 0;
-			// search through the each beatmap in each beatmapSet and see if they are ranked
-			// if yes, it's pretty safe to assume all metadata (artistName etc.) are the same
-			// so can go out of loop and directly assign the data to corresponding beatmapSet
-			
-			// set audioName to 1st of the beatmapSet for unranked Comparison
-			String audioName = beatmapSet.get(0).getAudioFileName();
-			// create new instance of list everytime to store atomizedBeatmapSet into map
-			List<List<Beatmap>> atomizedBeatmapSets = new ArrayList<>();
-			int subListFromIndex = 0;
-			
-			for (int j = 0; j < beatmapSet.size(); j++) {
-				if (beatmapSet.get(j).getRankedStatus() == 4) {
-					isRanked = true;
-					// store the index of the beatmap that is ranked. Most of the time this will be 0 but not in some case, so better 
-					// use this as indication when assigning data to beatmapSet
-					// !! some ranked maps still have beatmapSetID of -1... no fking idea why... but so far so good so just leave it
-					rankedIndex = j;
-					break;
+		try {
+			for (int i = 0; i < songsFolder.size(); i++) {
+				List<Beatmap> beatmapSet = songsFolder.get(i);
+				boolean isRanked = false;
+				int rankedIndex = 0;
+				// search through the each beatmap in each beatmapSet and see if they are ranked
+				// if yes, it's pretty safe to assume all metadata (artistName etc.) are the same
+				// so can go out of loop and directly assign the data to corresponding beatmapSet
+				
+				// set audioName to 1st of the beatmapSet for unranked Comparison
+				String audioName = beatmapSet.get(0).getAudioFileName();
+				// create new instance of list everytime to store atomizedBeatmapSet into map
+				List<List<Beatmap>> atomizedBeatmapSets = new ArrayList<>();
+				int subListFromIndex = 0;
+				
+				for (int j = 0; j < beatmapSet.size(); j++) {
+					if (beatmapSet.get(j).getRankedStatus() == 4) {
+						isRanked = true;
+						// store the index of the beatmap that is ranked. Most of the time this will be 0 but not in some case, so better 
+						// use this as indication when assigning data to beatmapSet
+						// !! some ranked maps still have beatmapSetID of -1... no fking idea why... but so far so good so just leave it
+						rankedIndex = j;
+						break;
+					}
+					
+					// only for unranked situation (very rare)
+					if (!audioName.equals(beatmapSet.get(j).getAudioFileName())) {
+						// update audioName for new reference
+						audioName = beatmapSet.get(j).getAudioFileName();
+						// add the grouped beatmapSet into list
+						atomizedBeatmapSets.add(beatmapSet.subList(subListFromIndex, j));
+						subListFromIndex = j;
+					}
+					// account for last audio in beatmapSet
+					if (j == beatmapSet.size() - 1 && !atomizedBeatmapSets.isEmpty() && !audioName.equals(atomizedBeatmapSets.get(atomizedBeatmapSets.size() - 1).get(0).getAudioFileName())) {
+						atomizedBeatmapSets.add(beatmapSet.subList(subListFromIndex, j + 1));
+					}
 				}
 				
-				// only for unranked situation (very rare)
-				if (!audioName.equals(beatmapSet.get(j).getAudioFileName())) {
-					// update audioName for new reference
-					audioName = beatmapSet.get(j).getAudioFileName();
-					// add the grouped beatmapSet into list
-					atomizedBeatmapSets.add(beatmapSet.subList(subListFromIndex, j));
-					subListFromIndex = j;
+				if (isRanked) {
+					rankedList.add(rankedIndex);
 				}
-				// account for last audio in beatmapSet
-				if (j == beatmapSet.size() - 1 && !atomizedBeatmapSets.isEmpty() && !audioName.equals(atomizedBeatmapSets.get(atomizedBeatmapSets.size() - 1).get(0).getAudioFileName())) {
-					atomizedBeatmapSets.add(beatmapSet.subList(subListFromIndex, j + 1));
+				else {
+					// 99% of the time
+					if (atomizedBeatmapSets.isEmpty()) {
+						// same thing as above, but indicates as unranked
+						rankedList.add(-1);
+						
+						// initialize the beatmapData to 1st Beatmap of beatmapSet
+						Beatmap beatmapDataForReference = new Beatmap();
+						beatmapDataForReference.setArtistName(beatmapSet.get(0).getArtistName());
+						beatmapDataForReference.setArtistNameUnicode(beatmapSet.get(0).getArtistNameUnicode());
+						beatmapDataForReference.setSongTitle(beatmapSet.get(0).getSongTitle());
+						beatmapDataForReference.setSongTitleUnicode(beatmapSet.get(0).getSongTitleUnicode());
+						beatmapDataForReference.setSongSource(beatmapSet.get(0).getSongSource());
+						beatmapDataForReference.setSongTags(beatmapSet.get(0).getSongTags());
+						
+						this.collectDataForUnranked(beatmapDataForReference, beatmapSet);
+						
+						// puting data into map for reference later
+						unrankedDataMap.put(i, beatmapDataForReference);
+					}
+					else {
+						// indicate as not atomized
+						rankedList.add(-2);
+						List<Beatmap> beatmapDataForReferences = new ArrayList<Beatmap>();
+						
+						// for each of the atomizedBeatmapSets, do the same thing as above
+						for (List<Beatmap> atomizedBeatmapSet : atomizedBeatmapSets) {
+							// initialize the beatmapData to 1st Beatmap of atomizedBeatmapSet
+							Beatmap beatmapDataForReference = new Beatmap();
+							beatmapDataForReference.setArtistName(atomizedBeatmapSet.get(0).getArtistName());
+							beatmapDataForReference.setArtistNameUnicode(atomizedBeatmapSet.get(0).getArtistNameUnicode());
+							beatmapDataForReference.setSongTitle(atomizedBeatmapSet.get(0).getSongTitle());
+							beatmapDataForReference.setSongTitleUnicode(atomizedBeatmapSet.get(0).getSongTitleUnicode());
+							beatmapDataForReference.setSongSource(atomizedBeatmapSet.get(0).getSongSource());
+							beatmapDataForReference.setSongTags(atomizedBeatmapSet.get(0).getSongTags());
+							
+							this.collectDataForUnranked(beatmapDataForReference, atomizedBeatmapSet);
+							
+							beatmapDataForReferences.add(beatmapDataForReference);
+						}
+						// store for reference later
+						atomizedBeatmapSetMap.put(i, atomizedBeatmapSets);
+						atomizedBeatmapSetReferenceDataMap.put(i, beatmapDataForReferences);
+					}
 				}
 			}
 			
-			if (isRanked) {
-				rankedList.add(rankedIndex);
+			if (songsFolder.size() != rankedList.size() || atomizedBeatmapSetMap.size() != atomizedBeatmapSetReferenceDataMap.size()) {
+				throw new RuntimeException("Logic error when gathering information for inserting data");
 			}
-			else {
-				// 99% of the time
-				if (atomizedBeatmapSets.isEmpty()) {
-					// same thing as above, but indicates as unranked
-					rankedList.add(-1);
-					
-					// initialize the beatmapData to 1st Beatmap of beatmapSet
-					Beatmap beatmapDataForReference = new Beatmap();
-					beatmapDataForReference.setArtistName(beatmapSet.get(0).getArtistName());
-					beatmapDataForReference.setArtistNameUnicode(beatmapSet.get(0).getArtistNameUnicode());
-					beatmapDataForReference.setSongTitle(beatmapSet.get(0).getSongTitle());
-					beatmapDataForReference.setSongTitleUnicode(beatmapSet.get(0).getSongTitleUnicode());
-					beatmapDataForReference.setSongSource(beatmapSet.get(0).getSongSource());
-					beatmapDataForReference.setSongTags(beatmapSet.get(0).getSongTags());
-					
-					this.collectDataForUnranked(beatmapDataForReference, beatmapSet);
-					
-					// puting data into map for reference later
-					unrankedDataMap.put(i, beatmapDataForReference);
-				}
-				else {
-					// indicate as not atomized
-					rankedList.add(-2);
-					List<Beatmap> beatmapDataForReferences = new ArrayList<Beatmap>();
-					
-					// for each of the atomizedBeatmapSets, do the same thing as above
-					for (List<Beatmap> atomizedBeatmapSet : atomizedBeatmapSets) {
-						// initialize the beatmapData to 1st Beatmap of atomizedBeatmapSet
-						Beatmap beatmapDataForReference = new Beatmap();
-						beatmapDataForReference.setArtistName(atomizedBeatmapSet.get(0).getArtistName());
-						beatmapDataForReference.setArtistNameUnicode(atomizedBeatmapSet.get(0).getArtistNameUnicode());
-						beatmapDataForReference.setSongTitle(atomizedBeatmapSet.get(0).getSongTitle());
-						beatmapDataForReference.setSongTitleUnicode(atomizedBeatmapSet.get(0).getSongTitleUnicode());
-						beatmapDataForReference.setSongSource(atomizedBeatmapSet.get(0).getSongSource());
-						beatmapDataForReference.setSongTags(atomizedBeatmapSet.get(0).getSongTags());
-						
-						this.collectDataForUnranked(beatmapDataForReference, atomizedBeatmapSet);
-						
-						beatmapDataForReferences.add(beatmapDataForReference);
-					}
-					// store for reference later
-					atomizedBeatmapSetMap.put(i, atomizedBeatmapSets);
-					atomizedBeatmapSetReferenceDataMap.put(i, beatmapDataForReferences);
+			
+			try {
+				this.getConn().setAutoCommit(false);
+				this.insertDataIntoDb(songsFolder, rankedList, unrankedDataMap, atomizedBeatmapSetMap, atomizedBeatmapSetReferenceDataMap, true);
+			}
+			finally {
+				this.getConn().setAutoCommit(true);
+				// if threading, set back to null to prevent inadvertent access later
+				if (this.progressUpdate != null) {
+					this.setProgressUpdate(null);
 				}
 			}
 		}
-		
-		if (songsFolder.size() != rankedList.size() || atomizedBeatmapSetMap.size() != atomizedBeatmapSetReferenceDataMap.size()) {
-			throw new RuntimeException("Logic error when gathering information for inserting data");
+		catch (Exception e) {
+			this.cleanUpThread(true);
+			throw e;
 		}
-		
-		try {
-			this.getConn().setAutoCommit(false);
-			this.insertDataIntoDb(songsFolder, rankedList, unrankedDataMap, atomizedBeatmapSetMap, atomizedBeatmapSetReferenceDataMap, true);
-		}
-		finally {
-			this.getConn().setAutoCommit(true);
-			// if threading, set back to null to prevent inadvertent access later
-			if (this.progressUpdate != null) {
-				this.setProgressUpdate(null);
-			}
-		}
-		
 				
 	}
 	
 	
-	// TODO: add exception when pathToosuDb is no longer true so that the welcome message wont show forever
-		// TODO: check for initliazing threadData when starting this!
 		// TODO: consider update lastModificationTime when requested in menu and update in new stage maybe
 	public void updateData(OsuDbParser osuDb) throws SQLException, InterruptedException, Exception {
 		// only the key is useful
@@ -1331,7 +1332,7 @@ public class SqliteDatabase {
 	public void updateConfigFull(int configID, String pathToOsuDb, String pathToSongsFolder, String saveFolder,
 			boolean isSongSourceShown, boolean isArtistNameShown, boolean isArtistNameUnicodeShown,
 			boolean isSongTitleShown, boolean isSongTitleUnicodeShown, boolean isCreatorNameShown,
-			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering) throws Exception, SQLException {
+			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering) throws SQLException {
 		
 		String sql = "UPDATE " + this.Data.Config.TABLE_NAME + "\n"
 				+ "SET " + this.Data.Config.PATH_TO_OSU_DB + " = ?,"
@@ -1388,7 +1389,7 @@ public class SqliteDatabase {
 		pstmt.executeUpdate();
 	}
 	
-	public void updateConfigBoolean(int configID, String[] items, Boolean[] results) throws SQLException {
+	public void updateConfigBoolean(int configID, String[] items, boolean[] results) throws SQLException {
 		if (items.length != results.length) {
 			throw new RuntimeException("Update config boolean argument num doesn't match");
 		}
@@ -1433,15 +1434,19 @@ public class SqliteDatabase {
 		updateBeatmapSetBooleanPStatement.addBatch();
 	}
 	
+	
 	// for threading only
 	public void cleanUpThread(boolean deleteSongsDb) throws SQLException {
 		this.closeConnection();
 		if (deleteSongsDb) {
-			File db = new File(this.DB_NAME);
-			db.delete();
+			this.deleteSongsDb();
 		}
 	}
 	
+	public void deleteSongsDb() {
+		File db = new File(this.DB_NAME);
+		db.delete();
+	}
 	
 	public boolean isDbExist() {
 		return this.isDbExist;

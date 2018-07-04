@@ -16,6 +16,7 @@ import application.OsuDbParser;
 import application.OsuSongsCollector;
 import application.SqliteDatabase;
 import application.Beatmap;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.concurrent.Service;
@@ -32,6 +33,7 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 
 // TODO: best practice: pass parameter into the tasks and assign them as final
@@ -47,20 +49,29 @@ public class LoadAndCreateDatabaseController {
 	@FXML private ProgressBar testProgressBar;
 	@FXML private Label testStateLabel;
 	
-	// TODO: show warning first before closing window
 	public void initDataAndStart(Stage currentStage, String fullPathToOsuDb, String pathToSongsFolder) {
 		this.fullPathToOsuDb = fullPathToOsuDb;
 		this.pathToSongsFolder = pathToSongsFolder;
 		currentStage.setOnCloseRequest(e -> {
-			this.exec.shutdownNow();
-			try {
-				this.exec.awaitTermination(8, TimeUnit.SECONDS);
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-				// TODO: show more specific instructions when this happen
-				Alert alert = new Alert(AlertType.ERROR, "Program is interrupted without cleaning up while initializing. Relevant files might be corrupted. Consider Reset All to repair.", ButtonType.OK);
-				alert.show();
-			}
+			// show alert to user to reconfirm exit
+			Alert alert = new Alert(AlertType.WARNING, "Unexpected results can happen if the window is closed now. Close anyway?", ButtonType.YES, ButtonType.NO);
+			alert.showAndWait().ifPresent(response -> {
+				if (response == ButtonType.YES) {
+					this.exec.shutdownNow();
+					try {
+						this.exec.awaitTermination(8, TimeUnit.SECONDS);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+						// TODO: show more specific instructions when this happen
+						Alert corruptionAlert = new Alert(AlertType.ERROR, "Program is interrupted without cleaning up while initializing. Relevant files might be corrupted. Consider Reset All to repair.", ButtonType.OK);
+						corruptionAlert.show();
+					}
+				}
+				// if not, continue the process
+				else {
+					e.consume();
+				}
+			});
 		});
 		this.loadOsuDb();
 	}
@@ -96,7 +107,7 @@ public class LoadAndCreateDatabaseController {
 	}
 	
 	private void loadOsuDb() {
-		this.testStateLabel.setText("1/2: Loading osu!.db");
+		this.testStateLabel.setText("(1/2): Loading osu!.db");
 		Task<OsuDbParser> loadOsuDbTask = this.getLoadOsuDbTask();
 		this.testProgressBar.progressProperty().bind(loadOsuDbTask.progressProperty());
 		
@@ -123,7 +134,7 @@ public class LoadAndCreateDatabaseController {
 	
 	
 	private void createSongsDb(OsuDbParser osuDb) {
-		this.testStateLabel.setText("2/2 Creating database. This might take a while...");
+		this.testStateLabel.setText("(2/2): Creating songs.db. This might take a while...");
 		Task<SqliteDatabase> createSongsDbTask = this.getCreateSongsDbTask(osuDb);
 		this.testProgressBar.progressProperty().bind(createSongsDbTask.progressProperty());
 		createSongsDbTask.setOnFailed(event -> {
@@ -133,19 +144,26 @@ public class LoadAndCreateDatabaseController {
 		});
 		
 		createSongsDbTask.setOnSucceeded(event -> {
-    		this.testStateLabel.setText("Done. Loading required data...");
-    		SqliteDatabase songsDb = createSongsDbTask.getValue();
-    		try {
-				this.loadSongsDisplayStage(songsDb);
-			} catch (IOException e1) {
-				e1.printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
-				alert.showAndWait();
-			} catch (SQLException e1) {
-				e1.printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
-				alert.showAndWait();
-			}
+			this.testStateLabel.setText("Done. Loading songs data...");
+			// pause because otherwise label setText is not updated in UI
+			PauseTransition pause = new PauseTransition(Duration.millis(10));
+        	pause.setOnFinished(e -> {
+        		SqliteDatabase songsDb = createSongsDbTask.getValue();
+        		try {
+    				this.loadSongsDisplayStage(songsDb);
+    			}
+        		catch (SQLException e1) {
+    				e1.printStackTrace();
+    				Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
+    				alert.showAndWait();
+    			}
+        		catch (IOException e1) {
+    				e1.printStackTrace();
+    				Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
+    				alert.showAndWait();
+    			} 
+        	});
+        	pause.play();
 		});
         this.exec.submit(createSongsDbTask);
 	}

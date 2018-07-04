@@ -38,19 +38,13 @@ public class InitScreenController {
 					songsDb.connect();
 					ResultSet metadataRs = songsDb.selectMetadata();
 					if (metadataRs.next()) {
-						// TODO: might need to change this to check everything instead of just metadata
-						// if the check can be fast
 						int folderCount = metadataRs.getInt(songsDb.Data.Metadata.FOLDER_COUNT);
 						int numberOfBeatmaps = metadataRs.getInt(songsDb.Data.Metadata.NUMBER_OF_BEATMAPS);
 						ResultSet configRs = songsDb.selectConfig();
 						if (configRs.next()) {
 							pathToOsuDb = configRs.getString(songsDb.Data.Config.PATH_TO_OSU_DB);
 							pathToSongsFolder = configRs.getString(songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
-							// TODO: change back to this
 							OsuDbParser osuDbMeta = new OsuDbParser(pathToOsuDb, pathToSongsFolder);
-//							Path p = Paths.get(pathToSongsFolder);
-//							String t = Paths.get(p.getParent().toString(), Main.OSU_DB_NAME).toString();
-//							OsuDbParser osuDbMeta = new OsuDbParser(t, pathToSongsFolder);
 							osuDbMeta.startParsingMetadataOnly();
 							
 							if (osuDbMeta.getFolderCount() != folderCount || osuDbMeta.getNumberOfBeatmaps() != numberOfBeatmaps) {
@@ -71,7 +65,7 @@ public class InitScreenController {
 	    }
 	}
 	
-	public void startChecking() throws IOException {
+	public void startChecking() {
 		// 1st quick check if songs db is ald created (not created means 1st time use)
 		this.songsDb = new SqliteDatabase(Main.DB_NAME);
 		// if db exists, check for any new songs or deleted songs

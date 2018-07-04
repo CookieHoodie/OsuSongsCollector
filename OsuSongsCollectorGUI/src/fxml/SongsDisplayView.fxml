@@ -45,7 +45,7 @@
                   <TableColumn fx:id="totalTimeCol" editable="false" minWidth="20.0" prefWidth="100.0" sortable="false" text="Approx length" />
                   <TableColumn fx:id="checkBoxCol" minWidth="20.0" prefWidth="100.0" sortable="false">
                      <graphic>
-                        <CheckBox fx:id="selectAllCheckBoxInCheckBoxCol" alignment="CENTER" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" text="Select all" />
+                        <CheckBox fx:id="selectAllCheckBoxInCheckBoxCol" alignment="CENTER" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" onAction="#selectUnselectAll" text="Select all" />
                      </graphic>
                   </TableColumn>
                </columns>
@@ -61,8 +61,8 @@
         <menus>
           <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
             <items>
-                  <MenuItem fx:id="checkNewSongsFileMenuItem" mnemonicParsing="false" text="Check new songs" />
-                  <MenuItem fx:id="resetAllFileMenuItem" mnemonicParsing="false" text="Reset all" />
+                  <MenuItem fx:id="checkNewSongsFileMenuItem" mnemonicParsing="false" text="Check for new songs" />
+                  <MenuItem fx:id="resetAllFileMenuItem" mnemonicParsing="false" onAction="#resetAll" text="Reset all data" />
               <MenuItem fx:id="exitFileMenuItem" mnemonicParsing="false" text="Exit" />
             </items>
           </Menu>
@@ -77,7 +77,7 @@
                         <CheckMenuItem fx:id="songTitleUnicodeShowCheckMenuItem" mnemonicParsing="false" text="Song Title (Unicode)" />
                         <CheckMenuItem fx:id="creatorNameShowCheckMenuItem" mnemonicParsing="false" text="Creator" />
                         <CheckMenuItem fx:id="totalTimeShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Approx length" />
-                        <CheckMenuItem fx:id="isDownloadedShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Downloaded Songs" />
+                        <CheckMenuItem fx:id="isDownloadedShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Copied Songs" />
                      </items>
                 </Menu>
                   <Menu fx:id="displayMenuInViewMenu" mnemonicParsing="false" text="Display">
@@ -88,7 +88,7 @@
                            </toggleGroup>
                         </RadioMenuItem>
                         <RadioMenuItem fx:id="hiddenSongsRadioMenuItemInDisplayMenu" mnemonicParsing="false" onAction="#displaySongs" text="Hidden songs" toggleGroup="$displayToggleGroup" />
-                        <RadioMenuItem fx:id="downloadedSongsRadioMenuItemInDisplayMenu" mnemonicParsing="false" onAction="#displaySongs" text="Downloaded songs" toggleGroup="$displayToggleGroup" />
+                        <RadioMenuItem fx:id="downloadedSongsRadioMenuItemInDisplayMenu" mnemonicParsing="false" onAction="#displaySongs" text="Copied songs" toggleGroup="$displayToggleGroup" />
                     </items>
                   </Menu>
               </items>

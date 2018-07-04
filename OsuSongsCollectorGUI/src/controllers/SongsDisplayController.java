@@ -16,15 +16,20 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import application.Comparators;
 import application.Comparators.SongTitleComparator;
+import application.Main;
 import application.SqliteDatabase;
 import controllers.SongsDisplayController.TableViewData;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -41,13 +46,17 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -70,6 +79,7 @@ import javafx.util.Duration;
 
 public class SongsDisplayController {
 	private SqliteDatabase songsDb;
+	private Stage currentStage;
 	private ObservableList<TableViewData> initSongsObsList;
 	private FilteredList<TableViewData> initSongsFilteredList;
 	private SortedList<TableViewData> initSongsSortedList;
@@ -116,14 +126,14 @@ public class SongsDisplayController {
 	@FXML private MenuItem aboutHelpMenuItem;
 	
 	private final String numOfSelectedSongsLabelText = "Selected: ";
-	private int isSelectedCounter = 0;
+	private SimpleIntegerProperty selectedCounterProperty = new SimpleIntegerProperty(0);
+	
 	
 	// TODO: save those (and maybe saveFolder) in a different table Configuration
 	// and check the corresponding items in controller instead of fxml
 	// TODO: set help text on approx length
 	// TODO: add rotating screen while changing view, searching, etc.
 	// TODO: allow user to select and copy words but not edit
-	// TODO: search length < and > in search bar
 	
 	@FXML private void initialize() {
 		this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
@@ -172,16 +182,17 @@ public class SongsDisplayController {
         	};
         });
         
-        Comparator<TableViewData> lastModificationTimeComparator = new Comparators.LastModificationTimeComparator();
-        ObservableList<Comparator<TableViewData>> orderByComparatorsObsList = FXCollections.observableArrayList(
-        		new Comparators.SongTitleComparator(),
-        		new Comparators.ArtistNameComparator(),
-        		new Comparators.CreatorNameComparator(),
-        		new Comparators.TotalTimeComparator(),
-        		lastModificationTimeComparator
-        );
-        this.orderByComboBox.setItems(orderByComparatorsObsList);
-        this.orderByComboBox.getSelectionModel().select(lastModificationTimeComparator);
+//        Comparator<TableViewData> lastModificationTimeComparator = new Comparators.LastModificationTimeComparator();
+//        ObservableList<Comparator<TableViewData>> orderByComparatorsObsList = FXCollections.observableArrayList(
+//        		new Comparators.SongTitleComparator(),
+//        		new Comparators.ArtistNameComparator(),
+//        		new Comparators.CreatorNameComparator(),
+//        		new Comparators.TotalTimeComparator(),
+//        		lastModificationTimeComparator
+//        );
+//        // TODO: set to user preference and sort using that after setting
+//        this.orderByComboBox.setItems(orderByComparatorsObsList);
+//        this.orderByComboBox.getSelectionModel().select(lastModificationTimeComparator);
         
         this.songSourceShowCheckMenuItem.selectedProperty().addListener((obs, oldValue, newValue) -> {
         	if (newValue) {
@@ -255,34 +266,43 @@ public class SongsDisplayController {
         	this.initSongsFilteredList.setPredicate(new CustomPredicate(this.testSearchText.getText()));
         });
         
+        
         // set selected items to 0
-        this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + this.isSelectedCounter);
+        this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + this.selectedCounterProperty.get());
+        
+        this.selectedCounterProperty.addListener((obs, oldValue, newValue) -> {
+        	this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + newValue);
+        });
         
         // selectAll
-        this.selectAllCheckBoxInCheckBoxCol.selectedProperty().addListener((obs, oldValue, newValue) -> {
-        	if (newValue) {
-        		this.testTable.getItems().forEach(row -> {
-    				if (!row.isSelectedProperty().get()) {
-    					row.isSelectedProperty().set(true);
-    				}
-    			});
-        	}
-        	else {
-        		this.testTable.getItems().forEach(row -> {
-        			if (row.isSelectedProperty().get()) {
-        				row.isSelectedProperty().set(false);
-        			}
-        		});
-        	}
-        });
+//        this.selectAllCheckBoxInCheckBoxCol.selectedProperty().addListener((obs, oldValue, newValue) -> {
+//        	if (newValue) {
+//        		this.testTable.getItems().forEach(row -> {
+//    				if (!row.isSelectedProperty().get()) {
+//    					row.isSelectedProperty().set(true);
+//    				}
+//    			});
+//        	}
+//        	else {
+//        		this.testTable.getItems().forEach(row -> {
+//        			if (row.isSelectedProperty().get()) {
+//        				row.isSelectedProperty().set(false);
+//        			}
+//        		});
+//        	}
+//        });
 	}
 	
 	public void initData(Stage currentStage, SqliteDatabase connectedSongsDb) throws SQLException {
+		this.currentStage = currentStage;
 		this.songsDb = connectedSongsDb;
 		currentStage.setOnCloseRequest(e -> {
 			try {
-				this.songsDb.closeConnection();
-			} catch (SQLException e1) {
+				this.updatePreference();
+				this.songsDb.closeConnection();	
+			} 
+			// exception instead of SQLException as other exceptions can happen that prevent window from closing
+			catch (Exception e1) {
 				e1.printStackTrace();
 			}
 		});
@@ -331,18 +351,17 @@ public class SongsDisplayController {
         	// TODO: this is flawful! change this implementation alltogether
         	t.isSelectedProperty().addListener((obs, oldValue, newValue) -> {
         		if (newValue) {
-        			this.isSelectedCounter++;
+        			this.selectedCounterProperty.set(this.selectedCounterProperty.get() + 1);
         		}
         		else {
-        			this.isSelectedCounter--;
+        			this.selectedCounterProperty.set(this.selectedCounterProperty.get() - 1);
         		}
-        		this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + this.isSelectedCounter);
         	});
         	initSongsObsList.add(t);
 
         }
         FilteredList<TableViewData> initSongsFilteredList = new FilteredList<TableViewData>(initSongsObsList, new CustomPredicate(""));
-        PauseTransition pause = new PauseTransition(Duration.millis(180));
+        PauseTransition pause = new PauseTransition(Duration.millis(200));
         this.testSearchText.textProperty().addListener((obs, oldValue, newValue) -> {
         	pause.setOnFinished(event -> {
         		initSongsFilteredList.setPredicate(new CustomPredicate(newValue));
@@ -352,11 +371,98 @@ public class SongsDisplayController {
         
         SortedList<TableViewData> initSongsSortedList = new SortedList<TableViewData>(initSongsFilteredList);
         
-        
+        // store the references first as the following operation can trigger listener which requires these references
         this.initSongsObsList = initSongsObsList;
         this.initSongsFilteredList = initSongsFilteredList;
         this.initSongsSortedList = initSongsSortedList;
+        
+        ResultSet configRs = this.songsDb.selectConfig();
+        if (configRs.next()) {
+        	boolean isSongSourceShown = configRs.getBoolean(this.songsDb.Data.Config.IS_SONG_SOURCE_SHOWN);
+        	boolean isArtistNameShown = configRs.getBoolean(this.songsDb.Data.Config.IS_ARTIST_NAME_SHOWN);
+        	boolean isArtistNameUnicodeShown = configRs.getBoolean(this.songsDb.Data.Config.IS_ARTIST_NAME_UNICODE_SHOWN);
+        	boolean isSongTitleShown = configRs.getBoolean(this.songsDb.Data.Config.IS_SONG_TITLE_SHOWN);
+        	boolean isSongTitleUnicodeShown = configRs.getBoolean(this.songsDb.Data.Config.IS_SONG_TITLE_UNICODE_SHOWN);
+        	boolean isCreatorNameShown = configRs.getBoolean(this.songsDb.Data.Config.IS_CREATOR_NAME_SHOWN);
+        	boolean isTotalTimeShown = configRs.getBoolean(this.songsDb.Data.Config.IS_TOTAL_TIME_SHOWN);
+        	boolean isIsDownloadedShown = configRs.getBoolean(this.songsDb.Data.Config.IS_IS_DOWNLOADED_SHOWN);
+        	String ordering = configRs.getString(this.songsDb.Data.Config.ORDERING);
+        	
+        	// ordering is empty only when it's the first time loading the app, 
+        	// so if it's first time, dun overwrite the menuItem as the data from songsDb is defaulted to false
+        	if (!ordering.isEmpty()) {
+        		if (this.songSourceShowCheckMenuItem.isSelected() != isSongSourceShown) {
+            		this.songSourceShowCheckMenuItem.setSelected(isSongSourceShown);
+            	}
+            	if (this.artistNameShowCheckMenuItem.isSelected() != isArtistNameShown) {
+            		this.artistNameShowCheckMenuItem.setSelected(isArtistNameShown);
+            	}
+            	if (this.artistNameUnicodeShowCheckMenuItem.isSelected() != isArtistNameUnicodeShown) {
+            		this.artistNameUnicodeShowCheckMenuItem.setSelected(isArtistNameUnicodeShown);
+            	}
+            	if (this.songTitleShowCheckMenuItem.isSelected() != isSongTitleShown) {
+            		this.songTitleShowCheckMenuItem.setSelected(isSongTitleShown);
+            	}
+            	if (this.songTitleUnicodeShowCheckMenuItem.isSelected() != isSongTitleUnicodeShown) {
+            		this.songTitleUnicodeShowCheckMenuItem.setSelected(isSongTitleUnicodeShown);
+            	}
+            	if (this.creatorNameShowCheckMenuItem.isSelected() != isCreatorNameShown) {
+            		this.creatorNameShowCheckMenuItem.setSelected(isCreatorNameShown);
+            	}
+            	if (this.totalTimeShowCheckMenuItem.isSelected() != isTotalTimeShown) {
+            		this.totalTimeShowCheckMenuItem.setSelected(isTotalTimeShown);
+            	}
+            	if (this.isDownloadedShowCheckMenuItem.isSelected() != isIsDownloadedShown) {
+            		this.isDownloadedShowCheckMenuItem.setSelected(isIsDownloadedShown);
+            	}
+        	}
+        	
+        	// default comparator
+        	Comparator<TableViewData> lastModificationTimeComparator = new Comparators.LastModificationTimeComparator();
+			@SuppressWarnings("unchecked")
+			ObservableList<Comparator<TableViewData>> orderByComparatorsObsList = FXCollections.observableArrayList(
+			 	new Comparators.SongTitleComparator(),
+			 	new Comparators.ArtistNameComparator(),
+			 	new Comparators.CreatorNameComparator(),
+			 	new Comparators.TotalTimeComparator(),
+			 	lastModificationTimeComparator
+			 );
+			 
+			this.orderByComboBox.setItems(orderByComparatorsObsList);
+			if (!ordering.isEmpty()) {
+				for (Comparator<TableViewData> comparator : orderByComparatorsObsList) {
+			    	if (comparator.toString().equals(ordering)) {
+			    		this.orderByComboBox.getSelectionModel().select(comparator);
+			    		initSongsSortedList.setComparator(comparator);
+			    		break;
+			    	}
+			    }
+			}
+			// for first time loading app
+			else {
+				this.orderByComboBox.getSelectionModel().select(lastModificationTimeComparator);
+			}
+        }
+        else {
+        	throw new SQLException("Failed to get config data");
+        }
+       
         this.testTable.setItems(initSongsSortedList);
+	}
+	
+	private void updatePreference() throws SQLException {
+		ResultSet configRs = this.songsDb.selectConfig();
+		if (configRs.next()) {
+			int configID = configRs.getInt(this.songsDb.Data.Config.CONFIG_ID);
+			String pathToOsuDb = configRs.getString(this.songsDb.Data.Config.PATH_TO_OSU_DB);
+			String pathToSongsFolder = configRs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
+			String saveFolder = configRs.getString(this.songsDb.Data.Config.SAVE_FOLDER);
+			String ordering = this.orderByComboBox.getSelectionModel().getSelectedItem().toString();
+			this.songsDb.updateConfigFull(configID, pathToOsuDb, pathToSongsFolder, saveFolder
+					, songSourceShowCheckMenuItem.isSelected(), artistNameShowCheckMenuItem.isSelected(), artistNameUnicodeShowCheckMenuItem.isSelected()
+					, songTitleShowCheckMenuItem.isSelected(), songTitleUnicodeShowCheckMenuItem.isSelected(), creatorNameShowCheckMenuItem.isSelected()
+					, totalTimeShowCheckMenuItem.isSelected(), isDownloadedShowCheckMenuItem.isSelected(), ordering);
+		}
 	}
 	
 	@FXML private void testSort(ActionEvent event) {
@@ -364,48 +470,70 @@ public class SongsDisplayController {
 	}
 	
 	// testCopySongButton
+	// TODO: option to exclude possible duplicated songs 
 	@FXML private void copySong(ActionEvent event) {
 		List<TableViewData> selectedSongsList = new ArrayList<TableViewData>();
+//		boolean dismissWarning = false;
+//		ButtonType ignoreButton = new ButtonType("Ignore", ButtonData.NO);
+		boolean containCopiedSongs = false;
 		for (TableViewData row : this.testTable.getItems()) {
 			if (row.isSelectedProperty().get()) {
+//				if (row.isDownloadedProperty().get() && !dismissWarning) {
+//					String warning = "testing";
+////					Alert customAlert = this.alertWithCheckBox(AlertType.WARNING, warning, isSelected -> {if (isSelected) {dismissWarning = true;}}, ButtonType.YES, ButtonType.NO);
+////					Alert alert = new Alert(AlertType.WARNING, "", ButtonType.YES, ButtonType.NO);
+//				}
 				selectedSongsList.add(row);
+				if (row.isDownloadedProperty().get()) {
+					containCopiedSongs = true;
+				}
 			}
 		}
+		
+//		Map<String, List<TableViewData>> t = this.testTable.getItems().stream()
+//				.filter(row -> row.isSelectedProperty().get())
+//				.collect(Collectors.groupingBy(row -> row.folderNameProperty().get()));
+		
 		if (selectedSongsList.size() == 0) {
 			// TODO: change to reflect in GUI
 			System.out.println("No row is chosen");
 		}
 		else {
-			try {
-				Stage saveToOptionStage = new Stage();
-				FXMLLoader loader = new FXMLLoader();
-				loader.setLocation(getClass().getResource("/fxml/SaveToOptionView.fxml"));
-				BorderPane root = loader.load();
-				Scene scene = new Scene(root);
-				SaveToOptionController ctr = loader.<SaveToOptionController>getController();
-				saveToOptionStage.initModality(Modality.WINDOW_MODAL);
-				saveToOptionStage.initOwner(this.testTable.getScene().getWindow());
-				saveToOptionStage.setTitle("Configuration");
-				saveToOptionStage.setScene(scene);
-				ctr.initData(saveToOptionStage, this.songsDb, selectedSongsList);
-				saveToOptionStage.show();
+			boolean proceed = true;
+			if (containCopiedSongs) {
+				String warningText = "One or more copied songs are found in your copy list. Are you sure you want to proceed to copy those songs again? (This will result in duplicated songs in the same folder)";
+				Alert duplicatedAlert = new Alert(AlertType.WARNING, warningText, ButtonType.YES, ButtonType.NO);
+//				duplicatedAlert.showAndWait().ifPresent(response -> {
+//					if (response == ButtonType.NO) {
+//						return;
+//					}
+//				});
+				Optional<ButtonType> result = duplicatedAlert.showAndWait();
+				if (result.isPresent() && result.get() == ButtonType.NO) {
+				    proceed = false;
+				}
 			}
-			catch (IOException e) {
-				e.printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "Failed to load copy option screen", ButtonType.OK);
-				alert.showAndWait();
-			}
-			catch (SQLException e) {
-				e.printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "Error getting data from songs.db", ButtonType.OK);
-				alert.showAndWait();
+			
+			if (proceed) {
+				try {
+					this.loadSaveToOptionView(selectedSongsList);
+				}
+				catch (IOException e) {
+					e.printStackTrace();
+					Alert alert = new Alert(AlertType.ERROR, "Failed to load copy option screen", ButtonType.OK);
+					alert.showAndWait();
+				}
+				catch (SQLException e) {
+					e.printStackTrace();
+					Alert alert = new Alert(AlertType.ERROR, "Error getting data from songs.db", ButtonType.OK);
+					alert.showAndWait();
+				}
 			}
 		}
 	}
 	
 	// hideUnhideButton
 	@FXML private void hideUnhideSelectedSongs(ActionEvent event) throws SQLException {
-		// TODO: account for selectAll button also (probably wanna change the whole implementation)
 		try {
 			String[] items = {this.songsDb.Data.BeatmapSet.IS_HIDDEN};
 			this.songsDb.getConn().setAutoCommit(false);
@@ -432,6 +560,8 @@ public class SongsDisplayController {
 					}
 				}
 			}
+			this.selectAllCheckBoxInCheckBoxCol.setSelected(false);
+			// TODO: wrap this in task
 			updateBeatmapSetBooleanPStatement.executeBatch();
 		}
 		catch (SQLException e) {
@@ -442,6 +572,30 @@ public class SongsDisplayController {
 		finally {
 			this.songsDb.getConn().setAutoCommit(true);
 		}
+	}
+	
+	@FXML private void selectUnselectAll(ActionEvent event) {
+//		if (this.selectAllCheckBoxInCheckBoxCol.isSelected()) {
+//    		this.testTable.getItems().forEach(row -> {
+//				if (!row.isSelectedProperty().get()) {
+//					row.isSelectedProperty().set(true);
+//				}
+//			});
+//    	}
+//    	else {
+//    		this.testTable.getItems().forEach(row -> {
+//    			if (row.isSelectedProperty().get()) {
+//    				row.isSelectedProperty().set(false);
+//    			}
+//    		});
+//    	}
+		System.out.println("Start");
+		boolean setValue = this.selectAllCheckBoxInCheckBoxCol.isSelected();
+		ObservableList<TableViewData> obsList = this.testTable.getItems();
+		for (TableViewData row : obsList) {
+			row.isSelectedProperty().set(setValue);
+		}
+		System.out.println("End");
 	}
 	
 	@FXML private void displaySongs(ActionEvent event) {
@@ -468,11 +622,160 @@ public class SongsDisplayController {
 		this.initSongsFilteredList.setPredicate(new CustomPredicate(""));
 	}
 	
+	@FXML private void resetAll(ActionEvent event) {
+		String warning = "Are you sure you want to reset all data? All stored data such as copied songs, hidden songs, chosen path, and preferences"
+				+ " will be lost! (Application will be restarted after reset)";
+		Alert alert = new Alert(AlertType.WARNING, warning, ButtonType.YES, ButtonType.NO);
+		alert.showAndWait().ifPresent(response -> {
+			if (response == ButtonType.YES) {
+				try {
+					this.songsDb.closeConnection();
+					this.songsDb.deleteSongsDb();
+					this.currentStage.hide();
+					Main newApp = new Main();
+					newApp.start(new Stage());
+				} 
+				catch (Exception e) {
+					e.printStackTrace();
+					Alert restartAlert = new Alert(AlertType.ERROR, "Failed to restart", ButtonType.OK);
+					restartAlert.showAndWait();
+				}
+			}
+		});
+	}
+	
+	private void loadSaveToOptionView(List<TableViewData> selectedSongsList) throws SQLException, IOException {
+		Stage saveToOptionStage = new Stage();
+		FXMLLoader loader = new FXMLLoader();
+		loader.setLocation(getClass().getResource("/fxml/SaveToOptionView.fxml"));
+		BorderPane root = loader.load();
+		Scene scene = new Scene(root);
+		SaveToOptionController ctr = loader.<SaveToOptionController>getController();
+		saveToOptionStage.initModality(Modality.WINDOW_MODAL);
+		saveToOptionStage.initOwner(this.testTable.getScene().getWindow());
+		saveToOptionStage.setTitle("Configuration");
+		saveToOptionStage.setScene(scene);
+		ctr.initData(saveToOptionStage, this.songsDb, selectedSongsList);
+		saveToOptionStage.show();
+	}
+	
+//	private Alert alertWithCheckBox(AlertType type, String contentText, Consumer<Boolean> checkBoxAction, ButtonType... buttonTypes) {
+//		Alert alert = new Alert(type);
+//		// Need to force the alert to layout in order to grab the graphic,
+//		 // as we are replacing the dialog pane with a custom pane
+//		 alert.getDialogPane().applyCss();
+//		 Node graphic = alert.getDialogPane().getGraphic();
+//		 // Create a new dialog pane that has a checkbox instead of the hide/show details button
+//		 // Use the supplied callback for the action of the checkbox
+//		 alert.setDialogPane(new DialogPane() {
+//		   @Override
+//		   protected Node createDetailsButton() {
+//		     CheckBox optOut = new CheckBox();
+//		     optOut.setText("Do not ask again");
+//		     optOut.setOnAction(e -> checkBoxAction.accept(optOut.isSelected()));
+//		     return optOut;
+//		   }
+//		 });
+//		 alert.getDialogPane().getButtonTypes().addAll(buttonTypes);
+//		 alert.getDialogPane().setContentText(contentText);
+//		 // Fool the dialog into thinking there is some expandable content
+//		 // a Group won't take up any space if it has no children
+//		 alert.getDialogPane().setExpandableContent(new Group());
+//		 alert.getDialogPane().setExpanded(true);
+//		 // Reset the dialog graphic using the default style
+//		 alert.getDialogPane().setGraphic(graphic);
+//		 return alert;
+//	}
+	
+	
 	private class CustomPredicate implements Predicate<TableViewData> { 
 		private final String searchedText;
 		
+		private final String lengthFilter = "length"; 
+		
 		public CustomPredicate(String searchedText) {
 			this.searchedText = searchedText;
+		}
+		
+		private boolean matchLengthFilter(String[] words) {
+			if (words.length != 1) {
+				return false;
+			}
+			if (words[0].toLowerCase().startsWith(lengthFilter)) {
+				// must have at least 2 chars after length (for <,> or <=,>=) to qualify 
+				if (words[0].length() < lengthFilter.length() + 2) {
+					return false;
+				}
+				else {
+					String operator = words[0].substring(lengthFilter.length(), lengthFilter.length() + 2);
+					// make sure there's number after the operators for filtering
+					if ((!operator.startsWith("<") && !operator.startsWith(">")) || (operator.endsWith("=") && words[0].length() == lengthFilter.length() + 2)) {
+						return false;
+		 			}
+					
+					return true;
+				}
+			}
+			else {
+				return false;
+			}
+		}
+		
+		private boolean matchLengthCondition(String word, int totalTime) {
+			int operatorStartIndex = lengthFilter.length();
+			String searchedLengthStr;
+			String operator = word.substring(operatorStartIndex, operatorStartIndex + 2);
+			// operator is either < or >
+			if (!operator.endsWith("=")) {
+				// get substring after operator
+				searchedLengthStr = word.substring(operatorStartIndex + 1);
+				// rewrite operator as length of operator is only one
+				operator = Character.toString(operator.charAt(0));
+			}
+			// operator is either <= or >=
+			else {
+				searchedLengthStr = word.substring(operatorStartIndex + 2);
+			}
+			
+			// for searching seconds
+			String[] searchedLengthArr = searchedLengthStr.split(":", 2);
+			long searchedLength;
+			// if search for minutes + seconds (etc. 4:30)
+			if (searchedLengthArr.length > 1) {
+				// check if they are digits
+				for (String time : searchedLengthArr) {
+					if (!time.matches("\\d+")) {
+						return false;
+					}
+				}
+				// false if length of seconds string is more than two (etc. 2:333) 
+				if (searchedLengthArr[1].length() > 2) {
+					return false;
+				}
+				// convert to seconds
+				searchedLength = TimeUnit.MINUTES.toSeconds(Long.parseLong(searchedLengthArr[0])) + Long.parseLong(searchedLengthArr[1]);
+			}
+			else {
+				if (!searchedLengthStr.matches("\\d+")) {
+					return false;
+				}
+				
+				searchedLength = TimeUnit.MINUTES.toSeconds(Long.parseLong(searchedLengthStr));
+			}
+			// convert totalTime to seconds as well for comparison as the user given string is not as precise
+			long length = TimeUnit.MILLISECONDS.toSeconds(totalTime);
+			switch (operator) {
+				case "<":
+					return length < searchedLength;
+				case ">":
+					return length > searchedLength;
+				case "<=":
+					return length <= searchedLength;
+				case ">=":
+					return length >= searchedLength;
+			}
+ 			// shouldn't have come to here but return false in default
+			return false;
 		}
 		
 		@Override public boolean test(TableViewData row) {
@@ -493,17 +796,26 @@ public class SongsDisplayController {
 				displayCondition = row.isDownloadedProperty().get() ? true : false;
 			}
 			
-			// TODO: allows comparator < and > for length related or date?
 			if (this.searchedText.isEmpty()) {
 				return displayCondition && true;
 			}
+			
+			String[] words = searchedText.toLowerCase().split("\\s+");
+			
+			// if search for length specifically
+			if (this.matchLengthFilter(words)) {
+				return this.matchLengthCondition(words[0], row.totalTimeProperty().get());
+			}
+			
+			// TODO: can optimize this by using map of sorts instead of this linear search
+			// normal search
 			String[] items = {row.songSourceProperty().get(), row.artistNameProperty().get()
     				, row.artistNameUnicodeProperty().get(), row.songTitleProperty().get()
     				, row.songTitleUnicodeProperty().get(), row.songTagNamesProperty().get()
     				, row.creatorNameProperty().get()};
     		String itemsStr = String.join(" ", items).toLowerCase();
-    		String[] words = searchedText.toLowerCase().split("\\s+");
-    		if (Arrays.stream(words).parallel().allMatch(itemsStr::contains)) {
+    		
+    		if (Arrays.stream(words).allMatch(itemsStr::contains)) {
     			return displayCondition && true;
     		}
     		return displayCondition && false;
@@ -582,7 +894,7 @@ public class SongsDisplayController {
 		}
 		
 		public static Callback<TableViewData, Observable[]> extractor() {
-		   return (TableViewData p) -> new Observable[]{p.isDownloadedProperty(), p.isHiddenProperty(), p.isSelectedProperty()};
+		   return (p) -> new Observable[]{p.isDownloadedProperty(), p.isHiddenProperty(), p.isSelectedProperty()};
 		}
 		
 		public static String totalTimeToString(int totalTime) {
