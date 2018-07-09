@@ -117,7 +117,8 @@ public class SqliteDatabase {
 				+ this.Data.Config.IS_CREATOR_NAME_SHOWN + " BOOLEAN,"
 				+ this.Data.Config.IS_TOTAL_TIME_SHOWN + " BOOLEAN,"
 				+ this.Data.Config.IS_IS_DOWNLOADED_SHOWN + " BOOLEAN,"
-				+ this.Data.Config.ORDERING + " TEXT"
+				+ this.Data.Config.ORDERING + " TEXT,"
+				+ this.Data.Config.SOUND_VOLUME + " REAL"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
@@ -256,7 +257,7 @@ public class SqliteDatabase {
 	private void insertIntoConfig(String pathToOsuDb, String pathToSongsFolder, String saveFolder,
 			boolean isSongSourceShown, boolean isArtistNameShown, boolean isArtistNameUnicodeShown,
 			boolean isSongTitleShown, boolean isSongTitleUnicodeShown, boolean isCreatorNameShown,
-			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering) throws SQLException {
+			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume) throws SQLException {
 		String sql = "INSERT INTO " + this.Data.Config.TABLE_NAME + "(" 
 				+ this.Data.Config.PATH_TO_OSU_DB + ","
 				+ this.Data.Config.PATH_TO_SONGS_FOLDER + ","
@@ -269,8 +270,9 @@ public class SqliteDatabase {
 				+ this.Data.Config.IS_CREATOR_NAME_SHOWN + ","
 				+ this.Data.Config.IS_TOTAL_TIME_SHOWN + ","
 				+ this.Data.Config.IS_IS_DOWNLOADED_SHOWN + ","
-				+ this.Data.Config.ORDERING
-				+ ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ this.Data.Config.ORDERING + ","
+				+ this.Data.Config.SOUND_VOLUME
+				+ ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, pathToOsuDb);
 		pstmt.setString(2, pathToSongsFolder);
@@ -284,6 +286,7 @@ public class SqliteDatabase {
 		pstmt.setBoolean(10, isTotalTimeShown);
 		pstmt.setBoolean(11, isIsDownloadedShown);
 		pstmt.setString(12, ordering);
+		pstmt.setDouble(13, soundVolume);
 		pstmt.executeUpdate();
 	}
 	
@@ -752,7 +755,7 @@ public class SqliteDatabase {
 	// TODO: delete songsDb when error occurs
 	public void insertAllData(OsuDbParser osuDb) throws SQLException, InterruptedException {
 		this.insertIntoMetadata(osuDb.getOsuVersion(), osuDb.getFolderCount(), osuDb.getPlayerName(), osuDb.getNumberOfBeatmaps());
-		this.insertIntoConfig(osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "", false, false, false, false, false, false, false, false, "");
+		this.insertIntoConfig(osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "", false, false, false, false, false, false, false, false, "", 50.0);
 		
 		// store rankedIndex if ranked, -1 if is not and -2 if multi-audio
 		List<Integer> rankedList = new ArrayList<Integer>();
@@ -881,7 +884,13 @@ public class SqliteDatabase {
 	}
 	
 	
-		// TODO: consider update lastModificationTime when requested in menu and update in new stage maybe
+	// TODO: consider update lastModificationTime when requested in menu and update in new stage maybe
+	// To do that, first go through this check first as there may be inconsistency
+	// then, foreach beatmap in osuDb get its folderName, difficulty (or nameOfOsuFile) and modificationTime
+	// then make query in Database with join to load all beatmaps into memory by selecting the same attributes with additional beatmapAutoID for update later.
+	// only then compare each data
+	// maybe make option for osuDb to return map instead of list for easier lookup
+	// if different, means it has been changed, so update in batch
 	public void updateData(OsuDbParser osuDb) throws SQLException, InterruptedException, Exception {
 		// only the key is useful
 		Map<Integer, Integer> dbRecords = new TreeMap<Integer, Integer>();
@@ -1332,7 +1341,7 @@ public class SqliteDatabase {
 	public void updateConfigFull(int configID, String pathToOsuDb, String pathToSongsFolder, String saveFolder,
 			boolean isSongSourceShown, boolean isArtistNameShown, boolean isArtistNameUnicodeShown,
 			boolean isSongTitleShown, boolean isSongTitleUnicodeShown, boolean isCreatorNameShown,
-			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering) throws SQLException {
+			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume) throws SQLException {
 		
 		String sql = "UPDATE " + this.Data.Config.TABLE_NAME + "\n"
 				+ "SET " + this.Data.Config.PATH_TO_OSU_DB + " = ?,"
@@ -1346,7 +1355,8 @@ public class SqliteDatabase {
 				+ this.Data.Config.IS_CREATOR_NAME_SHOWN + " = ?,"
 				+ this.Data.Config.IS_TOTAL_TIME_SHOWN + " = ?,"
 				+ this.Data.Config.IS_IS_DOWNLOADED_SHOWN + " = ?,"
-				+ this.Data.Config.ORDERING + " = ? "
+				+ this.Data.Config.ORDERING + " = ?,"
+				+ this.Data.Config.SOUND_VOLUME + " = ? "
 				+ "WHERE " + this.Data.Config.CONFIG_ID + " = ?";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, pathToOsuDb);
@@ -1361,7 +1371,8 @@ public class SqliteDatabase {
 		pstmt.setBoolean(10, isTotalTimeShown);
 		pstmt.setBoolean(11, isIsDownloadedShown);
 		pstmt.setString(12, ordering);
-		pstmt.setInt(13, configID);
+		pstmt.setDouble(13, soundVolume);
+		pstmt.setInt(14, configID);
 		pstmt.executeUpdate();
 	}
 	
@@ -1469,7 +1480,7 @@ public class SqliteDatabase {
 	}
 	
 	
-	
+	// TODO: change to static fields(?) instead of this shit
 	public class SongsDbData {
 		public Metadata Metadata = new Metadata();
 		public Config Config = new Config();
@@ -1506,6 +1517,7 @@ public class SqliteDatabase {
 			public final String IS_TOTAL_TIME_SHOWN = "IsTotalTimeShown";
 			public final String IS_IS_DOWNLOADED_SHOWN = "IsIsDownloadedShown";
 			public final String ORDERING = "Ordering";
+			public final String SOUND_VOLUME = "SoundVolume";
 		}
 		
 		public class Beatmap {

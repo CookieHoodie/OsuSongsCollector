@@ -2,10 +2,12 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -47,26 +49,37 @@
                   </HBox>
                   <HBox alignment="CENTER" prefHeight="66.0" prefWidth="410.0">
                      <children>
-                        <TextField fx:id="sampleTextField" editable="false" focusTraversable="false" prefHeight="25.0" prefWidth="149.0" HBox.hgrow="SOMETIMES" />
+                        <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <TextField fx:id="sampleTextField" editable="false" focusTraversable="false" prefHeight="25.0" prefWidth="149.0" text="Choose your filename format below:" />
+                              <Label fx:id="warningLabel" focusTraversable="false" textFill="#f50005" visible="false" />
+                           </children>
+                        </VBox>
                      </children>
                   </HBox>
                   <HBox alignment="CENTER" prefHeight="55.0" prefWidth="410.0">
                      <children>
-                        <ComboBox fx:id="prefixComboBox" onAction="#renderSample" prefWidth="150.0" />
-                        <Label text=" - ">
+                        <ComboBox fx:id="prefixComboBox" onAction="#renderSample" prefWidth="150.0" HBox.hgrow="ALWAYS" />
+                        <Label text=" - " HBox.hgrow="ALWAYS">
                            <font>
                               <Font size="18.0" />
                            </font>
                         </Label>
-                        <ComboBox fx:id="suffixComboBox" onAction="#renderSample" prefWidth="150.0" />
+                        <ComboBox fx:id="suffixComboBox" onAction="#renderSample" prefWidth="150.0" HBox.hgrow="ALWAYS" />
                      </children>
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
                   </HBox>
-                  <HBox alignment="BOTTOM_RIGHT" prefHeight="72.0" prefWidth="410.0">
-                     <children>
-                        <Button fx:id="duplicatedSongsCheckButton" mnemonicParsing="false" onAction="#checkForDuplicatedSongs" text="Check" />
+                  <ButtonBar prefHeight="40.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+                    <buttons>
+                        <Button fx:id="duplicatedSongsCheckButton" mnemonicParsing="false" onAction="#checkForDuplicatedSongs" text="Check for duplicates �">
+                           <tooltip>
+                              <Tooltip text="Search for possible duplicated songs in the chosen songs list base on similar Artist, Title, and Length" />
+                           </tooltip></Button>
                         <Button fx:id="startButton" disable="true" mnemonicParsing="false" onAction="#startCopying" text="Start" />
-                     </children>
-                  </HBox>
+                    </buttons>
+                  </ButtonBar>
                </children>
             </VBox>
          </children>

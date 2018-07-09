@@ -10,10 +10,13 @@
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.RadioMenuItem?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -29,6 +32,56 @@
                   <TextField fx:id="testSearchText" promptText="Search for..." />
                   <Label fx:id="numOfSelectedSongsLabel" text="selected: (init in controller)" />
                   <ComboBox fx:id="orderByComboBox" onAction="#testSort" prefWidth="150.0" />
+                  <VBox prefHeight="56.0" prefWidth="272.0">
+                     <children>
+                        <HBox prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <Label fx:id="mediaPlayerTitleLabel" text="Song Title" />
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <Slider fx:id="mediaPlayerTimeSlider" />
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="49.0" prefWidth="200.0">
+                           <children>
+                              <ToggleButton fx:id="mediaPlayerRepeatToggleButton" minWidth="25.0" mnemonicParsing="false" selected="true" text="∞">
+                                 <tooltip>
+                                    <Tooltip text="Repeat / No repeat" />
+                                 </tooltip>
+                              </ToggleButton>
+                              <ToggleButton fx:id="mediaPlayerShuffleToggleButton" minWidth="25.0" mnemonicParsing="false" text="🔀">
+                                 <tooltip>
+                                    <Tooltip text="Random / Sequential (*lower priority than ∞)" />
+                                 </tooltip>
+                              </ToggleButton>
+                              <Button fx:id="mediaPlayerPreviousButton" minWidth="25.0" mnemonicParsing="false" text="⏪">
+                                 <tooltip>
+                                    <Tooltip text="Previous song" />
+                                 </tooltip></Button>
+                            <Button fx:id="mediaPlayerPlayButton" minWidth="25.0" mnemonicParsing="false" text="▶">
+                                 <tooltip>
+                                    <Tooltip text="Play" />
+                                 </tooltip></Button>
+                              <Button fx:id="mediaPlayerPauseButton" minWidth="25.0" mnemonicParsing="false" text="⏸">
+                                 <tooltip>
+                                    <Tooltip text="Pause" />
+                                 </tooltip></Button>
+                              <Button fx:id="mediaPlayerStopButton" minWidth="25.0" mnemonicParsing="false" text="◼">
+                                 <tooltip>
+                                    <Tooltip text="Stop " />
+                                 </tooltip></Button>
+                              <Button fx:id="mediaPlayerNextButton" mnemonicParsing="false" text="⏩">
+                                 <tooltip>
+                                    <Tooltip text="Next song" />
+                                 </tooltip></Button>
+                              <Label fx:id="mediaPlayerSpeakerLabel" text="🔊" />
+                              <Slider fx:id="mediaPlayerVolumeSlider" prefHeight="14.0" prefWidth="68.0" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
                </children>
                <VBox.margin>
                   <Insets bottom="20.0" />
@@ -42,7 +95,7 @@
                   <TableColumn fx:id="songTitleCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Song Title" />
                   <TableColumn fx:id="songTitleUnicodeCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Song Title (Unicode)" visible="false" />
                   <TableColumn fx:id="creatorNameCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Creator" visible="false" />
-                  <TableColumn fx:id="totalTimeCol" editable="false" minWidth="20.0" prefWidth="100.0" sortable="false" text="Approx length" />
+                  <TableColumn fx:id="totalTimeCol" editable="false" minWidth="20.0" prefWidth="100.0" sortable="false" />
                   <TableColumn fx:id="checkBoxCol" minWidth="20.0" prefWidth="100.0" sortable="false">
                      <graphic>
                         <CheckBox fx:id="selectAllCheckBoxInCheckBoxCol" alignment="CENTER" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" onAction="#selectUnselectAll" text="Select all" />
@@ -76,7 +129,7 @@
                         <CheckMenuItem fx:id="songTitleShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Song Title" />
                         <CheckMenuItem fx:id="songTitleUnicodeShowCheckMenuItem" mnemonicParsing="false" text="Song Title (Unicode)" />
                         <CheckMenuItem fx:id="creatorNameShowCheckMenuItem" mnemonicParsing="false" text="Creator" />
-                        <CheckMenuItem fx:id="totalTimeShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Approx length" />
+                        <CheckMenuItem fx:id="totalTimeShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Length" />
                         <CheckMenuItem fx:id="isDownloadedShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Copied Songs" />
                      </items>
                 </Menu>

@@ -16,7 +16,6 @@ public class OsuDbParser extends OsuReader{
 	// for threading
 	private BiConsumer<Integer, Integer> progressUpdate = null;
 	
-    // public member
 	private String pathToSongsFolder;
 	private String pathToOsuDb;
     private int osuVersion;

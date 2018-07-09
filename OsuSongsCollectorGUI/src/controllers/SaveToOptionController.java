@@ -11,15 +11,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.management.RuntimeErrorException;
 
+import application.Comparators;
 import application.Main;
 import application.OsuDbParser;
 import application.SqliteDatabase;
+import controllers.FilterDialogController.SimplifiedTableViewData;
 import controllers.SongsDisplayController.TableViewData;
 import javafx.application.Platform;
 import javafx.beans.property.Property;
@@ -46,6 +50,7 @@ import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
@@ -56,10 +61,11 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.TilePane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class SaveToOptionController {
-	private enum ComboBoxChoice {
+	enum ComboBoxChoice {
 		NONE("None", ""),
 		SONG_SOURCE("Source", "やはり俺の青春ラブコメはまちがっている。続"),
 		ARTIST_NAME("Artist", "yanaginagi"),
@@ -93,26 +99,20 @@ public class SaveToOptionController {
 	@FXML private Button startButton;
 	@FXML private TextField sampleTextField;
 	@FXML private Button duplicatedSongsCheckButton;
-//	@FXML private ProgressBar downloadProgressBar;
-//	@FXML private Button cancelButton;
-//	@FXML private TextArea taskDetailsTextArea;
+	@FXML private Label warningLabel;
 	
 	private Stage currentStage;
 	private SqliteDatabase songsDb;
-	private List<TableViewData> selectedSongsList;
+	private Map<String, List<TableViewData>> selectedSongsMap;
 	private boolean isPathSet = false;
-	private boolean isOptionsSet = true;
+	private boolean isOptionsSet = false;
+	private boolean useArtistNameUnicode;
+	private boolean useSongTitleUnicode;
 	
 	// all initially from db, should not be changed
 	private int configID;
 	private String pathToSongsFolder = "";
 	private String saveFolder = "";
-	
-//	private Task<Void> task;
-	
-	// TODO: unselect all checked checkbox after closing stage
-	// TODO: add option to remove or hide duplicated by examining artist, songTitle, totalTime, and audioName
-	// by adding buttons and screen to show what has been hidden and their criteria to make them marked as duplicated
 	
 	
 	@FXML private void initialize() {
@@ -120,18 +120,27 @@ public class SaveToOptionController {
 		// in that case, remember to change the isOptionsSet also
 		ObservableList<ComboBoxChoice> prefixSuffixComboBoxObsList = FXCollections.observableArrayList(ComboBoxChoice.values());
 		this.prefixComboBox.setItems(prefixSuffixComboBoxObsList);
-		this.prefixComboBox.getSelectionModel().select(ComboBoxChoice.ARTIST_NAME);
+		this.prefixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
 		this.suffixComboBox.setItems(prefixSuffixComboBoxObsList);
-		this.suffixComboBox.getSelectionModel().select(ComboBoxChoice.SONG_TITLE);
+		this.suffixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
 //		this.taskDetailsTextArea.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
-		this.sampleTextField.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
+//		this.sampleTextField.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
+//		this.sampleTextField.setText("No attribute is chosen");
+		// invisible by default
+		this.warningLabel.setText("*Filename with only one attribute can result in numerous duplicates!");
+//		this.duplicatedSongsCheckButton.setTooltip(new Tooltip("Search for possible duplicated songs in the chosen songs list"
+//				+ " base on similar Artist, Title, and Length"));
 	}
 	
-	public void initData(Stage currentStage, SqliteDatabase songsDb, List<TableViewData> selectedSongsList) throws SQLException {
+	public void initData(Stage currentStage, SqliteDatabase songsDb, Map<String, List<TableViewData>> selectedSongsMap
+			, boolean useArtistNameUnicode, boolean useSongTitleUnicode) throws SQLException {
 		// assigning to member all data passed in
 		this.songsDb = songsDb;
 		this.currentStage = currentStage;
-		this.selectedSongsList = selectedSongsList;
+		this.selectedSongsMap = selectedSongsMap;
+		// both are for dialog view naming purpose (if any)
+		this.useArtistNameUnicode = useArtistNameUnicode;
+		this.useSongTitleUnicode = useSongTitleUnicode;
 		// get metadata from database to initialize some needed variables
 		ResultSet rs = this.songsDb.selectConfig();
 		if (rs.next()) {
@@ -149,7 +158,6 @@ public class SaveToOptionController {
 		else {
 			throw new SQLException("No metadata available?");
 		}
-		
 		
 	}
 	
@@ -175,7 +183,9 @@ public class SaveToOptionController {
 		ComboBoxChoice prefix = this.prefixComboBox.getSelectionModel().getSelectedItem();
 		ComboBoxChoice suffix = this.suffixComboBox.getSelectionModel().getSelectedItem();
 		
+		this.sampleTextField.setTooltip(null); // remove tooptip if any
 		this.isOptionsSet = false;
+		boolean setWarningLabelVisible = false;
 		if (prefix == suffix) {
 			if (prefix != ComboBoxChoice.NONE) {
 				this.sampleTextField.setText("Attributes can't be the same!");
@@ -188,15 +198,27 @@ public class SaveToOptionController {
 				|| ((prefix == ComboBoxChoice.SONG_TITLE || prefix == ComboBoxChoice.SONG_TITLE_UNICODE) && (suffix == ComboBoxChoice.SONG_TITLE || suffix == ComboBoxChoice.SONG_TITLE_UNICODE))) {
 			this.sampleTextField.setText("Similar attributes is not allowed!");
 		}
+		else if ((prefix == ComboBoxChoice.SONG_SOURCE || suffix == ComboBoxChoice.SONG_SOURCE) &&
+				 (prefix == ComboBoxChoice.ARTIST_NAME || prefix == ComboBoxChoice.ARTIST_NAME_UNICODE
+				|| suffix == ComboBoxChoice.ARTIST_NAME || suffix == ComboBoxChoice.ARTIST_NAME_UNICODE)) {
+			this.sampleTextField.setText("Possible attribute collision �");
+			this.sampleTextField.setTooltip(new Tooltip("When Source is empty, Artist(Unicode) will be used instead and finally Artist if Unicode is also empty."
+					+ " This can result in filename with something like: 'ArtistName - ArtistName'."));
+		}
 		else {
+			// either one is empty but not both
 			if (prefix == ComboBoxChoice.NONE || suffix == ComboBoxChoice.NONE) {
+				setWarningLabelVisible = true;
 				this.sampleTextField.setText(prefix.getSample() + suffix.getSample());
 			}
 			else {
 				this.sampleTextField.setText(prefix.getSample() + " - " + suffix.getSample());
 			}
 			this.isOptionsSet = true;
+			
 		}
+		// this is only for when either one box is None
+		this.warningLabel.setVisible(setWarningLabelVisible);
 		
 		this.setStartButtonDisability();
 	}
@@ -219,7 +241,8 @@ public class SaveToOptionController {
 		
 		ComboBoxChoice prefix = this.prefixComboBox.getSelectionModel().getSelectedItem();
 		ComboBoxChoice suffix = this.suffixComboBox.getSelectionModel().getSelectedItem();
-		Task<Void> copySongsTask = new CopySongsTask(this.selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix); 
+		List<TableViewData> selectedSongsList = this.selectedSongsMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
+//		Task<Void> copySongsTask = new CopySongsTask(selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix); 
 		
 		try {
 			FXMLLoader loader = new FXMLLoader();
@@ -227,85 +250,97 @@ public class SaveToOptionController {
 			BorderPane root = loader.load();
 			Scene scene = new Scene(root);
 			CopySongsController ctr = loader.<CopySongsController>getController();
-			ctr.initDataAndStart(copySongsTask);
+			ctr.initDataAndStart(this.currentStage, this.songsDb, selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix);
 			this.currentStage.setScene(scene);
 		}
-		catch (IOException e) {
+		catch (Exception e) {
 			e.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load copy songs screen", ButtonType.OK);
 			alert.showAndWait();
 		}
 	}
 	
-	// TODO: add option to remove or hide duplicated by examining artist, songTitle, totalTime, and audioName x folderName
 	@FXML private void checkForDuplicatedSongs(ActionEvent event) {
+		// add data into map with Song as key
+		// if similar song, the value (list) size will be > 1
 		Map<Song, List<TableViewData>> duplicatedMap = new HashMap<>();
-		for (TableViewData row : this.selectedSongsList) {
-			Song s = new Song(row.artistNameProperty().get().toLowerCase(), row.songTitleProperty().get().toLowerCase());
-			List<TableViewData> rowList = duplicatedMap.get(s);
-			// if the key doesn't exist
-			if (rowList == null) {
-				rowList = new ArrayList<TableViewData>();
-				rowList.add(row);
-				duplicatedMap.put(s, rowList);
-			}
-			else {
-				rowList.add(row);
+		for (List<TableViewData> rowList : this.selectedSongsMap.values()) {
+			if (rowList.size() == 1) {
+				TableViewData row = rowList.get(0);
+				Song s = new Song(row.artistNameProperty().get().toLowerCase(), row.songTitleProperty().get().toLowerCase());
+				List<TableViewData> duplicatedRows = duplicatedMap.get(s);
+				// if the key doesn't exist
+				if (duplicatedRows == null) {
+					duplicatedRows = new ArrayList<TableViewData>();
+					duplicatedRows.add(row);
+					duplicatedMap.put(s, duplicatedRows);
+				}
+				else {
+					duplicatedRows.add(row);
+				}
 			}
 		}
-		List<List<TableViewData>> possibleDuplicatedList = new ArrayList<List<TableViewData>>();
-		for (List<TableViewData> rowList : duplicatedMap.values()) {
-			// if songs are duplicated by artistName and songTitle
-			if (rowList.size() > 1) {
-				// all these are for checking for rare case where one folder contains several different audio
-				Map<String, List<TableViewData>> sameFolderCheckMap = new HashMap<>();
-				for (TableViewData row : rowList) {
-					List<TableViewData> subRowList = sameFolderCheckMap.get(row.folderNameProperty().get());
-					if (subRowList == null) {
-						subRowList = new ArrayList<TableViewData>();
-						subRowList.add(row);
-						sameFolderCheckMap.put(row.folderNameProperty().get(), subRowList);
-					}
-					else {
-						subRowList.add(row);
-					}
-				}
-				
-				List<TableViewData> groupedList = new ArrayList<TableViewData>();
-				for (List<TableViewData> subRowList : sameFolderCheckMap.values()) {
-					// normal case: means the songs are likely duplicated
-					if (subRowList.size() == 1) {
-						groupedList.add(subRowList.get(0));
-					}
-					// rare case
-					else {
-						// further check whether there are other songs (> 1) with different folder
-						if (sameFolderCheckMap.size() <= 2) {
-							break;
+		Comparator<TableViewData> totalTimeComparator = new Comparators.TotalTimeComparator();
+		// from dialogView
+		ObservableList<SimplifiedTableViewData> dialogObsList = FXCollections.observableArrayList(SimplifiedTableViewData.extractor());
+//		List<List<TableViewData>> possibleDuplicatedList = new ArrayList<List<TableViewData>>();
+		final int range = 15000;  // in range of 15 seconds
+		for (List<TableViewData> r : duplicatedMap.values()) {
+			if (r.size() > 1) {
+				// sort for comparison later
+				r.sort(totalTimeComparator);
+				List<TableViewData> l = new ArrayList<TableViewData>();
+				for (int i = 1; i < r.size(); i++) {
+					TableViewData previousRow = r.get(i - 1);
+					TableViewData currentRow = r.get(i);
+					
+					int currentTime = currentRow.totalTimeProperty().get();
+					int previousTime = previousRow.totalTimeProperty().get();
+					if (Math.abs(currentTime - previousTime) < range) {
+						// if the streak breaks, we need to add both rows if duplicated
+						if (l.isEmpty() || !previousRow.equals(l.get(l.size() - 1))) {
+							l.add(previousRow);
 						}
+						l.add(currentRow);
 					}
+					// TODO: if ever want to deselect for user, it can be done here by unselecting currentRow
+					// might consider adding option for user to choose all duplicated Name instead of examining the totalTIme
+					// and option for user to choose longest, shortest, etc.
 				}
-				if (groupedList.size() != 0) {
-					possibleDuplicatedList.add(groupedList);
+				if (!l.isEmpty()) {
+					for (TableViewData row : l) {
+						String name;
+						String artistName = this.useArtistNameUnicode && !row.artistNameUnicodeProperty().get().isEmpty() ? row.artistNameUnicodeProperty().get() : row.artistNameProperty().get();
+						String songTitle = this.useSongTitleUnicode && !row.songTitleUnicodeProperty().get().isEmpty() ? row.songTitleUnicodeProperty().get() : row.songTitleProperty().get();
+						if (!row.songSourceProperty().get().isEmpty()) {
+							name = row.songSourceProperty().get() + " (" + artistName + ") - " + songTitle;
+						}
+						else {
+							name = artistName + " - " + songTitle;
+						}
+						SimplifiedTableViewData data = new SimplifiedTableViewData(name, TableViewData.totalTimeToString(row.totalTimeProperty().get()), row.isSelectedProperty().get(), row.folderNameProperty().get());
+						dialogObsList.add(data);
+					}
+					dialogObsList.add(new SimplifiedTableViewData());
+//					possibleDuplicatedList.add(l);
 				}
 			}
 		}
 		
-//		System.out.println(possibleDuplicatedList.size());
-//		for (List<TableViewData> l : possibleDuplicatedList) {
-//			for (TableViewData row : l) {
-//				System.out.println(row.artistNameProperty().get() + " - " + row.songTitleProperty().get() + " - " + row.totalTimeProperty().get());
-//			}
-//			System.out.println();
-//		}
-		
-		System.out.println(possibleDuplicatedList.size());
-		for (List<TableViewData> l : possibleDuplicatedList) {
-			for (TableViewData row : l) {
-				System.out.println(row.artistNameProperty().get() + " - " + row.songTitleProperty().get() + " - " + row.totalTimeProperty().get());
-			}
-			System.out.println();
+		if (dialogObsList.isEmpty()) {
+			Alert alert = new Alert(AlertType.INFORMATION, "No possible duplicate is found!", ButtonType.OK);
+			alert.showAndWait();
 		}
+		else {
+			try {
+				this.loadFilterDialogView(dialogObsList);
+			} catch (Exception e) {
+				e.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Failed to load duplicate check screen", ButtonType.OK);
+				alert.showAndWait();
+			}
+		}
+		
 	}
 	
 	private void setStartButtonDisability() {
@@ -317,6 +352,22 @@ public class SaveToOptionController {
 			this.startButton.requestFocus();
 		}
 	}
+	
+	private void loadFilterDialogView(ObservableList<SimplifiedTableViewData> dialogObsList) throws IOException {
+		Stage dialogStage = new Stage();
+		dialogStage.setTitle("Duplicate check");
+		dialogStage.initModality(Modality.WINDOW_MODAL);
+		dialogStage.initOwner(this.currentStage);
+		FXMLLoader loader = new FXMLLoader();
+		loader.setLocation(getClass().getResource("/fxml/FilterDialogView.fxml"));
+		BorderPane root = loader.load();
+		Scene scene = new Scene(root);
+		FilterDialogController ctr = loader.<FilterDialogController>getController();
+		ctr.initData(this.selectedSongsMap, dialogObsList);
+		dialogStage.setScene(scene);
+		dialogStage.show();
+	}
+	
 	
 	private class Song {
 		private final String artistName;
@@ -365,179 +416,5 @@ public class SaveToOptionController {
 			return SaveToOptionController.this;
 		}
 	}
-	
-	private class CopySongsTask extends Task<Void> {
-		private final String pathToSongsFolderInTask;
-		private final String destinationFolder;
-		private final ComboBoxChoice prefix;
-		private final ComboBoxChoice suffix;
-		private final List<TableViewData> selectedSongsListInTask;
-		
-		public CopySongsTask(List<TableViewData> selectedSongsList, String pathToSongsFolder, String destinationFolder, ComboBoxChoice prefix, ComboBoxChoice suffix) {
-			this.selectedSongsListInTask = selectedSongsList;
-			this.pathToSongsFolderInTask = pathToSongsFolder;
-			this.destinationFolder = destinationFolder;
-			this.prefix = prefix;
-			this.suffix = suffix;
-		}
-		
-		private String formatFileName(String prefix, String suffix, String audioName, int occurance) {
-			String separator = prefix == "" || suffix == "" ? "" : " - ";
-			if (occurance == 0) {
-				return prefix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + separator + suffix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + audioName.substring(audioName.lastIndexOf('.'));
-			}
-			else {
-				return prefix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + separator + suffix.trim().replaceAll("[\\\\/:*?\"<>|]", "_") + " (" + (occurance+1) + ")" + audioName.substring(audioName.lastIndexOf('.'));
-			}
-		}
-		
-		private String getFileNamePrefix(TableViewData row) {
-			String fileNamePrefix;
-			// if Source is empty, cascade to artistNameUnicode and finally artistName if still empty
-			// if songTitleUnicode is empty, cascade to songTitle only
-			switch (this.prefix) {
-				case NONE: {
-					fileNamePrefix = "";
-					break;
-				}
-				case SONG_SOURCE: {
-					fileNamePrefix = row.songSourceProperty().get();
-					if (!fileNamePrefix.isEmpty()) {
-						break;
-					}
-				}
-				case ARTIST_NAME_UNICODE: {
-					fileNamePrefix = row.artistNameUnicodeProperty().get();
-					if (!fileNamePrefix.isEmpty()) {
-						break;
-					}
-				}
-				case ARTIST_NAME: {
-					fileNamePrefix = row.artistNameProperty().get();
-					break;
-				}
-				case SONG_TITLE_UNICODE: {
-					fileNamePrefix = row.songTitleProperty().get();
-					if (!fileNamePrefix.isEmpty()) {
-						break;
-					}
-				}
-				case SONG_TITLE: {
-					fileNamePrefix = row.songTitleProperty().get();
-					break;
-				}
-				
-				default: throw new RuntimeException("Invalid options");
-			}
-			return fileNamePrefix;
-		}
-		
-		private String getFileNameSuffix(TableViewData row) {
-			String fileNameSuffix;
-			switch (this.suffix) {
-				case NONE: {
-					fileNameSuffix = "";
-					break;
-				}
-				case SONG_SOURCE: {
-					fileNameSuffix = row.songSourceProperty().get();
-					if (!fileNameSuffix.isEmpty()) {
-						break;
-					}
-				}
-				case ARTIST_NAME_UNICODE: {
-					fileNameSuffix = row.artistNameUnicodeProperty().get();
-					if (!fileNameSuffix.isEmpty()) {
-						break;
-					}
-				}
-				case ARTIST_NAME: {
-					fileNameSuffix = row.artistNameProperty().get();
-					break;
-				}
-				case SONG_TITLE_UNICODE: {
-					fileNameSuffix = row.songTitleProperty().get();
-					if (!fileNameSuffix.isEmpty()) {
-						break;
-					}
-				}
-				case SONG_TITLE: {
-					fileNameSuffix = row.songTitleProperty().get();
-					break;
-				}
-				default: throw new RuntimeException("Invalid filename options");
-			}
-			return fileNameSuffix;
-		}
-		
-		@Override
-        protected Void call() throws Exception {
-//			int currentProgress = 0;
-//			boolean isCompleted = true;
-			updateProgress(0, 0);
-			int totalProgress = this.selectedSongsListInTask.size();
-			String[] items = {songsDb.Data.BeatmapSet.IS_DOWNLOADED};
-			Boolean[] results = {true};
-			try {
-				songsDb.getConn().setAutoCommit(false);
-				PreparedStatement updateBeatmapSetBooleanPStatement = songsDb.getUpdateBeatmapSetBooleanPreparedStatement(items);
-				for (int i = 0; i < totalProgress; i++) {
-					if (!isCancelled()) {
-						TableViewData row = this.selectedSongsListInTask.get(i);
-						int beatmapSetAutoID = row.beatmapSetAutoIDProperty().get();
-						// TODO: check if exist and if not, log error and continue 
-						Path oriPath = Paths.get(this.pathToSongsFolderInTask, row.folderNameProperty().get(), row.audioNameProperty().get());
-						// TODO: if unicode, use english if empty
-						// warn user if they change the order of the filename as old files does not recognize the previous one
-						int occurance = 0;
-						String fileNamePrefix = this.getFileNamePrefix(row);
-						String fileNameSuffix = this.getFileNameSuffix(row);
-						String fileName = this.formatFileName(fileNamePrefix, fileNameSuffix, row.audioNameProperty().get(), occurance);
-						
-						Path cpPath = Paths.get(this.destinationFolder, fileName);
-						File cpFile = cpPath.toFile();
-						if (cpFile.exists()) {
-							fileNameSuffix += " (" + TableViewData.totalTimeToString(row.totalTimeProperty().get()).replace(":", "'") + ")";
-							fileName = this.formatFileName(fileNamePrefix, fileNameSuffix, row.audioNameProperty().get(), occurance);
-							cpPath = Paths.get(this.destinationFolder, fileName);
-							cpFile = cpPath.toFile();
-							while (cpFile.exists()) {
-								occurance++;
-								fileName = this.formatFileName(fileNamePrefix, fileNameSuffix, row.audioNameProperty().get(), occurance);
-								cpPath = Paths.get(this.destinationFolder, fileName);
-								cpFile = cpPath.toFile();
-							}
-						}
-						
-						try {
-							Files.copy(oriPath, cpPath);
-						}
-						catch (UnsupportedOperationException | IOException | SecurityException e) {
-							updateBeatmapSetBooleanPStatement.executeBatch();
-							songsDb.getConn().commit();
-							throw e;
-						}
-						songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, beatmapSetAutoID, results);
-						Platform.runLater(() -> {
-							row.isDownloadedProperty().set(true);
-							row.isSelectedProperty().set(false);
-						}); 
-						updateProgress(i + 1, totalProgress);
-						updateMessage("(" + i + 1 + "/" + totalProgress + ") " + fileName);
-					}
-					else {
-						updateMessage((i+1) + " songs are copied, " + (totalProgress-i-1) + " are cancelled.");
-						break;
-					}
-				}
-				updateBeatmapSetBooleanPStatement.executeBatch();
-				songsDb.getConn().commit();
-			}
-			finally {
-				songsDb.getConn().setAutoCommit(true);
-			}
-			return null;
-        }
-    }
-	
+
 }

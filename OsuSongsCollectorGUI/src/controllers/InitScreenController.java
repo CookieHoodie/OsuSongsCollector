@@ -21,6 +21,9 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
+// TODO: at the end, ensure only one app can be opened at the same time. Otherwise racing condition can happen in SQL
+// TODO: if any error occurs while welcome screen is showing, after alert, close the program otherwise the screen just hangs there
+
 public class InitScreenController {
 	@FXML private Label welcomeLabel;
 	
@@ -76,21 +79,24 @@ public class InitScreenController {
 				if (isUpToDate) {
 					try {
 						this.loadSongsDisplayView();
-					} catch (IOException e1) {
-						e1.printStackTrace();
-						Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
-						alert.showAndWait();
-					} catch (SQLException e1) {
+					}
+					catch (SQLException e1) {
 						// this exception comes from initTableData method for populating the tableView
 						e1.printStackTrace();
 						Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
+						alert.showAndWait();
+					}
+					catch (Exception e1) {
+						e1.printStackTrace();
+						Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
 						alert.showAndWait();
 					}
 				}
 				else {
 					try {
 						this.loadUpdateDataView();
-					} catch (IOException e1) {
+					} 
+					catch (Exception e1) {
 						e1.printStackTrace();
 						Alert alert = new Alert(AlertType.ERROR, "Failed to load update screen", ButtonType.OK);
 						alert.showAndWait();
@@ -110,7 +116,7 @@ public class InitScreenController {
 			try {
 				this.loadSetSongsFolderPathView();
 			}
-			catch (IOException e) {
+			catch (Exception e) {
 				e.printStackTrace();
 				Alert alert = new Alert(AlertType.ERROR, "Failed to load initialization screen", ButtonType.OK);
 				alert.showAndWait();
@@ -119,6 +125,7 @@ public class InitScreenController {
 		
 	}
 	
+	// TODO: might consider move all these loading methods to new class and pass callingStage as parameter
 	private void loadSongsDisplayView() throws IOException, SQLException {
 		Stage songsDisplayStage = new Stage();
 		FXMLLoader loader = new FXMLLoader();
@@ -133,6 +140,7 @@ public class InitScreenController {
 		songsDisplayStage.setScene(scene);
 		ctr.initData(songsDisplayStage, this.songsDb);
 		songsDisplayStage.show();
+		ctr.startMusic(); // TODO: if decide, add this to updateData and LoadAndCreateDB
 		primaryStage.hide();
 	}
 	

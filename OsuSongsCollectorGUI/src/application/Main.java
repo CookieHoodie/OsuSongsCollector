@@ -13,8 +13,10 @@ import controllers.InitScreenController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.scene.Scene;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
 
 
 public class Main extends Application {
@@ -34,6 +36,8 @@ public class Main extends Application {
 		loader.setLocation(getClass().getResource("/fxml/InitScreenView.fxml"));
 		BorderPane root = loader.load();
 		Scene scene = new Scene(root);
+		primaryStage.initStyle(StageStyle.TRANSPARENT);
+		scene.setFill(Color.TRANSPARENT);
 		primaryStage.setScene(scene);
 		primaryStage.show();
 		// show the screen 1st, then start the checking progress

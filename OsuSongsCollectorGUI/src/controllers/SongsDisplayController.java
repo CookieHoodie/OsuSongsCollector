@@ -12,11 +12,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -27,6 +30,7 @@ import application.Comparators;
 import application.Comparators.SongTitleComparator;
 import application.Main;
 import application.SqliteDatabase;
+import controllers.FilterDialogController.SimplifiedTableViewData;
 import controllers.SongsDisplayController.TableViewData;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
@@ -35,12 +39,14 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -61,17 +67,25 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaException;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaPlayer.Status;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -125,13 +139,36 @@ public class SongsDisplayController {
 	@FXML private Menu helpMenu;
 	@FXML private MenuItem aboutHelpMenuItem;
 	
+	@FXML private Label mediaPlayerTitleLabel;
+	@FXML private Button mediaPlayerPlayButton;
+	@FXML private Button mediaPlayerPauseButton;
+	@FXML private Button mediaPlayerStopButton;
+	@FXML private Button mediaPlayerPreviousButton;
+	@FXML private Button mediaPlayerNextButton;
+	@FXML private Label mediaPlayerSpeakerLabel;
+	@FXML private Slider mediaPlayerVolumeSlider;
+	@FXML private Slider mediaPlayerTimeSlider;
+	@FXML private ToggleButton mediaPlayerRepeatToggleButton;
+	@FXML private ToggleButton mediaPlayerShuffleToggleButton;
+	
 	private final String numOfSelectedSongsLabelText = "Selected: ";
 	private SimpleIntegerProperty selectedCounterProperty = new SimpleIntegerProperty(0);
 	
+	private MediaPlayer mediaPlayer;
+	private TableViewData currentlyPlayedSong;
+	private String pathToSongsFolder;
+	private Double soundVolume;
+	private boolean userChangedTimeSlider = true; // var for detecting user or comp changed slider value
+
+//	private final String playButtonPlayText = "▶";
+//	private final String playButtonPauseText = "⏸";
+//	private final String shuffleButtonShuffleText = "🔀";
+//	private final String shuffleButtonRepeatText = "∞";
+	private final String speakerUTFIcon = "🔊";
+	private final String speakerMuteUTFIcon = "🔇";
+
 	
-	// TODO: save those (and maybe saveFolder) in a different table Configuration
 	// and check the corresponding items in controller instead of fxml
-	// TODO: set help text on approx length
 	// TODO: add rotating screen while changing view, searching, etc.
 	// TODO: allow user to select and copy words but not edit
 	
@@ -161,12 +198,14 @@ public class SongsDisplayController {
         		}
         	};
         });
+        // for the sake of tooltip
+        Label totalTimeLabel = new Label("Length �");
+        totalTimeLabel.setTooltip(new Tooltip("This length corresponds to the length of beatmap in osu!. Real mp3 length may be longer than this."));
+        this.totalTimeCol.setGraphic(totalTimeLabel);
         this.checkBoxCol.setCellValueFactory(new PropertyValueFactory<TableViewData, Boolean>("isSelected"));
         this.checkBoxCol.setCellFactory(tc -> new CheckBoxTableCell<>());
 //        this.checkBoxCol.setCellFactory(tc -> new CustomCheckBoxCell());
-//        this.testTable.getSelectionModel().selectedItemProperty().addListener((obs, wasSelected, isSelected) -> {
-//        	System.out.println(obs);
-//        });
+        
         this.testTable.setRowFactory(value -> {
         	return new TableRow<TableViewData>() {
         		@Override protected void updateItem(TableViewData item, boolean empty) {
@@ -182,19 +221,18 @@ public class SongsDisplayController {
         	};
         });
         
-//        Comparator<TableViewData> lastModificationTimeComparator = new Comparators.LastModificationTimeComparator();
-//        ObservableList<Comparator<TableViewData>> orderByComparatorsObsList = FXCollections.observableArrayList(
-//        		new Comparators.SongTitleComparator(),
-//        		new Comparators.ArtistNameComparator(),
-//        		new Comparators.CreatorNameComparator(),
-//        		new Comparators.TotalTimeComparator(),
-//        		lastModificationTimeComparator
-//        );
-//        // TODO: set to user preference and sort using that after setting
-//        this.orderByComboBox.setItems(orderByComparatorsObsList);
-//        this.orderByComboBox.getSelectionModel().select(lastModificationTimeComparator);
+        this.initMenuItemsListener();
         
-        this.songSourceShowCheckMenuItem.selectedProperty().addListener((obs, oldValue, newValue) -> {
+        // set selected items to 0
+        this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + this.selectedCounterProperty.get());
+        
+        this.selectedCounterProperty.addListener((obs, oldValue, newValue) -> {
+        	this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + newValue);
+        });
+	}
+	
+	private void initMenuItemsListener() {
+		this.songSourceShowCheckMenuItem.selectedProperty().addListener((obs, oldValue, newValue) -> {
         	if (newValue) {
         		this.songSourceCol.setVisible(true);
         	}
@@ -265,32 +303,6 @@ public class SongsDisplayController {
         	
         	this.initSongsFilteredList.setPredicate(new CustomPredicate(this.testSearchText.getText()));
         });
-        
-        
-        // set selected items to 0
-        this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + this.selectedCounterProperty.get());
-        
-        this.selectedCounterProperty.addListener((obs, oldValue, newValue) -> {
-        	this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + newValue);
-        });
-        
-        // selectAll
-//        this.selectAllCheckBoxInCheckBoxCol.selectedProperty().addListener((obs, oldValue, newValue) -> {
-//        	if (newValue) {
-//        		this.testTable.getItems().forEach(row -> {
-//    				if (!row.isSelectedProperty().get()) {
-//    					row.isSelectedProperty().set(true);
-//    				}
-//    			});
-//        	}
-//        	else {
-//        		this.testTable.getItems().forEach(row -> {
-//        			if (row.isSelectedProperty().get()) {
-//        				row.isSelectedProperty().set(false);
-//        			}
-//        		});
-//        	}
-//        });
 	}
 	
 	public void initData(Stage currentStage, SqliteDatabase connectedSongsDb) throws SQLException {
@@ -308,7 +320,6 @@ public class SongsDisplayController {
 		});
 		this.initTableView();
 	}
-	
 	
 	private void initTableView() throws SQLException {
         ResultSet tableInitDataRs = this.songsDb.getTableInitData();
@@ -358,13 +369,17 @@ public class SongsDisplayController {
         		}
         	});
         	initSongsObsList.add(t);
-
         }
+       
+        
         FilteredList<TableViewData> initSongsFilteredList = new FilteredList<TableViewData>(initSongsObsList, new CustomPredicate(""));
         PauseTransition pause = new PauseTransition(Duration.millis(200));
         this.testSearchText.textProperty().addListener((obs, oldValue, newValue) -> {
+        	// TODO: prettify this
+        	this.testTable.setDisable(true);
         	pause.setOnFinished(event -> {
         		initSongsFilteredList.setPredicate(new CustomPredicate(newValue));
+        		this.testTable.setDisable(false);
         	});
             pause.playFromStart();
         });
@@ -378,6 +393,8 @@ public class SongsDisplayController {
         
         ResultSet configRs = this.songsDb.selectConfig();
         if (configRs.next()) {
+        	this.pathToSongsFolder = configRs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
+        	this.soundVolume = configRs.getDouble(this.songsDb.Data.Config.SOUND_VOLUME);
         	boolean isSongSourceShown = configRs.getBoolean(this.songsDb.Data.Config.IS_SONG_SOURCE_SHOWN);
         	boolean isArtistNameShown = configRs.getBoolean(this.songsDb.Data.Config.IS_ARTIST_NAME_SHOWN);
         	boolean isArtistNameUnicodeShown = configRs.getBoolean(this.songsDb.Data.Config.IS_ARTIST_NAME_UNICODE_SHOWN);
@@ -447,23 +464,321 @@ public class SongsDisplayController {
         	throw new SQLException("Failed to get config data");
         }
        
+        this.initMediaPlayerEssentials();
+        
         this.testTable.setItems(initSongsSortedList);
+        
 	}
 	
-	private void updatePreference() throws SQLException {
-		ResultSet configRs = this.songsDb.selectConfig();
-		if (configRs.next()) {
-			int configID = configRs.getInt(this.songsDb.Data.Config.CONFIG_ID);
-			String pathToOsuDb = configRs.getString(this.songsDb.Data.Config.PATH_TO_OSU_DB);
-			String pathToSongsFolder = configRs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
-			String saveFolder = configRs.getString(this.songsDb.Data.Config.SAVE_FOLDER);
-			String ordering = this.orderByComboBox.getSelectionModel().getSelectedItem().toString();
-			this.songsDb.updateConfigFull(configID, pathToOsuDb, pathToSongsFolder, saveFolder
-					, songSourceShowCheckMenuItem.isSelected(), artistNameShowCheckMenuItem.isSelected(), artistNameUnicodeShowCheckMenuItem.isSelected()
-					, songTitleShowCheckMenuItem.isSelected(), songTitleUnicodeShowCheckMenuItem.isSelected(), creatorNameShowCheckMenuItem.isSelected()
-					, totalTimeShowCheckMenuItem.isSelected(), isDownloadedShowCheckMenuItem.isSelected(), ordering);
+	
+	// procedure:
+	// startMusic (random) -> repeat Or new song base on repeatToggleButton 
+	// if repeatToggleButton is pressed while playing, set mediaPlayer to repeat or not
+	// shuffleToggleButton is only used when it's time to get new song
+	// modelSelection prevails all
+	
+	private void initMediaPlayerEssentials() {
+		if (this.soundVolume == null) {
+			throw new RuntimeException("Sound volume is not yet selected from songs.db");
+		}
+		// this must be set after querying database so that mediaPlayer later can refer to this value when boot
+		this.mediaPlayerVolumeSlider.setValue(this.soundVolume);
+		// default is not mute icon
+		if (Math.abs(this.soundVolume) < 0.01) {
+			this.mediaPlayerSpeakerLabel.setText(this.speakerMuteUTFIcon);
+		}
+		
+		
+		this.testTable.getSelectionModel().selectedItemProperty().addListener((obs, wasSelected, isSelected) -> {
+//			// when switching display, this is also fired but isSelected is null this time
+//			// also check if mediaPlayer is initialized and set to stopped. If yes, then dun play anything
+//			if (isSelected != null && this.mediaPlayer != null && this.mediaPlayer.getStatus() != Status.STOPPED) {
+//				// when switching display or searching, sometimes this listener will be fired but with same isSelected
+//				// so here check if selected is different only then play new song
+//				if (this.currentlyPlayedSong == null || this.currentlyPlayedSong != isSelected) {
+//					this.playNewSong(isSelected);
+//				}
+//				else {
+//					// otherwise, update title only for hinting user
+//					this.mediaPlayerTitleLabel.setText(this.getFormattedMediaPlayerSongTitle(isSelected));
+//				}
+//			}
+			
+			// when switching display, this is also fired but isSelected is null this time
+			if (isSelected != null) {
+				// also check if mediaPlayer is initialized,
+				if (this.mediaPlayer != null) {
+					// and set to stopped. If no, 
+					if (this.mediaPlayer.getStatus() != Status.STOPPED) {
+						// check if selected is different only then play new song
+						if (this.currentlyPlayedSong == null || this.currentlyPlayedSong != isSelected) {
+							this.playNewSong(isSelected);
+						}
+					}
+					// otherwise,
+					else {
+						// update title only for visual hint
+						this.mediaPlayerTitleLabel.setText(this.getFormattedMediaPlayerSongTitle(isSelected));
+					}
+				}
+				// nothing is played and a song is selected (which should not be happenning cuz song is initialized when 1st rendering this view)
+				else {
+					this.playNewSong(isSelected);
+				}
+			}
+        });
+		
+		// all these check for null first becuz if table is empty (for whatever reason) when booting, mediaPlayer will not be initialized
+		this.mediaPlayerVolumeSlider.valueProperty().addListener(inL -> {
+        	if (this.mediaPlayer != null) {
+        		double volume = this.mediaPlayerVolumeSlider.getValue() / 100.0;
+        		this.mediaPlayer.setVolume(volume);
+        		if (Math.abs(volume) < 0.01) {
+        			this.mediaPlayerSpeakerLabel.setText(this.speakerMuteUTFIcon);
+        		}
+        		else {
+        			this.mediaPlayerSpeakerLabel.setText(this.speakerUTFIcon);
+        		}
+        	}
+        });
+		
+		this.mediaPlayerTimeSlider.valueProperty().addListener(inL -> {
+			if (this.mediaPlayer != null) {
+				// only if user change the slider value
+				if (this.userChangedTimeSlider) {
+			        // multiply duration by percentage calculated by slider position
+					this.mediaPlayer.seek(this.mediaPlayer.getMedia().getDuration().multiply(this.mediaPlayerTimeSlider.getValue() / 100.0));
+				}
+			}
+		});
+		
+		this.mediaPlayerRepeatToggleButton.selectedProperty().addListener((obs, oldValue, newValue) -> {
+			if (this.mediaPlayer != null) {
+				// if repeat is selected
+				if (newValue) {
+					this.mediaPlayer.setOnEndOfMedia(null);
+				}
+				else {
+					// reset the property as it might have been rewritten by other methods
+					this.mediaPlayer.setOnEndOfMedia(() -> {
+						this.playNewSong(this.getNextRowForMusic(false));
+					}); 
+				}
+			}
+		});
+		
+		this.mediaPlayerPlayButton.setOnAction(e -> {
+			if (this.mediaPlayer != null) {
+				// this is for situation where user press stop and select new song then press play
+				// in this case, the song played should be the currently selected song instead of the cached song before stop
+				// selectedItem will equal to null if nothing is selected when stop
+				if (this.mediaPlayer.getStatus() == Status.STOPPED && this.testTable.getSelectionModel().getSelectedItem() != null
+						&& !this.testTable.getSelectionModel().getSelectedItem().equals(this.currentlyPlayedSong)) {
+					this.playNewSong(this.testTable.getSelectionModel().getSelectedItem());
+				}
+				else {
+					if (this.mediaPlayer.getStatus() == Status.PAUSED || this.mediaPlayer.getStatus() == Status.STOPPED) {
+						this.mediaPlayer.play();
+					}
+					// TODO: think carefully for play when stopped
+					else if (this.mediaPlayer.getStatus() == Status.PLAYING) {
+						this.mediaPlayer.seek(this.mediaPlayer.getStartTime());
+					}
+				}
+			}
+		});
+		
+		this.mediaPlayerPauseButton.setOnAction(e -> {
+			if (this.mediaPlayer != null) {
+				if (this.mediaPlayer.getStatus() == Status.PLAYING) {
+					this.mediaPlayer.pause();
+				}
+				else if (this.mediaPlayer.getStatus() == Status.PAUSED) {
+					this.mediaPlayer.play();
+				}
+			}
+		});
+		
+		this.mediaPlayerStopButton.setOnAction(e -> {
+			if (this.mediaPlayer != null) {
+				this.mediaPlayer.stop();
+			}
+		});
+		
+		// next and previous doesn't respect the currently selected songs if status is stopped but doesn't matter much
+		this.mediaPlayerNextButton.setOnAction(e -> {
+			if (this.mediaPlayer != null) {
+				this.playNewSong(this.getNextRowForMusic(false));
+			}
+		});
+		
+		this.mediaPlayerPreviousButton.setOnAction(e -> {
+			if (this.mediaPlayer != null) {
+				this.playNewSong(this.getNextRowForMusic(true));
+			}
+		});
+		
+//        Pane thumb = (Pane) this.mediaPlayerVolumeSlider.lookup(".thumb");
+//        Label label = new Label();
+//        label.textProperty().bind(this.mediaPlayerVolumeSlider.valueProperty().asString("%.0f"));
+//        thumb.getChildren().add(label);
+		
+	}
+	
+	// TODO: might want to save the option (repeat, shuffle) into songs.db at the end
+	// TODO: might want to move the exception handling to another or calling method
+	private void playNewSong(TableViewData rowToBePlayed) {
+		Path mp3Path = Paths.get(this.pathToSongsFolder, rowToBePlayed.folderNameProperty().get(), rowToBePlayed.audioNameProperty().get());
+		if (mp3Path.toFile().exists()) {
+			// cleanup last song
+			if (this.mediaPlayer != null) {
+	    		this.mediaPlayer.dispose();
+	    		// reset timeSlider position
+	    		this.mediaPlayerTimeSlider.setValue(0);
+	    	}
+			
+			// load next song
+			this.mediaPlayer = new MediaPlayer(new Media(mp3Path.toUri().toString()));
+			// always set to repeat so that if shuffle is removed, it can repeat itself
+			this.mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+			// if repeat is not chosen, play next song when current song ends
+			if (!this.mediaPlayerRepeatToggleButton.isSelected()) {
+				this.mediaPlayer.setOnEndOfMedia(() -> {
+					this.playNewSong(this.getNextRowForMusic(false));
+				});
+			}
+			// this listener is added here instead of in init method as only now the mediaPlayer is sure to exist
+			this.mediaPlayer.currentTimeProperty().addListener(inL -> {
+				// no need this as it is already handled in the init method
+//				if (!this.mediaPlayerTimeSlider.isValueChanging()) {
+					double currentTime = this.mediaPlayer.getCurrentTime().toMillis();
+					// indicate that this slider change is not made by user,
+					// so that the listener in init method won't seek unnecessarily
+					this.userChangedTimeSlider = false;
+					this.mediaPlayerTimeSlider.setValue(currentTime / this.mediaPlayer.getMedia().getDuration().toMillis() * 100.0);
+					// set back to true to allow change by user
+					this.userChangedTimeSlider = true;
+//				}
+			});
+			this.mediaPlayer.setVolume(this.mediaPlayerVolumeSlider.getValue() / 100.0);
+			this.currentlyPlayedSong = rowToBePlayed;
+			this.mediaPlayerTitleLabel.setText(getFormattedMediaPlayerSongTitle(rowToBePlayed));
+			this.mediaPlayer.play();
+		}
+		else {
+			// TODO: after deciding the final name for the 'check for new songs', change this warning messsage!
+			String errorMessage =  mp3Path.toString() + " is not found! Data is likely to be outdated. Try to check for new songs.";
+			Alert alert = new Alert(AlertType.ERROR, errorMessage, ButtonType.OK);
+			alert.showAndWait();
 		}
 	}
+	
+	private String getFormattedMediaPlayerSongTitle(TableViewData rowToBePlayed) {
+		String artistName = "";
+		String songTitle = "";
+		
+		// get unicode if col is shown and not empty else fallback to ascii
+		if (this.artistNameUnicodeCol.isVisible()) {
+			artistName = rowToBePlayed.artistNameUnicodeProperty().get();
+		}
+		if (artistName.isEmpty()) {
+			artistName = rowToBePlayed.artistNameProperty().get();
+		}
+		
+		if (this.songTitleUnicodeCol.isVisible()) {
+			songTitle = rowToBePlayed.songTitleUnicodeProperty().get();
+		}
+		if (songTitle.isEmpty()) {
+			songTitle = rowToBePlayed.songTitleProperty().get();
+		}
+		
+		return artistName + " - " + songTitle;
+	}
+	
+//	@FXML private void playOrPause(ActionEvent event) {
+//		if (this.mediaPlayer == null) return;
+//		
+//		if (this.mediaPlayer.getStatus() == Status.PAUSED) {
+//			this.mediaPlayer.play();
+//			this.mediaPlayerPlayButton.setText(this.playButtonPauseText);
+//		}
+//		else if (this.mediaPlayer.getStatus() == Status.PLAYING) {
+//			this.mediaPlayer.pause();
+//			this.mediaPlayerPlayButton.setText(this.playButtonPlayText);
+//		}
+//	}
+	
+	
+	// TODO: slider for selecting music start point
+	// This is only called when stage is shown (ie. every required initialization has been done)
+	public void startMusic() {
+		TableViewData randomSong = this.getRandomRow();
+		if (randomSong != null) {
+			this.playNewSong(randomSong);
+		}
+	}
+	
+	private TableViewData getRandomRow() {
+		if (this.testTable.getItems().isEmpty()) 
+			return null;
+		
+		Random rand = new Random();
+		return this.testTable.getItems().get(rand.nextInt(this.testTable.getItems().size()));
+	}
+	
+	// at this point, currentlyPlayedSong must be initialized
+	private TableViewData getNextRowForMusic(boolean reverse) {
+		// check if shuffle or sequential
+		if (this.mediaPlayerShuffleToggleButton.isSelected()) {
+			if (this.getRandomRow() != null) {
+				return this.getRandomRow();
+			}
+			else {
+				return this.currentlyPlayedSong;
+			}
+		}
+		else {
+			// TODO: implement binary search
+			// use iterator becuz the list might be filtered at the same time this is working
+			for (ListIterator<TableViewData> iter = this.testTable.getItems().listIterator(); iter.hasNext();) {
+				TableViewData row = iter.next();
+				// if ever found this song in current tableview (ie. user does not switch to hidden display (for etc))
+				if (row.equals(this.currentlyPlayedSong)) {
+					if (!reverse) {
+						// get next song
+						if (iter.hasNext()) {
+							return iter.next();
+						}
+					}
+					else {
+						if (iter.hasPrevious()) {
+							iter.previous(); // same as row
+							if (iter.hasPrevious()) {
+								return iter.previous(); // this is the real previous row
+							}
+						}
+					}
+					// if no next song (ie. current view is empty or at the end of list), break out for default return
+					break;
+				}
+			}
+			// return 1st row if not empty
+			if (this.testTable.getItems().isEmpty()) {
+				return this.currentlyPlayedSong;
+			}
+			else {
+				// if at 1st position and reverse, play the last song in the list
+				if (reverse) {
+					return this.testTable.getItems().get(this.testTable.getItems().size() - 1);
+				}
+				else {
+					return this.testTable.getItems().get(0);
+				}
+			}
+//			return this.testTable.getItems().isEmpty() ? this.currentlyPlayedSong : this.testTable.getItems().get(0);
+		}
+	}
+	
 	
 	@FXML private void testSort(ActionEvent event) {
 		this.initSongsSortedList.setComparator(this.orderByComboBox.getSelectionModel().getSelectedItem());
@@ -472,42 +787,35 @@ public class SongsDisplayController {
 	// testCopySongButton
 	// TODO: option to exclude possible duplicated songs 
 	@FXML private void copySong(ActionEvent event) {
-		List<TableViewData> selectedSongsList = new ArrayList<TableViewData>();
-//		boolean dismissWarning = false;
-//		ButtonType ignoreButton = new ButtonType("Ignore", ButtonData.NO);
-		boolean containCopiedSongs = false;
-		for (TableViewData row : this.testTable.getItems()) {
-			if (row.isSelectedProperty().get()) {
-//				if (row.isDownloadedProperty().get() && !dismissWarning) {
-//					String warning = "testing";
-////					Alert customAlert = this.alertWithCheckBox(AlertType.WARNING, warning, isSelected -> {if (isSelected) {dismissWarning = true;}}, ButtonType.YES, ButtonType.NO);
-////					Alert alert = new Alert(AlertType.WARNING, "", ButtonType.YES, ButtonType.NO);
+//		List<TableViewData> selectedSongsList = new ArrayList<TableViewData>();
+//		boolean containCopiedSongs = false;
+//		for (TableViewData row : this.testTable.getItems()) {
+//			if (row.isSelectedProperty().get()) {
+//				selectedSongsList.add(row);
+//				if (row.isDownloadedProperty().get()) {
+//					containCopiedSongs = true;
 //				}
-				selectedSongsList.add(row);
-				if (row.isDownloadedProperty().get()) {
-					containCopiedSongs = true;
-				}
-			}
-		}
+//			}
+//		}
+		Map<String, List<TableViewData>> selectedSongsMap = this.testTable.getItems().stream()
+				.filter(row -> row.isSelectedProperty().get())
+				.collect(Collectors.groupingBy(row -> row.folderNameProperty().get()));
 		
-//		Map<String, List<TableViewData>> t = this.testTable.getItems().stream()
-//				.filter(row -> row.isSelectedProperty().get())
-//				.collect(Collectors.groupingBy(row -> row.folderNameProperty().get()));
 		
-		if (selectedSongsList.size() == 0) {
+		
+		if (selectedSongsMap.size() == 0) {
 			// TODO: change to reflect in GUI
 			System.out.println("No row is chosen");
 		}
 		else {
+//			Map<String, List<TableViewData>> selectedSongsMap = selectedSongsList.stream()
+//					.collect(Collectors.groupingBy(row -> row.folderNameProperty().get()));
+//			List<TableViewData> x = selectedSongsMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
+			boolean containCopiedSongs = selectedSongsMap.values().stream().anyMatch(list -> list.stream().anyMatch(row -> row.isDownloadedProperty().get()));
 			boolean proceed = true;
 			if (containCopiedSongs) {
 				String warningText = "One or more copied songs are found in your copy list. Are you sure you want to proceed to copy those songs again? (This will result in duplicated songs in the same folder)";
 				Alert duplicatedAlert = new Alert(AlertType.WARNING, warningText, ButtonType.YES, ButtonType.NO);
-//				duplicatedAlert.showAndWait().ifPresent(response -> {
-//					if (response == ButtonType.NO) {
-//						return;
-//					}
-//				});
 				Optional<ButtonType> result = duplicatedAlert.showAndWait();
 				if (result.isPresent() && result.get() == ButtonType.NO) {
 				    proceed = false;
@@ -516,16 +824,16 @@ public class SongsDisplayController {
 			
 			if (proceed) {
 				try {
-					this.loadSaveToOptionView(selectedSongsList);
-				}
-				catch (IOException e) {
-					e.printStackTrace();
-					Alert alert = new Alert(AlertType.ERROR, "Failed to load copy option screen", ButtonType.OK);
-					alert.showAndWait();
+					this.loadSaveToOptionView(selectedSongsMap);
 				}
 				catch (SQLException e) {
 					e.printStackTrace();
 					Alert alert = new Alert(AlertType.ERROR, "Error getting data from songs.db", ButtonType.OK);
+					alert.showAndWait();
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+					Alert alert = new Alert(AlertType.ERROR, "Failed to load copy option screen", ButtonType.OK);
 					alert.showAndWait();
 				}
 			}
@@ -541,7 +849,7 @@ public class SongsDisplayController {
 			if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
 				Boolean[] results = {true};
 				// !! iterate over obsList instead of filteredList 
-				// otherwise because of the predicate in displaySongs method, index out of bound error and stuff will occur.
+				// otherwise because of the nature of filteredList, index out of bound error and stuff will occur.
 				for (TableViewData row : this.initSongsObsList) {
 					if (row.isSelectedProperty().get()) {
 						row.isSelectedProperty().set(false);
@@ -575,20 +883,6 @@ public class SongsDisplayController {
 	}
 	
 	@FXML private void selectUnselectAll(ActionEvent event) {
-//		if (this.selectAllCheckBoxInCheckBoxCol.isSelected()) {
-//    		this.testTable.getItems().forEach(row -> {
-//				if (!row.isSelectedProperty().get()) {
-//					row.isSelectedProperty().set(true);
-//				}
-//			});
-//    	}
-//    	else {
-//    		this.testTable.getItems().forEach(row -> {
-//    			if (row.isSelectedProperty().get()) {
-//    				row.isSelectedProperty().set(false);
-//    			}
-//    		});
-//    	}
 		System.out.println("Start");
 		boolean setValue = this.selectAllCheckBoxInCheckBoxCol.isSelected();
 		ObservableList<TableViewData> obsList = this.testTable.getItems();
@@ -600,26 +894,31 @@ public class SongsDisplayController {
 	
 	@FXML private void displaySongs(ActionEvent event) {
 		this.testSearchText.clear();
+		
 		if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
 			this.hideUnhideButton.setText("Hide");
+			// TODO: the following line can violate the user choice
 			this.isDownloadedShowCheckMenuItem.setVisible(true);
 			this.hideUnhideButton.setVisible(true);
-			this.checkBoxCol.setVisible(true);
+//			this.checkBoxCol.setVisible(true);
+			this.selectedCounterProperty.set(this.selectedCounterProperty.get());
 		}
 		else if (this.hiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
 			this.hideUnhideButton.setText("Unhide");
 			this.isDownloadedShowCheckMenuItem.setVisible(false);
 			this.hideUnhideButton.setVisible(true);
-			this.checkBoxCol.setVisible(true);
+//			this.checkBoxCol.setVisible(true);
 		}
-		// TODO: label showing number of downloaded songs
+		// TODO: might want to allow selecting in here also
+		// TODO: add one more invisible label in VBox or HBox and show that label instead of sharing labels
 		else if (this.downloadedSongsRadioMenuItemInDisplayMenu.isSelected()) {
 			this.isDownloadedShowCheckMenuItem.setVisible(false);
 			this.hideUnhideButton.setVisible(false);
-			this.checkBoxCol.setVisible(false);
+//			this.checkBoxCol.setVisible(false);
 		}
 		
 		this.initSongsFilteredList.setPredicate(new CustomPredicate(""));
+		
 	}
 	
 	@FXML private void resetAll(ActionEvent event) {
@@ -629,6 +928,9 @@ public class SongsDisplayController {
 		alert.showAndWait().ifPresent(response -> {
 			if (response == ButtonType.YES) {
 				try {
+					if (this.mediaPlayer != null) {
+						this.mediaPlayer.dispose();
+					}
 					this.songsDb.closeConnection();
 					this.songsDb.deleteSongsDb();
 					this.currentStage.hide();
@@ -644,8 +946,17 @@ public class SongsDisplayController {
 		});
 	}
 	
-	private void loadSaveToOptionView(List<TableViewData> selectedSongsList) throws SQLException, IOException {
+	private void loadSaveToOptionView(Map<String, List<TableViewData>> selectedSongsMap) throws SQLException, IOException {
 		Stage saveToOptionStage = new Stage();
+		// pretty save to use this here as the new stage opened is not minimizable
+		// if that changes later, this must be changed as well
+		saveToOptionStage.showingProperty().addListener((obs, oldValue, newValue) -> {
+			if (!newValue) { // when closed
+				// so that copied songs can be reflected in the table 
+				this.testTable.refresh();
+			}
+		});
+		
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/SaveToOptionView.fxml"));
 		BorderPane root = loader.load();
@@ -655,8 +966,23 @@ public class SongsDisplayController {
 		saveToOptionStage.initOwner(this.testTable.getScene().getWindow());
 		saveToOptionStage.setTitle("Configuration");
 		saveToOptionStage.setScene(scene);
-		ctr.initData(saveToOptionStage, this.songsDb, selectedSongsList);
+		ctr.initData(saveToOptionStage, this.songsDb, selectedSongsMap, this.artistNameUnicodeCol.isVisible(), this.songTitleUnicodeCol.isVisible());
 		saveToOptionStage.show();
+	}
+	
+	private void updatePreference() throws SQLException {
+		ResultSet configRs = this.songsDb.selectConfig();
+		if (configRs.next()) {
+			int configID = configRs.getInt(this.songsDb.Data.Config.CONFIG_ID);
+			String pathToOsuDb = configRs.getString(this.songsDb.Data.Config.PATH_TO_OSU_DB);
+			String pathToSongsFolder = configRs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
+			String saveFolder = configRs.getString(this.songsDb.Data.Config.SAVE_FOLDER);
+			String ordering = this.orderByComboBox.getSelectionModel().getSelectedItem().toString();
+			this.songsDb.updateConfigFull(configID, pathToOsuDb, pathToSongsFolder, saveFolder
+					, songSourceShowCheckMenuItem.isSelected(), artistNameShowCheckMenuItem.isSelected(), artistNameUnicodeShowCheckMenuItem.isSelected()
+					, songTitleShowCheckMenuItem.isSelected(), songTitleUnicodeShowCheckMenuItem.isSelected(), creatorNameShowCheckMenuItem.isSelected()
+					, totalTimeShowCheckMenuItem.isSelected(), isDownloadedShowCheckMenuItem.isSelected(), ordering, this.mediaPlayerVolumeSlider.getValue());
+		}
 	}
 	
 //	private Alert alertWithCheckBox(AlertType type, String contentText, Consumer<Boolean> checkBoxAction, ButtonType... buttonTypes) {
@@ -774,7 +1100,7 @@ public class SongsDisplayController {
 				case ">=":
 					return length >= searchedLength;
 			}
- 			// shouldn't have come to here but return false in default
+ 			// shouldn't have come to here but return false by default
 			return false;
 		}
 		
@@ -809,9 +1135,16 @@ public class SongsDisplayController {
 			
 			// TODO: can optimize this by using map of sorts instead of this linear search
 			// normal search
-			String[] items = {row.songSourceProperty().get(), row.artistNameProperty().get()
-    				, row.artistNameUnicodeProperty().get(), row.songTitleProperty().get()
-    				, row.songTitleUnicodeProperty().get(), row.songTagNamesProperty().get()
+//			String[] items = {row.songSourceProperty().get(), row.artistNameProperty().get()
+//    				, row.artistNameUnicodeProperty().get(), row.songTitleProperty().get()
+//    				, row.songTitleUnicodeProperty().get(), row.songTagNamesProperty().get()
+//    				, row.creatorNameProperty().get()};
+			String[] items = {row.songTitleProperty().get()
+					, row.artistNameProperty().get()
+					, row.songTitleUnicodeProperty().get()
+					, row.artistNameUnicodeProperty().get() 
+					, row.songTagNamesProperty().get()
+					, row.songSourceProperty().get()
     				, row.creatorNameProperty().get()};
     		String itemsStr = String.join(" ", items).toLowerCase();
     		
@@ -865,9 +1198,9 @@ public class SongsDisplayController {
 //		private final SimpleIntegerProperty previewTime;
 		private final SimpleIntegerProperty totalTime;
 		private final SimpleLongProperty lastModificationTime;
-		private SimpleBooleanProperty isDownloaded;
-		private SimpleBooleanProperty isHidden;
-		private SimpleBooleanProperty isSelected;
+		private final SimpleBooleanProperty isDownloaded;
+		private final SimpleBooleanProperty isHidden;
+		private final SimpleBooleanProperty isSelected;
 		private final SimpleStringProperty folderName;
 		private final SimpleStringProperty audioName;
 		private final SimpleStringProperty songTagNames;
@@ -908,25 +1241,13 @@ public class SongsDisplayController {
 		public SimpleBooleanProperty isDownloadedProperty() {
 			return isDownloaded;
 		}
-
-		public void setIsDownloadedProperty(SimpleBooleanProperty isDownloadedProperty) {
-			this.isDownloaded = isDownloadedProperty;
-		}
-
+		
 		public SimpleBooleanProperty isHiddenProperty() {
 			return isHidden;
 		}
 
-		public void setIsHiddenProperty(SimpleBooleanProperty isHiddenProperty) {
-			this.isHidden = isHiddenProperty;
-		}
-
 		public SimpleBooleanProperty isSelectedProperty() {
 			return isSelected;
-		}
-
-		public void setIsSelectedProperty(SimpleBooleanProperty isSelectedProperty) {
-			this.isSelected = isSelectedProperty;
 		}
 		
 		public SimpleIntegerProperty beatmapSetAutoIDProperty() {
@@ -977,50 +1298,6 @@ public class SongsDisplayController {
 			return creatorName;
 		}
 		
-
-//		public String getSongSource() {
-//			return songSource.get();
-//		}
-//
-//
-//		public String getSongTitle() {
-//			return songTitle.get();
-//		}
-//
-//
-//		public String getSongTitleUnicode() {
-//			return songTitleUnicode.get();
-//		}
-//
-//
-//		public String getArtistName() {
-//			return artistName.get();
-//		}
-//
-//
-//		public String getArtistNameUnicode() {
-//			return artistNameUnicode.get();
-//		}
-//		
-//		public String getTotalTime() {
-//			return totalTime.get();
-//		}
-//		
-//		public long getLastmodificationTime() {
-//			return lastModificationTime.get();
-//		}
-//		
-//		public boolean getIsDownloaded() {
-//			return isDownloaded.get();
-//		}
-//		
-//		public boolean getIsHidden() {
-//			return isHidden.get();
-//		}
-//		
-//		public boolean getIsSelected() {
-//			return isSelected.get();
-//		}
 	}
 }
 
