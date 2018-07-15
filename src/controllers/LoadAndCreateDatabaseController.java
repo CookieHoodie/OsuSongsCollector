@@ -13,8 +13,8 @@ import java.util.concurrent.TimeUnit;
 import application.Comparators;
 import application.Main;
 import application.OsuDbParser;
-import application.OsuSongsCollector;
 import application.SqliteDatabase;
+import application.ViewLoader;
 import application.Beatmap;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
@@ -150,7 +150,9 @@ public class LoadAndCreateDatabaseController {
         	pause.setOnFinished(e -> {
         		SqliteDatabase songsDb = createSongsDbTask.getValue();
         		try {
-    				this.loadSongsDisplayStage(songsDb);
+//    				this.loadSongsDisplayStage(songsDb);
+        			Stage currentStage = (Stage) this.testStateLabel.getScene().getWindow();
+        			ViewLoader.loadNewSongsDisplayView(currentStage, songsDb);
     			}
         		catch (SQLException e1) {
     				e1.printStackTrace();
@@ -169,20 +171,20 @@ public class LoadAndCreateDatabaseController {
 	}
 	
 	
-	private void loadSongsDisplayStage(SqliteDatabase songsDb) throws IOException, SQLException {
-		Stage songsDisplayStage = new Stage();
-		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/SongsDisplayView.fxml"));
-		BorderPane root = loader.load();
-		Scene scene = new Scene(root);
-		Stage currentStage = (Stage) this.testStateLabel.getScene().getWindow();
-		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
-		
-		songsDisplayStage.setTitle(currentStage.getTitle());
-		songsDisplayStage.setScene(scene);
-		ctr.initData(songsDisplayStage, songsDb);
-		songsDisplayStage.show();
-		currentStage.hide();
-	}
+//	private void loadSongsDisplayStage(SqliteDatabase songsDb) throws IOException, SQLException {
+//		Stage songsDisplayStage = new Stage();
+//		FXMLLoader loader = new FXMLLoader();
+//		loader.setLocation(getClass().getResource("/fxml/SongsDisplayView.fxml"));
+//		BorderPane root = loader.load();
+//		Scene scene = new Scene(root);
+//		Stage currentStage = (Stage) this.testStateLabel.getScene().getWindow();
+//		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
+//		
+//		songsDisplayStage.setTitle(currentStage.getTitle());
+//		songsDisplayStage.setScene(scene);
+//		ctr.initData(songsDisplayStage, songsDb);
+//		songsDisplayStage.show();
+//		currentStage.hide();
+//	}
 
 }

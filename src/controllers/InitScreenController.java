@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import application.Main;
 import application.OsuDbParser;
 import application.SqliteDatabase;
+import application.ViewLoader;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -78,7 +79,9 @@ public class InitScreenController {
 				boolean isUpToDate = checkAllSetService.getValue();
 				if (isUpToDate) {
 					try {
-						this.loadSongsDisplayView();
+//						this.loadSongsDisplayView();
+						Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
+						ViewLoader.loadNewSongsDisplayView(currentStage, this.songsDb);
 					}
 					catch (SQLException e1) {
 						// this exception comes from initTableData method for populating the tableView
@@ -126,24 +129,24 @@ public class InitScreenController {
 	}
 	
 	// TODO: might consider move all these loading methods to new class and pass callingStage as parameter
-	private void loadSongsDisplayView() throws IOException, SQLException {
-		Stage songsDisplayStage = new Stage();
-		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/SongsDisplayView.fxml"));
-		BorderPane root = loader.load();
-		Scene scene = new Scene(root);
-		Stage primaryStage = (Stage) this.welcomeLabel.getScene().getWindow();
-		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
-		
-//		primaryStage.setScene(scene);
-		songsDisplayStage.setTitle(primaryStage.getTitle());
-		songsDisplayStage.setScene(scene);
-		ctr.initData(songsDisplayStage, this.songsDb);
-		songsDisplayStage.show();
-		ctr.startMusic(); // TODO: if decide, add this to updateData and LoadAndCreateDB
-		primaryStage.hide();
-	}
-	
+//	private void loadSongsDisplayView() throws IOException, SQLException {
+//		Stage songsDisplayStage = new Stage();
+//		FXMLLoader loader = new FXMLLoader();
+//		loader.setLocation(getClass().getResource("/fxml/SongsDisplayView.fxml"));
+//		BorderPane root = loader.load();
+//		Scene scene = new Scene(root);
+//		Stage primaryStage = (Stage) this.welcomeLabel.getScene().getWindow();
+//		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
+//		
+////		primaryStage.setScene(scene);
+//		songsDisplayStage.setTitle(primaryStage.getTitle());
+//		songsDisplayStage.setScene(scene);
+//		ctr.initData(songsDisplayStage, this.songsDb);
+//		songsDisplayStage.show();
+//		ctr.startMusic(); // TODO: if decide, add this to updateData and LoadAndCreateDB
+//		primaryStage.hide();
+//	}
+//	
 	private void loadSetSongsFolderPathView() throws IOException {
 		Stage setSongsFolderStage = new Stage();
 		FXMLLoader loader = new FXMLLoader();

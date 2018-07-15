@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import application.OsuDbParser;
 import application.SqliteDatabase;
+import application.ViewLoader;
 import javafx.animation.PauseTransition;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -125,26 +126,28 @@ public class UpdateDataController {
 		this.exec.submit(updateSongsDbTask);
 	}
 	
-	private void loadSongsDisplayView(SqliteDatabase songsDb) throws SQLException, IOException {
-		Stage songsDisplayStage = new Stage();
-		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/SongsDisplayView.fxml"));
-		BorderPane root = loader.load();
-		Scene scene = new Scene(root);
-		Stage currentStage = (Stage) this.instructionLabel.getScene().getWindow();
-		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
-		
-		songsDisplayStage.setTitle(currentStage.getTitle());
-		songsDisplayStage.setScene(scene);
-		ctr.initData(songsDisplayStage, songsDb);
-		songsDisplayStage.show();
-		currentStage.hide();
-	}
+//	private void loadSongsDisplayView(SqliteDatabase songsDb) throws SQLException, IOException {
+//		Stage songsDisplayStage = new Stage();
+//		FXMLLoader loader = new FXMLLoader();
+//		loader.setLocation(getClass().getResource("/fxml/SongsDisplayView.fxml"));
+//		BorderPane root = loader.load();
+//		Scene scene = new Scene(root);
+//		Stage currentStage = (Stage) this.instructionLabel.getScene().getWindow();
+//		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
+//		
+//		songsDisplayStage.setTitle(currentStage.getTitle());
+//		songsDisplayStage.setScene(scene);
+//		ctr.initData(songsDisplayStage, songsDb);
+//		songsDisplayStage.show();
+//		currentStage.hide();
+//	}
 	
 	// for reuse
 	private void loadSongDisplayViewWrapperForTaskEvent(SqliteDatabase songsDb) {
 		try {
-			this.loadSongsDisplayView(songsDb);
+//			this.loadSongsDisplayView(songsDb);
+			Stage currentStage = (Stage) this.instructionLabel.getScene().getWindow();
+			ViewLoader.loadNewSongsDisplayView(currentStage, songsDb);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
