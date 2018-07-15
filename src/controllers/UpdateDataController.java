@@ -73,6 +73,7 @@ public class UpdateDataController {
 		return new Task<Void>() {
 			@Override
 	        protected Void call() throws Exception {
+				updateProgress(0, 1);
 				songsDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork));
 				songsDb.updateData(osuDb);
 	            return null;
