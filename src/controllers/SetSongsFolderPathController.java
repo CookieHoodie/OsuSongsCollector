@@ -64,12 +64,13 @@ public class SetSongsFolderPathController {
 	@FXML
 	private void setupDatabaseNewScene(ActionEvent event) {
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/LoadAndCreateDatabaseView.fxml"));
+		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
 		try {
+			LoadAndCreateDatabaseController ctr = new LoadAndCreateDatabaseController();
+			loader.setController(ctr);
 			BorderPane root = loader.load();
 			Scene scene = new Scene(root);
 			Stage currentStage = (Stage) this.continueButton.getScene().getWindow();
-			LoadAndCreateDatabaseController ctr = loader.<LoadAndCreateDatabaseController>getController();
 			ctr.initDataAndStart(currentStage, this.fullPathToOsuDb, this.pathToSongsFolder);
 			currentStage.setScene(scene);
 		}
