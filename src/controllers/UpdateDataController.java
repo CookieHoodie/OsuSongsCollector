@@ -27,9 +27,9 @@ import javafx.util.Duration;
 // TODO: since this is so similar to createDb view, might consider migrating this to that controller or extending it
 public class UpdateDataController extends LoadingDialogParentController {
 	
-	private SqliteDatabase songsDb;
-	private String fullPathToOsuDb;
-	private String pathToSongsFolder;
+	protected SqliteDatabase songsDb;
+	protected String fullPathToOsuDb;
+	protected String pathToSongsFolder;
 	
 	public void initDataAndStart(Stage currentStage, SqliteDatabase songsDb, String fullPathToOsuDb, String pathToSongsFolder) {
 		this.songsDb = songsDb;
@@ -50,7 +50,7 @@ public class UpdateDataController extends LoadingDialogParentController {
 		this.loadOsuDb();
 	}
 	
-	private Task<Void> getUpdateSongsDbTask(OsuDbParser osuDb) {
+	protected Task<Void> getUpdateSongsDbTask(OsuDbParser osuDb, SqliteDatabase songsDb) {
 		return new Task<Void>() {
 			@Override
 	        protected Void call() throws Exception {
@@ -61,7 +61,7 @@ public class UpdateDataController extends LoadingDialogParentController {
 		};
     }
 	
-	private void loadOsuDb() {
+	protected void loadOsuDb() {
 		Task<OsuDbParser> loadOsuDbTask = this.getLoadOsuDbTask(this.fullPathToOsuDb, this.pathToSongsFolder);
 		this.progressBar.progressProperty().bind(loadOsuDbTask.progressProperty());
 		this.instructionLabel.setText("Loading osu!.db");
@@ -79,11 +79,16 @@ public class UpdateDataController extends LoadingDialogParentController {
 		this.exec.submit(loadOsuDbTask);
 	}
 	
-	private void updateSongsDb(OsuDbParser loadedOsuDb) {
-		Task<Void> updateSongsDbTask = this.getUpdateSongsDbTask(loadedOsuDb); 
+	protected void updateSongsDb(OsuDbParser loadedOsuDb) {
+		Task<Void> updateSongsDbTask = this.getUpdateSongsDbTask(loadedOsuDb, this.songsDb); 
 		this.progressBar.progressProperty().bind(updateSongsDbTask.progressProperty());
 		this.instructionLabel.setText("Updating songs data");
 		
+		this.setUpdateSongsDbTaskOnHandlers(updateSongsDbTask);
+		this.exec.submit(updateSongsDbTask);
+	}
+	
+	protected void setUpdateSongsDbTaskOnHandlers(Task<Void> updateSongsDbTask) {
 		updateSongsDbTask.setOnSucceeded(e -> {
 			this.instructionLabel.setText("Done updating. Loading songs data...");
 			PauseTransition pause = new PauseTransition(Duration.millis(10));
@@ -91,7 +96,6 @@ public class UpdateDataController extends LoadingDialogParentController {
         		this.loadSongDisplayViewWrapperForTaskEvent(this.songsDb);
         	});
         	pause.play();
-			
 		});
 		
 		updateSongsDbTask.setOnFailed(e -> {
@@ -104,7 +108,6 @@ public class UpdateDataController extends LoadingDialogParentController {
 				}
 			});
 		});
-		this.exec.submit(updateSongsDbTask);
 	}
 	
 	// for reuse

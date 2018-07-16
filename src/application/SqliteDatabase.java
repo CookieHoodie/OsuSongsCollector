@@ -186,7 +186,7 @@ public class SqliteDatabase {
 				+ this.Data.Beatmap.TOTAL_TIME + " INTEGER,"
 				+ this.Data.Beatmap.PREVIEW_TIME + " INTEGER,"
 				+ this.Data.Beatmap.THREAD_ID + " INTEGER,"
-				+ this.Data.Beatmap.NAME_OF_OSU_FILE + " TEXT,"
+				+ this.Data.Beatmap.DIFFICULTY + " TEXT,"
 //				+ this.Data.Beatmap.GRADE_STANDARD + " INTEGER,"
 //				+ this.Data.Beatmap.GRADE_TAIKO + " INTEGER,"
 //				+ this.Data.Beatmap.GRADE_CTB + " INTEGER,"
@@ -232,7 +232,7 @@ public class SqliteDatabase {
 		stmt.execute(sql);
 		sql = "CREATE INDEX IF NOT EXISTS idx_preview_time ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.PREVIEW_TIME + ");";
 		stmt.execute(sql);
-		sql = "CREATE INDEX IF NOT EXISTS idx_name_of_osu_file ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.NAME_OF_OSU_FILE + ");";
+		sql = "CREATE INDEX IF NOT EXISTS idx_difficulty ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.DIFFICULTY + ");";
 		stmt.execute(sql);
 		sql = "CREATE INDEX IF NOT EXISTS idx_last_played_time ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.LAST_PLAYED_TIME + ");";
 		stmt.execute(sql);
@@ -381,7 +381,7 @@ public class SqliteDatabase {
 				+ this.Data.Beatmap.TOTAL_TIME + ","
 				+ this.Data.Beatmap.PREVIEW_TIME + ","
 				+ this.Data.Beatmap.THREAD_ID + ","
-				+ this.Data.Beatmap.NAME_OF_OSU_FILE + ","
+				+ this.Data.Beatmap.DIFFICULTY + ","
 //				+ this.Data.Beatmap.GRADE_STANDARD + ","
 //				+ this.Data.Beatmap.GRADE_TAIKO + ","
 //				+ this.Data.Beatmap.GRADE_CTB + ","
@@ -400,7 +400,7 @@ public class SqliteDatabase {
 			int totalTime, 
 			int previewTime, 
 			int threadID, 
-			String nameOfOsuFile,
+			String difficulty,
 			boolean isUnplayed, 
 			long lastPlayedTime
 			) throws SQLException {
@@ -411,7 +411,7 @@ public class SqliteDatabase {
 		beatmapPStatement.setInt(5, totalTime);
 		beatmapPStatement.setInt(6, previewTime);
 		beatmapPStatement.setInt(7, threadID);
-		beatmapPStatement.setString(8, nameOfOsuFile);
+		beatmapPStatement.setString(8, difficulty);
 		beatmapPStatement.setBoolean(9, isUnplayed);
 		beatmapPStatement.setLong(10, lastPlayedTime);
 		beatmapPStatement.addBatch();
@@ -752,7 +752,6 @@ public class SqliteDatabase {
 	}
 
 	
-	// TODO: delete songsDb when error occurs
 	public void insertAllData(OsuDbParser osuDb) throws SQLException, InterruptedException {
 		this.insertIntoMetadata(osuDb.getOsuVersion(), osuDb.getFolderCount(), osuDb.getPlayerName(), osuDb.getNumberOfBeatmaps());
 		this.insertIntoConfig(osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "", false, false, false, false, false, false, false, false, "", 50.0);
@@ -882,7 +881,7 @@ public class SqliteDatabase {
 		}
 				
 	}
-	
+	// TODO: threadinterrupt handling and progressupdate
 	
 	// TODO: consider update lastModificationTime when requested in menu and update in new stage maybe
 	// To do that, first go through this check first as there may be inconsistency
@@ -1091,10 +1090,10 @@ public class SqliteDatabase {
 				System.out.println("Start modifying");
 				
 				// modified songs
-				String getBeatmapAutoIDAndNameOfOsuFileSql = "SELECT " + this.Data.Beatmap.BEATMAP_AUTO_ID 
-						+ "," + this.Data.Beatmap.NAME_OF_OSU_FILE + " FROM "
+				String getBeatmapAutoIDAndDifficultySql = "SELECT " + this.Data.Beatmap.BEATMAP_AUTO_ID 
+						+ "," + this.Data.Beatmap.DIFFICULTY + " FROM "
 						+ this.Data.Beatmap.TABLE_NAME + " WHERE " + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?";
-				PreparedStatement getBeatmapAutoIDAndNameOfOsuFilePStatement = this.getConn().prepareStatement(getBeatmapAutoIDAndNameOfOsuFileSql);
+				PreparedStatement getBeatmapAutoIDAndDifficultyPStatement = this.getConn().prepareStatement(getBeatmapAutoIDAndDifficultySql);
 				
 				String deleteFromBeatmapSql = "DELETE FROM " + this.Data.Beatmap.TABLE_NAME + " WHERE "
 						+ this.Data.Beatmap.BEATMAP_AUTO_ID + " = ?";
@@ -1107,34 +1106,40 @@ public class SqliteDatabase {
 					int beatmapSetAutoID = modifiedStatusAndIDList.get(i)[1];
 					List<Beatmap> beatmapSet = modifiedList.get(i);
 					
-					getBeatmapAutoIDAndNameOfOsuFilePStatement.setInt(1, beatmapSetAutoID);
-					ResultSet beatmapAutoIDAndNameOfOsuFileRs = getBeatmapAutoIDAndNameOfOsuFilePStatement.executeQuery();
+					getBeatmapAutoIDAndDifficultyPStatement.setInt(1, beatmapSetAutoID);
+					ResultSet beatmapAutoIDAndDifficultyRs = getBeatmapAutoIDAndDifficultyPStatement.executeQuery();
 					
+					Map<String, Beatmap> beatmapsMap = beatmapSet.stream().collect(Collectors.toMap(Beatmap::getDifficulty, Function.identity()));
 					// songsDb has extra beatmaps
 					if (beatmapDeleted) {
-						while (beatmapAutoIDAndNameOfOsuFileRs.next()) {
-							int beatmapAutoID = beatmapAutoIDAndNameOfOsuFileRs.getInt(1);
-							String nameOfOsuFile = beatmapAutoIDAndNameOfOsuFileRs.getString(2);
-							boolean isObsoleteRecord = beatmapSet.stream().noneMatch(beatmap -> beatmap.getNameOfOsuFile().equals(nameOfOsuFile));
-							if (isObsoleteRecord) {
+						while (beatmapAutoIDAndDifficultyRs.next()) {
+//							int beatmapAutoID = beatmapAutoIDAndDifficultyRs.getInt(1);
+							String difficulty = beatmapAutoIDAndDifficultyRs.getString(2);
+//							boolean isObsoleteRecord = beatmapSet.stream().noneMatch(beatmap -> beatmap.getDifficulty().equals(difficulty));
+//							if (isObsoleteRecord) {
+//								deleteFromBeatmapPStatement.setInt(1, beatmapAutoID);
+//								deleteFromBeatmapPStatement.executeUpdate();
+//							}
+							if (!beatmapsMap.containsKey(difficulty)) {
+								// directly execute as modified list is not likely to be large
+								int beatmapAutoID = beatmapAutoIDAndDifficultyRs.getInt(1);
 								deleteFromBeatmapPStatement.setInt(1, beatmapAutoID);
 								deleteFromBeatmapPStatement.executeUpdate();
 							}
 						}
 					}
 					// songsDb has less beatmaps
-					// TODO: might consider using difficulty instead of nameOfOsuFile to reduce the db size and speed up comparing
 					else {
 						// store the beatmaps with nameOfOsuFile as key in a map
-						Map<String, Beatmap> toBeAddedMap = beatmapSet.stream().collect(Collectors.toMap(Beatmap::getNameOfOsuFile, Function.identity()));
+//						Map<String, Beatmap> toBeAddedMap = beatmapSet.stream().collect(Collectors.toMap(Beatmap::getDifficulty, Function.identity()));
 						
 						// then foreach record in songsDb, remove the elements in the map
-						while (beatmapAutoIDAndNameOfOsuFileRs.next()) {
-							String nameOfOsuFile = beatmapAutoIDAndNameOfOsuFileRs.getString(2);
-							toBeAddedMap.remove(nameOfOsuFile);
+						while (beatmapAutoIDAndDifficultyRs.next()) {
+							String difficulty = beatmapAutoIDAndDifficultyRs.getString(2);
+							beatmapsMap.remove(difficulty);
 						}
 						// finally we get the map with beatmaps to be added
-						for (Beatmap beatmap : toBeAddedMap.values()) {
+						for (Beatmap beatmap : beatmapsMap.values()) {
 							this.insertIntoBeatmapBatchWrapper(beatmapPStatement, beatmap, beatmapSetAutoID);
 						}
 						
@@ -1223,6 +1228,61 @@ public class SqliteDatabase {
 	}
 	
 	
+	public void updateDetails(Map<String, List<Beatmap>> osuDbBeatmapsMap) throws SQLException {
+		Map<String, Map<String, Beatmap>> nestedMap = new HashMap<>();
+		
+		
+		System.out.println("Creating maps");
+		
+		
+		osuDbBeatmapsMap.forEach((folderName, beatmapSet) -> {
+			Map<String, Beatmap> beatmapsMap = beatmapSet.stream().collect(Collectors.toMap(Beatmap::getDifficulty, Function.identity()));
+			nestedMap.put(folderName, beatmapsMap);
+		});
+		
+		String selectBeatmapSql = "SELECT " + this.Data.Beatmap.BEATMAP_AUTO_ID + "," 
+				+ this.Data.BeatmapSet.FOLDER_NAME + ","
+				+ this.Data.Beatmap.LAST_MODIFICATION_TIME + ","
+				+ this.Data.Beatmap.DIFFICULTY
+				+ " FROM " + this.Data.Beatmap.TABLE_NAME
+				+ " INNER JOIN " + this.Data.BeatmapSet.TABLE_NAME + " ON " + this.Data.BeatmapSet.TABLE_NAME + "." 
+				+ this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " = " + this.Data.Beatmap.TABLE_NAME + "."
+				+ this.Data.Beatmap.BEATMAP_SET_AUTO_ID;
+		
+		String[] items = {this.Data.Beatmap.LAST_MODIFICATION_TIME};
+		PreparedStatement updateBeatmapPStatement = this.getUpdateBeatmapPStatement(items);
+		Statement stmt = this.getConn().createStatement();
+		
+		System.out.println("updating");
+		
+		
+		try {
+			this.getConn().setAutoCommit(false);
+			ResultSet beatmapRs = stmt.executeQuery(selectBeatmapSql);
+			while (beatmapRs.next()) {
+				String folderName = beatmapRs.getString(2);
+				long lastModificationTime = beatmapRs.getLong(3);
+				String difficulty = beatmapRs.getString(4);
+				Beatmap beatmap = nestedMap.get(folderName).get(difficulty);
+				if (beatmap.getLastModificationTime() != lastModificationTime) {
+					int beatmapAutoID = beatmapRs.getInt(1);
+					this.addUpdateBeatmapLMTBatch(updateBeatmapPStatement, beatmapAutoID, beatmap.getLastModificationTime());
+					System.out.println("haha");
+				}
+			}
+			// execute batch here as the size is not likely to be large
+			updateBeatmapPStatement.executeBatch();
+			this.getConn().commit();
+//			this.getConn().rollback();
+		}
+		finally {
+			this.getConn().setAutoCommit(true);
+		}
+		
+		
+		System.out.println("finish");
+	}
+	
 	// ------------- for inner use--------------------
 	private void insertIntoBeatmapBatchWrapper(PreparedStatement beatmapPStatement, Beatmap beatmap, int beatmapSetAutoID) throws SQLException {
 		this.insertIntoBeatmapBatch(beatmapPStatement,
@@ -1233,7 +1293,7 @@ public class SqliteDatabase {
 				beatmap.getTotalTime(),
 				beatmap.getPreviewTime(),
 				beatmap.getThreadID(),
-				beatmap.getNameOfOsuFile(),
+				beatmap.getDifficulty(),
 //				beatmap.getGradeStandard(),
 //				beatmap.getGradeTaiko(),
 //				beatmap.getGradeCTB(),
@@ -1303,7 +1363,7 @@ public class SqliteDatabase {
 	
 	public ResultSet getTableInitData() throws SQLException {
 		String sql = "SELECT " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + this.Data.Song.SONG_SOURCE + "," + this.Data.Artist.ARTIST_NAME + "," + this.Data.Artist.ARTIST_NAME_UNICODE + "," + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," 
-				+ this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
+				+ "MAX(" + this.Data.Beatmap.TOTAL_TIME + ") AS " + this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
 				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(DISTINCT " + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + ","
 				+ this.Data.BeatmapSet.CREATOR_NAME + "\n"
 				+ "FROM " + this.Data.BeatmapSet.TABLE_NAME + "\n"
@@ -1314,10 +1374,27 @@ public class SqliteDatabase {
 				+ "INNER JOIN " + this.Data.SongTag.TABLE_NAME + " ON " + this.Data.SongTag.TABLE_NAME + "." + this.Data.SongTag.SONG_TAG_ID + " = " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
 //				+ "WHERE " + this.Data.BeatmapSet.IS_HIDDEN + " = 0\n"
 				+ "GROUP BY " + this.Data.BeatmapSet.FOLDER_NAME + ", " + this.Data.BeatmapSet.AUDIO_NAME + "\n"
-				+ "HAVING MAX(" + this.Data.Beatmap.TOTAL_TIME + ")\n"
-				+ "ORDER BY " + this.Data.Beatmap.LAST_MODIFICATION_TIME;
+				+ "ORDER BY MAX(" + this.Data.Beatmap.LAST_MODIFICATION_TIME + ")";
 		Statement stmt = this.getConn().createStatement();
 		return stmt.executeQuery(sql);
+		
+		
+//		String sql = "SELECT " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + this.Data.Song.SONG_SOURCE + "," + this.Data.Artist.ARTIST_NAME + "," + this.Data.Artist.ARTIST_NAME_UNICODE + "," + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," 
+//				+ this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
+//				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(DISTINCT " + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + ","
+//				+ this.Data.BeatmapSet.CREATOR_NAME + "\n"
+//				+ "FROM " + this.Data.BeatmapSet.TABLE_NAME + "\n"
+//				+ "INNER JOIN " + this.Data.Beatmap.TABLE_NAME + " ON " + this.Data.Beatmap.TABLE_NAME + "." + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+//				+ "INNER JOIN " + this.Data.Artist.TABLE_NAME + " ON " + this.Data.Artist.TABLE_NAME + "." + this.Data.Artist.ARTIST_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.ARTIST_ID + "\n"
+//				+ "INNER JOIN " + this.Data.Song.TABLE_NAME + " ON " + this.Data.Song.TABLE_NAME + "." + this.Data.Song.SONG_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.SONG_ID + "\n"
+//				+ "INNER JOIN " + this.Data.BeatmapSet_SongTag.TABLE_NAME + " ON " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+//				+ "INNER JOIN " + this.Data.SongTag.TABLE_NAME + " ON " + this.Data.SongTag.TABLE_NAME + "." + this.Data.SongTag.SONG_TAG_ID + " = " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
+////				+ "WHERE " + this.Data.BeatmapSet.IS_HIDDEN + " = 0\n"
+//				+ "GROUP BY " + this.Data.BeatmapSet.FOLDER_NAME + ", " + this.Data.BeatmapSet.AUDIO_NAME + "\n"
+//				+ "HAVING MAX(" + this.Data.Beatmap.TOTAL_TIME + ")\n"
+//				+ "ORDER BY " + this.Data.Beatmap.LAST_MODIFICATION_TIME;
+//		Statement stmt = this.getConn().createStatement();
+//		return stmt.executeQuery(sql);
 		
 	}
 	
@@ -1424,8 +1501,24 @@ public class SqliteDatabase {
 		pstmt.executeUpdate();
 	}
 	
+	private PreparedStatement getUpdateBeatmapPStatement(String[] items) throws SQLException {
+		String sql = "UPDATE " + this.Data.Beatmap.TABLE_NAME + " SET ";
+		StringJoiner sj = new StringJoiner(",");
+		for (int i = 0; i < items.length; i++) {
+			sj.add(items[i] + " = ?");
+		}
+		sql += sj.toString() + " WHERE " + this.Data.Beatmap.BEATMAP_AUTO_ID + " = ?";
+		return this.getConn().prepareStatement(sql);
+	}
+	
+	private void addUpdateBeatmapLMTBatch(PreparedStatement updateBeatmapPStatement, int beatmapAutoID, long lastModificationTime) throws SQLException {
+		updateBeatmapPStatement.setLong(1, lastModificationTime);
+		updateBeatmapPStatement.setInt(2, beatmapAutoID);
+		updateBeatmapPStatement.addBatch();
+	}
+	
 	// TODO: make all these statements to be safe by providing checks
-	public PreparedStatement getUpdateBeatmapSetBooleanPreparedStatement(String[] items) throws SQLException {
+	public PreparedStatement getUpdateBeatmapSetBooleanPStatement(String[] items) throws SQLException {
 		String sql = "UPDATE " + this.Data.BeatmapSet.TABLE_NAME + " SET ";
 		StringJoiner sj = new StringJoiner(",");
 		for (int i = 0; i < items.length; i++) {
@@ -1444,6 +1537,8 @@ public class SqliteDatabase {
 		updateBeatmapSetBooleanPStatement.setInt(index, beatmapSetAutoID);
 		updateBeatmapSetBooleanPStatement.addBatch();
 	}
+	
+	
 	
 	
 	// for threading only
@@ -1531,7 +1626,8 @@ public class SqliteDatabase {
 			public final String TOTAL_TIME = "TotalTime";
 			public final String PREVIEW_TIME = "PreviewTime";
 			public final String THREAD_ID = "ThreadID";
-			public final String NAME_OF_OSU_FILE = "NameOfOsuFile";
+			public final String DIFFICULTY = "Difficulty";
+//			public final String NAME_OF_OSU_FILE = "NameOfOsuFile";
 //			public final String GRADE_STANDARD = "GradeStandard";
 //			public final String GRADE_TAIKO = "GradeTaiko";
 //			public final String GRADE_CTB = "GradeCTB";

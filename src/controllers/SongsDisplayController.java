@@ -116,7 +116,8 @@ public class SongsDisplayController {
 	@FXML private ComboBox<Comparator<TableViewData>> orderByComboBox;
 	
 	@FXML private Menu fileMenu;
-	@FXML private MenuItem checkNewSongsFileMenuItem;
+//	@FXML private MenuItem checkNewSongsFileMenuItem;
+	@FXML private MenuItem fullBeatmapsUpdateFileMenuItem;
 	@FXML private MenuItem resetAllFileMenuItem;
 	@FXML private MenuItem exitFileMenuItem;
 	
@@ -157,6 +158,7 @@ public class SongsDisplayController {
 	private MediaPlayer mediaPlayer;
 	private TableViewData currentlyPlayedSong;
 	private String pathToSongsFolder;
+	private String pathToOsuDb;
 	private Double soundVolume;
 	private boolean userChangedTimeSlider = true; // var for detecting user or comp changed slider value
 
@@ -171,6 +173,7 @@ public class SongsDisplayController {
 	// and check the corresponding items in controller instead of fxml
 	// TODO: add rotating screen while changing view, searching, etc.
 	// TODO: allow user to select and copy words but not edit
+	// TODO: add action to checkForNewSongs menuitem with popup windows
 	
 	@FXML private void initialize() {
 		this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
@@ -393,6 +396,7 @@ public class SongsDisplayController {
         
         ResultSet configRs = this.songsDb.selectConfig();
         if (configRs.next()) {
+        	this.pathToOsuDb = configRs.getString(this.songsDb.Data.Config.PATH_TO_OSU_DB);
         	this.pathToSongsFolder = configRs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
         	this.soundVolume = configRs.getDouble(this.songsDb.Data.Config.SOUND_VOLUME);
         	boolean isSongSourceShown = configRs.getBoolean(this.songsDb.Data.Config.IS_SONG_SOURCE_SHOWN);
@@ -629,6 +633,7 @@ public class SongsDisplayController {
 	// TODO: might want to move the exception handling to another or calling method
 	private void playNewSong(TableViewData rowToBePlayed) {
 		Path mp3Path = Paths.get(this.pathToSongsFolder, rowToBePlayed.folderNameProperty().get(), rowToBePlayed.audioNameProperty().get());
+		
 		if (mp3Path.toFile().exists()) {
 			// cleanup last song
 			if (this.mediaPlayer != null) {
@@ -845,7 +850,7 @@ public class SongsDisplayController {
 		try {
 			String[] items = {this.songsDb.Data.BeatmapSet.IS_HIDDEN};
 			this.songsDb.getConn().setAutoCommit(false);
-			PreparedStatement updateBeatmapSetBooleanPStatement = this.songsDb.getUpdateBeatmapSetBooleanPreparedStatement(items);
+			PreparedStatement updateBeatmapSetBooleanPStatement = this.songsDb.getUpdateBeatmapSetBooleanPStatement(items);
 			if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
 				Boolean[] results = {true};
 				// !! iterate over obsList instead of filteredList 
@@ -944,6 +949,34 @@ public class SongsDisplayController {
 				}
 			}
 		});
+	}
+	
+	@FXML private void fullBeatmapsUpdate(ActionEvent event) {
+//		this.songsDb.updateDetails(osuDbBeatmapsMap);
+		try {
+			this.loadUpdateDetailsView();
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void loadUpdateDetailsView() throws IOException {
+		// TODO: set modality
+		Stage updateDetailsStage = new Stage();
+		FXMLLoader loader = new FXMLLoader();
+		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
+		UpdateDetailsController ctr = new UpdateDetailsController();
+		loader.setController(ctr);
+		BorderPane root = loader.load();
+		Scene scene = new Scene(root);
+		
+		updateDetailsStage.setTitle("Update Songs Details");
+		updateDetailsStage.setScene(scene);
+		// the last two paths must have already initialized to come to here
+		ctr.initDataAndStart(updateDetailsStage, this.songsDb, this.pathToOsuDb, this.pathToSongsFolder);
+		updateDetailsStage.setScene(scene);
+		updateDetailsStage.show();
 	}
 	
 	private void loadSaveToOptionView(Map<String, List<TableViewData>> selectedSongsMap) throws SQLException, IOException {
