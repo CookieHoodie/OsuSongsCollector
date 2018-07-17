@@ -561,7 +561,8 @@ public class SongsDisplayController {
 				else {
 					// reset the property as it might have been rewritten by other methods
 					this.mediaPlayer.setOnEndOfMedia(() -> {
-						this.playNewSong(this.getNextRowForMusic(false));
+//						this.playNewSong(this.getNextRowForMusic(false));
+						this.testTable.getSelectionModel().select(this.getNextRowForMusic(false));
 					}); 
 				}
 			}
@@ -575,6 +576,7 @@ public class SongsDisplayController {
 				if (this.mediaPlayer.getStatus() == Status.STOPPED && this.testTable.getSelectionModel().getSelectedItem() != null
 						&& !this.testTable.getSelectionModel().getSelectedItem().equals(this.currentlyPlayedSong)) {
 					this.playNewSong(this.testTable.getSelectionModel().getSelectedItem());
+					
 				}
 				else {
 					if (this.mediaPlayer.getStatus() == Status.PAUSED || this.mediaPlayer.getStatus() == Status.STOPPED) {
@@ -608,13 +610,15 @@ public class SongsDisplayController {
 		// next and previous doesn't respect the currently selected songs if status is stopped but doesn't matter much
 		this.mediaPlayerNextButton.setOnAction(e -> {
 			if (this.mediaPlayer != null) {
-				this.playNewSong(this.getNextRowForMusic(false));
+//				this.playNewSong(this.getNextRowForMusic(false));
+				this.testTable.getSelectionModel().select(this.getNextRowForMusic(false));
 			}
 		});
 		
 		this.mediaPlayerPreviousButton.setOnAction(e -> {
 			if (this.mediaPlayer != null) {
-				this.playNewSong(this.getNextRowForMusic(true));
+//				this.playNewSong(this.getNextRowForMusic(true));
+				this.testTable.getSelectionModel().select(this.getNextRowForMusic(true));
 			}
 		});
 		
@@ -626,7 +630,6 @@ public class SongsDisplayController {
 	}
 	
 	// TODO: might want to save the option (repeat, shuffle) into songs.db at the end
-	// TODO: might want to move the exception handling to another or calling method
 	private void playNewSong(TableViewData rowToBePlayed) {
 		Path mp3Path = Paths.get(this.pathToSongsFolder, rowToBePlayed.folderNameProperty().get(), rowToBePlayed.audioNameProperty().get());
 		if (mp3Path.toFile().exists()) {
@@ -644,7 +647,8 @@ public class SongsDisplayController {
 			// if repeat is not chosen, play next song when current song ends
 			if (!this.mediaPlayerRepeatToggleButton.isSelected()) {
 				this.mediaPlayer.setOnEndOfMedia(() -> {
-					this.playNewSong(this.getNextRowForMusic(false));
+//					this.playNewSong(this.getNextRowForMusic(false));
+					this.testTable.getSelectionModel().select(this.getNextRowForMusic(false));
 				});
 			}
 			// this listener is added here instead of in init method as only now the mediaPlayer is sure to exist
@@ -709,12 +713,12 @@ public class SongsDisplayController {
 //	}
 	
 	
-	// TODO: slider for selecting music start point
 	// This is only called when stage is shown (ie. every required initialization has been done)
 	public void startMusic() {
 		TableViewData randomSong = this.getRandomRow();
 		if (randomSong != null) {
-			this.playNewSong(randomSong);
+//			this.playNewSong(randomSong);
+			this.testTable.getSelectionModel().select(randomSong);
 		}
 	}
 	
@@ -738,44 +742,70 @@ public class SongsDisplayController {
 			}
 		}
 		else {
-			// TODO: implement binary search
-			// use iterator becuz the list might be filtered at the same time this is working
-			for (ListIterator<TableViewData> iter = this.testTable.getItems().listIterator(); iter.hasNext();) {
-				TableViewData row = iter.next();
-				// if ever found this song in current tableview (ie. user does not switch to hidden display (for etc))
-				if (row.equals(this.currentlyPlayedSong)) {
-					if (!reverse) {
-						// get next song
-						if (iter.hasNext()) {
-							return iter.next();
-						}
-					}
-					else {
-						if (iter.hasPrevious()) {
-							iter.previous(); // same as row
-							if (iter.hasPrevious()) {
-								return iter.previous(); // this is the real previous row
-							}
-						}
-					}
-					// if no next song (ie. current view is empty or at the end of list), break out for default return
-					break;
+			// TODO: check back using old implementation whether it will still jump or not
+			// if yes, try modify the selectionModel
+			List<TableViewData> songList = this.testTable.getItems();
+			int index = Collections.binarySearch(songList, this.currentlyPlayedSong, this.orderByComboBox.getSelectionModel().getSelectedItem());
+			// if found, return directly
+			if (index >= 0) {
+				TableViewData nextSong;
+				if (!reverse) {
+					nextSong = index + 1 >= songList.size() ? songList.get(0) : songList.get(index + 1);
 				}
+				else {
+					nextSong = index - 1 < 0 ? songList.get(songList.size() - 1) : songList.get(index - 1);
+				}
+				return nextSong;
 			}
-			// return 1st row if not empty
+			
+			// if not found, (ie. filteredList is empty or filteredList does not contain currentlyPLayedSong)
 			if (this.testTable.getItems().isEmpty()) {
 				return this.currentlyPlayedSong;
 			}
 			else {
-				// if at 1st position and reverse, play the last song in the list
-				if (reverse) {
-					return this.testTable.getItems().get(this.testTable.getItems().size() - 1);
-				}
-				else {
-					return this.testTable.getItems().get(0);
-				}
+				// return 1st in list (ie. when filtering and currentlyPlayedSong is not in, play the first in the list)
+				return this.testTable.getItems().get(0);
 			}
-//			return this.testTable.getItems().isEmpty() ? this.currentlyPlayedSong : this.testTable.getItems().get(0);
+			
+//			// use iterator becuz the list might be filtered at the same time this is working
+//			for (ListIterator<TableViewData> iter = this.testTable.getItems().listIterator(); iter.hasNext();) {
+//				TableViewData row = iter.next();
+//				// if ever found this song in current tableview (ie. user does not switch to hidden display (for etc))
+//				if (row.equals(this.currentlyPlayedSong)) {
+//					if (!reverse) {
+//						// get next song
+//						if (iter.hasNext()) {
+//							return iter.next();
+//						}
+//					}
+//					else {
+//						if (iter.hasPrevious()) {
+//							iter.previous(); // same as row
+//							if (iter.hasPrevious()) {
+//								return iter.previous(); // this is the real previous row
+//							}
+//						}
+//					}
+//					// if no next song (ie. current view is empty or at the end of list), break out for default return
+//					break;
+//				}
+//			}
+		
+//			// return 1st row if not empty
+//			if (this.testTable.getItems().isEmpty()) {
+//				return this.currentlyPlayedSong;
+//			}
+//			else {
+//				// if at 1st position and reverse, play the last song in the list
+//				if (reverse) {
+//					return this.testTable.getItems().get(this.testTable.getItems().size() - 1);
+//				}
+//				else {
+//					return this.testTable.getItems().get(0);
+//				}
+//			}
+////			return this.testTable.getItems().isEmpty() ? this.currentlyPlayedSong : this.testTable.getItems().get(0);
+			
 		}
 	}
 	
@@ -785,7 +815,6 @@ public class SongsDisplayController {
 	}
 	
 	// testCopySongButton
-	// TODO: option to exclude possible duplicated songs 
 	@FXML private void copySong(ActionEvent event) {
 //		List<TableViewData> selectedSongsList = new ArrayList<TableViewData>();
 //		boolean containCopiedSongs = false;
@@ -802,10 +831,9 @@ public class SongsDisplayController {
 				.collect(Collectors.groupingBy(row -> row.folderNameProperty().get()));
 		
 		
-		
 		if (selectedSongsMap.size() == 0) {
-			// TODO: change to reflect in GUI
-			System.out.println("No row is chosen");
+			Alert alert = new Alert(AlertType.INFORMATION, "No Song is chosen!", ButtonType.OK);
+			alert.showAndWait();
 		}
 		else {
 //			Map<String, List<TableViewData>> selectedSongsMap = selectedSongsList.stream()
