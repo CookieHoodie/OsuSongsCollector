@@ -25,11 +25,15 @@ import java.util.stream.Collectors;
 
 import javafx.concurrent.Task;
 
+
+// TODO: if any modification to the table (ie. add or delete fields) in the future, bear in mind
+// to use insert but not change them directly otherwise error will happen and user will have to delete 
+// songsDb which loses their data
+
 public class SqliteDatabase {
 	private final String SQLITE_PREFIX = "jdbc:sqlite:";
 	private final String URL;
 	public final String DB_NAME;
-	public SongsDbData Data = new SongsDbData();
 	
 	private boolean isDbExist;
 	private Connection conn;
@@ -92,120 +96,120 @@ public class SqliteDatabase {
 	}
 	
 	private void createTableMetadata() throws SQLException {
-		String sql = "CREATE TABLE IF NOT EXISTS "+ this.Data.Metadata.TABLE_NAME + " ("
-				+ this.Data.Metadata.METADATA_ID + " INTEGER NOT NULL PRIMARY KEY,"
-				+ this.Data.Metadata.OSU_VERSION + " INTEGER,"
-				+ this.Data.Metadata.FOLDER_COUNT + " INTEGER,"
-				+ this.Data.Metadata.PLAYER_NAME + " TEXT,"
-				+ this.Data.Metadata.NUMBER_OF_BEATMAPS + " INTEGER"
+		String sql = "CREATE TABLE IF NOT EXISTS "+ TableData.Metadata.TABLE_NAME + " ("
+				+ TableData.Metadata.METADATA_ID + " INTEGER NOT NULL PRIMARY KEY,"
+				+ TableData.Metadata.OSU_VERSION + " INTEGER,"
+				+ TableData.Metadata.FOLDER_COUNT + " INTEGER,"
+				+ TableData.Metadata.PLAYER_NAME + " TEXT,"
+				+ TableData.Metadata.NUMBER_OF_BEATMAPS + " INTEGER"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
 	}
 	
 	private void createTableConfig() throws SQLException {
-		String sql = "CREATE TABLE IF NOT EXISTS " + this.Data.Config.TABLE_NAME + " ("
-				+ this.Data.Config.CONFIG_ID + " INTEGER NOT NULL PRIMARY KEY,"
-				+ this.Data.Config.PATH_TO_OSU_DB + " TEXT,"
-				+ this.Data.Config.PATH_TO_SONGS_FOLDER + " TEXT,"
-				+ this.Data.Config.SAVE_FOLDER + " TEXT,"
-				+ this.Data.Config.IS_SONG_SOURCE_SHOWN + " BOOLEAN,"
-				+ this.Data.Config.IS_ARTIST_NAME_SHOWN + " BOOLEAN,"
-				+ this.Data.Config.IS_ARTIST_NAME_UNICODE_SHOWN + " BOOLEAN,"
-				+ this.Data.Config.IS_SONG_TITLE_SHOWN + " BOOLEAN,"
-				+ this.Data.Config.IS_SONG_TITLE_UNICODE_SHOWN + " BOOLEAN,"
-				+ this.Data.Config.IS_CREATOR_NAME_SHOWN + " BOOLEAN,"
-				+ this.Data.Config.IS_TOTAL_TIME_SHOWN + " BOOLEAN,"
-				+ this.Data.Config.IS_IS_DOWNLOADED_SHOWN + " BOOLEAN,"
-				+ this.Data.Config.ORDERING + " TEXT,"
-				+ this.Data.Config.SOUND_VOLUME + " REAL,"
-				+ this.Data.Config.IS_REPEAT_TOGGLED + " BOOLEAN,"
-				+ this.Data.Config.IS_SHUFFLE_TOGGLED + " BOOLEAN"
+		String sql = "CREATE TABLE IF NOT EXISTS " + TableData.Config.TABLE_NAME + " ("
+				+ TableData.Config.CONFIG_ID + " INTEGER NOT NULL PRIMARY KEY,"
+				+ TableData.Config.PATH_TO_OSU_DB + " TEXT,"
+				+ TableData.Config.PATH_TO_SONGS_FOLDER + " TEXT,"
+				+ TableData.Config.SAVE_FOLDER + " TEXT,"
+				+ TableData.Config.IS_SONG_SOURCE_SHOWN + " BOOLEAN,"
+				+ TableData.Config.IS_ARTIST_NAME_SHOWN + " BOOLEAN,"
+				+ TableData.Config.IS_ARTIST_NAME_UNICODE_SHOWN + " BOOLEAN,"
+				+ TableData.Config.IS_SONG_TITLE_SHOWN + " BOOLEAN,"
+				+ TableData.Config.IS_SONG_TITLE_UNICODE_SHOWN + " BOOLEAN,"
+				+ TableData.Config.IS_CREATOR_NAME_SHOWN + " BOOLEAN,"
+				+ TableData.Config.IS_TOTAL_TIME_SHOWN + " BOOLEAN,"
+				+ TableData.Config.IS_IS_DOWNLOADED_SHOWN + " BOOLEAN,"
+				+ TableData.Config.ORDERING + " TEXT,"
+				+ TableData.Config.SOUND_VOLUME + " REAL,"
+				+ TableData.Config.IS_REPEAT_TOGGLED + " BOOLEAN,"
+				+ TableData.Config.IS_SHUFFLE_TOGGLED + " BOOLEAN"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
 	}
 	
 	private void createTableBeatmapSet() throws SQLException {
-		String sql = "CREATE TABLE IF NOT EXISTS " + this.Data.BeatmapSet.TABLE_NAME + " ("
-				+ this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " INTEGER NOT NULL PRIMARY KEY,"
-				+ this.Data.BeatmapSet.BEATMAP_SET_ID + " INTEGER,"
-				+ this.Data.BeatmapSet.ARTIST_ID + " INTEGER,"
-				+ this.Data.BeatmapSet.SONG_ID + " INTEGER,"
-				+ this.Data.BeatmapSet.CREATOR_NAME + " TEXT COLLATE NOCASE,"
-				+ this.Data.BeatmapSet.FOLDER_NAME + " TEXT COLLATE NOCASE,"
-				+ this.Data.BeatmapSet.AUDIO_NAME + " TEXT,"
-				+ this.Data.BeatmapSet.IS_DOWNLOADED + " BOOLEAN,"
-				+ this.Data.BeatmapSet.IS_HIDDEN + " BOOLEAN,"
-				+ "UNIQUE (" + this.Data.BeatmapSet.FOLDER_NAME + "," + this.Data.BeatmapSet.AUDIO_NAME + "),"
-				+ "FOREIGN KEY (" + this.Data.BeatmapSet.ARTIST_ID + ") REFERENCES " + this.Data.Artist.TABLE_NAME + "(" + this.Data.Artist.ARTIST_ID + ")" + " ON UPDATE CASCADE ON DELETE CASCADE,"
-				+ "FOREIGN KEY (" + this.Data.BeatmapSet.SONG_ID + ") REFERENCES " + this.Data.Song.TABLE_NAME + "(" + this.Data.Song.SONG_ID + ")" + " ON UPDATE CASCADE ON DELETE CASCADE"
+		String sql = "CREATE TABLE IF NOT EXISTS " + TableData.BeatmapSet.TABLE_NAME + " ("
+				+ TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + " INTEGER NOT NULL PRIMARY KEY,"
+				+ TableData.BeatmapSet.BEATMAP_SET_ID + " INTEGER,"
+				+ TableData.BeatmapSet.ARTIST_ID + " INTEGER,"
+				+ TableData.BeatmapSet.SONG_ID + " INTEGER,"
+				+ TableData.BeatmapSet.CREATOR_NAME + " TEXT COLLATE NOCASE,"
+				+ TableData.BeatmapSet.FOLDER_NAME + " TEXT COLLATE NOCASE,"
+				+ TableData.BeatmapSet.AUDIO_NAME + " TEXT,"
+				+ TableData.BeatmapSet.IS_DOWNLOADED + " BOOLEAN,"
+				+ TableData.BeatmapSet.IS_HIDDEN + " BOOLEAN,"
+				+ "UNIQUE (" + TableData.BeatmapSet.FOLDER_NAME + "," + TableData.BeatmapSet.AUDIO_NAME + "),"
+				+ "FOREIGN KEY (" + TableData.BeatmapSet.ARTIST_ID + ") REFERENCES " + TableData.Artist.TABLE_NAME + "(" + TableData.Artist.ARTIST_ID + ")" + " ON UPDATE CASCADE ON DELETE CASCADE,"
+				+ "FOREIGN KEY (" + TableData.BeatmapSet.SONG_ID + ") REFERENCES " + TableData.Song.TABLE_NAME + "(" + TableData.Song.SONG_ID + ")" + " ON UPDATE CASCADE ON DELETE CASCADE"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
 	}
 	
 	private void createTableArtist() throws SQLException {
-		String sql = "CREATE TABLE IF NOT EXISTS " + this.Data.Artist.TABLE_NAME + " ("
-				+ this.Data.Artist.ARTIST_ID + " INTEGER NOT NULL PRIMARY KEY,"
-				+ this.Data.Artist.ARTIST_NAME + " TEXT COLLATE NOCASE,"
-				+ this.Data.Artist.ARTIST_NAME_UNICODE + " TEXT COLLATE NOCASE,"
-				+ "UNIQUE (" + this.Data.Artist.ARTIST_NAME + ", " + this.Data.Artist.ARTIST_NAME_UNICODE + ")"
+		String sql = "CREATE TABLE IF NOT EXISTS " + TableData.Artist.TABLE_NAME + " ("
+				+ TableData.Artist.ARTIST_ID + " INTEGER NOT NULL PRIMARY KEY,"
+				+ TableData.Artist.ARTIST_NAME + " TEXT COLLATE NOCASE,"
+				+ TableData.Artist.ARTIST_NAME_UNICODE + " TEXT COLLATE NOCASE,"
+				+ "UNIQUE (" + TableData.Artist.ARTIST_NAME + ", " + TableData.Artist.ARTIST_NAME_UNICODE + ")"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
 	}
 	
 	private void createTableSong() throws SQLException {
-		String sql = "CREATE TABLE IF NOT EXISTS " + this.Data.Song.TABLE_NAME + " ("
-				+ this.Data.Song.SONG_ID + " INTEGER NOT NULL PRIMARY KEY,"
-				+ this.Data.Song.SONG_TITLE + " TEXT COLLATE NOCASE,"
-				+ this.Data.Song.SONG_TITLE_UNICODE + " TEXT COLLATE NOCASE,"
-				+ this.Data.Song.SONG_SOURCE + " TEXT,"
-				+ "UNIQUE (" + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," + this.Data.Song.SONG_SOURCE + ")"
+		String sql = "CREATE TABLE IF NOT EXISTS " + TableData.Song.TABLE_NAME + " ("
+				+ TableData.Song.SONG_ID + " INTEGER NOT NULL PRIMARY KEY,"
+				+ TableData.Song.SONG_TITLE + " TEXT COLLATE NOCASE,"
+				+ TableData.Song.SONG_TITLE_UNICODE + " TEXT COLLATE NOCASE,"
+				+ TableData.Song.SONG_SOURCE + " TEXT,"
+				+ "UNIQUE (" + TableData.Song.SONG_TITLE + "," + TableData.Song.SONG_TITLE_UNICODE + "," + TableData.Song.SONG_SOURCE + ")"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
 	}
 	
 	private void createTableSongTag() throws SQLException {
-		String sql = "CREATE TABLE IF NOT EXISTS " + this.Data.SongTag.TABLE_NAME + " ("
-				+ this.Data.SongTag.SONG_TAG_ID + " INTEGER NOT NULL PRIMARY KEY,"
-				+ this.Data.SongTag.SONG_TAG_NAME + " TEXT COLLATE NOCASE,"
-				+ "UNIQUE (" + this.Data.SongTag.SONG_TAG_NAME + ")"
+		String sql = "CREATE TABLE IF NOT EXISTS " + TableData.SongTag.TABLE_NAME + " ("
+				+ TableData.SongTag.SONG_TAG_ID + " INTEGER NOT NULL PRIMARY KEY,"
+				+ TableData.SongTag.SONG_TAG_NAME + " TEXT COLLATE NOCASE,"
+				+ "UNIQUE (" + TableData.SongTag.SONG_TAG_NAME + ")"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
 	}
 	
 	private void createTableBeatmap() throws SQLException {
-		String sql = "CREATE TABLE IF NOT EXISTS " + this.Data.Beatmap.TABLE_NAME + " ("
-				+ this.Data.Beatmap.BEATMAP_AUTO_ID + " INTEGER NOT NULL PRIMARY KEY,"
-				+ this.Data.Beatmap.BEATMAP_ID + " INTEGER,"
-				+ this.Data.Beatmap.BEATMAP_SET_AUTO_ID + " INTEGER,"
-				+ this.Data.Beatmap.RANKED_STATUS + " INTEGER,"
-				+ this.Data.Beatmap.LAST_MODIFICATION_TIME + " INTEGER,"
-				+ this.Data.Beatmap.TOTAL_TIME + " INTEGER,"
-				+ this.Data.Beatmap.PREVIEW_TIME + " INTEGER,"
-				+ this.Data.Beatmap.THREAD_ID + " INTEGER,"
-				+ this.Data.Beatmap.DIFFICULTY + " TEXT,"
-//				+ this.Data.Beatmap.GRADE_STANDARD + " INTEGER,"
-//				+ this.Data.Beatmap.GRADE_TAIKO + " INTEGER,"
-//				+ this.Data.Beatmap.GRADE_CTB + " INTEGER,"
-//				+ this.Data.Beatmap.GRADE_MANIA + " INTEGER,"
-				+ this.Data.Beatmap.IS_UNPLAYED + " BOOLEAN,"
-				+ this.Data.Beatmap.LAST_PLAYED_TIME + " INTEGER,"
-				+ "FOREIGN KEY (" + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + ") REFERENCES " + this.Data.BeatmapSet.TABLE_NAME + "(" + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + ")" + " ON UPDATE CASCADE ON DELETE CASCADE"
+		String sql = "CREATE TABLE IF NOT EXISTS " + TableData.Beatmap.TABLE_NAME + " ("
+				+ TableData.Beatmap.BEATMAP_AUTO_ID + " INTEGER NOT NULL PRIMARY KEY,"
+				+ TableData.Beatmap.BEATMAP_ID + " INTEGER,"
+				+ TableData.Beatmap.BEATMAP_SET_AUTO_ID + " INTEGER,"
+				+ TableData.Beatmap.RANKED_STATUS + " INTEGER,"
+				+ TableData.Beatmap.LAST_MODIFICATION_TIME + " INTEGER,"
+				+ TableData.Beatmap.TOTAL_TIME + " INTEGER,"
+				+ TableData.Beatmap.PREVIEW_TIME + " INTEGER,"
+				+ TableData.Beatmap.THREAD_ID + " INTEGER,"
+				+ TableData.Beatmap.DIFFICULTY + " TEXT,"
+//				+ TableData.Beatmap.GRADE_STANDARD + " INTEGER,"
+//				+ TableData.Beatmap.GRADE_TAIKO + " INTEGER,"
+//				+ TableData.Beatmap.GRADE_CTB + " INTEGER,"
+//				+ TableData.Beatmap.GRADE_MANIA + " INTEGER,"
+				+ TableData.Beatmap.IS_UNPLAYED + " BOOLEAN,"
+				+ TableData.Beatmap.LAST_PLAYED_TIME + " INTEGER,"
+				+ "FOREIGN KEY (" + TableData.Beatmap.BEATMAP_SET_AUTO_ID + ") REFERENCES " + TableData.BeatmapSet.TABLE_NAME + "(" + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + ")" + " ON UPDATE CASCADE ON DELETE CASCADE"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
 	}
 	
 	private void createTableBeatmapSet_SongTag() throws SQLException {
-		String sql = "CREATE TABLE IF NOT EXISTS " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "("
-				+ this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " INTEGER NOT NULL,"
-				+ this.Data.BeatmapSet_SongTag.SONG_TAG_ID + " INTEGER NOT NULL,"
-				+ "PRIMARY KEY (" + this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + "," + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + ")"
+		String sql = "CREATE TABLE IF NOT EXISTS " + TableData.BeatmapSet_SongTag.TABLE_NAME + "("
+				+ TableData.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " INTEGER NOT NULL,"
+				+ TableData.BeatmapSet_SongTag.SONG_TAG_ID + " INTEGER NOT NULL,"
+				+ "PRIMARY KEY (" + TableData.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + "," + TableData.BeatmapSet_SongTag.SONG_TAG_ID + ")"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
@@ -214,39 +218,39 @@ public class SqliteDatabase {
 	
 	private void createIndexBeatmapSet() throws SQLException {
 		Statement stmt = this.getConn().createStatement();
-		String sql = "CREATE INDEX IF NOT EXISTS idx_artist_id ON " + this.Data.BeatmapSet.TABLE_NAME + "(" + this.Data.BeatmapSet.ARTIST_ID + ");";
+		String sql = "CREATE INDEX IF NOT EXISTS idx_artist_id ON " + TableData.BeatmapSet.TABLE_NAME + "(" + TableData.BeatmapSet.ARTIST_ID + ");";
 		stmt.execute(sql);
-		sql = "CREATE INDEX IF NOT EXISTS idx_song_id ON " + this.Data.BeatmapSet.TABLE_NAME + "(" + this.Data.BeatmapSet.SONG_ID + ");";
+		sql = "CREATE INDEX IF NOT EXISTS idx_song_id ON " + TableData.BeatmapSet.TABLE_NAME + "(" + TableData.BeatmapSet.SONG_ID + ");";
 		stmt.execute(sql);
-		sql = "CREATE INDEX IF NOT EXISTS idx_creator_name ON " + this.Data.BeatmapSet.TABLE_NAME + "(" + this.Data.BeatmapSet.CREATOR_NAME + ");";
+		sql = "CREATE INDEX IF NOT EXISTS idx_creator_name ON " + TableData.BeatmapSet.TABLE_NAME + "(" + TableData.BeatmapSet.CREATOR_NAME + ");";
 		stmt.execute(sql);
-		sql = "CREATE INDEX IF NOT EXISTS idx_folder_name ON " + this.Data.BeatmapSet.TABLE_NAME + "(" + this.Data.BeatmapSet.FOLDER_NAME + ");";
+		sql = "CREATE INDEX IF NOT EXISTS idx_folder_name ON " + TableData.BeatmapSet.TABLE_NAME + "(" + TableData.BeatmapSet.FOLDER_NAME + ");";
 		stmt.execute(sql);
 	}
 	
 	private void createIndexBeatmap() throws SQLException {
 		Statement stmt = this.getConn().createStatement();
-		String sql = "CREATE INDEX IF NOT EXISTS idx_beatmap_set_auto_id ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + ");";
+		String sql = "CREATE INDEX IF NOT EXISTS idx_beatmap_set_auto_id ON " + TableData.Beatmap.TABLE_NAME + "(" + TableData.Beatmap.BEATMAP_SET_AUTO_ID + ");";
 		stmt.execute(sql);
-		sql = "CREATE INDEX IF NOT EXISTS idx_last_modification_time ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.LAST_MODIFICATION_TIME + ");";
+		sql = "CREATE INDEX IF NOT EXISTS idx_last_modification_time ON " + TableData.Beatmap.TABLE_NAME + "(" + TableData.Beatmap.LAST_MODIFICATION_TIME + ");";
 		stmt.execute(sql);
-		sql = "CREATE INDEX IF NOT EXISTS idx_total_time ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.TOTAL_TIME + ");";
+		sql = "CREATE INDEX IF NOT EXISTS idx_total_time ON " + TableData.Beatmap.TABLE_NAME + "(" + TableData.Beatmap.TOTAL_TIME + ");";
 		stmt.execute(sql);
-		sql = "CREATE INDEX IF NOT EXISTS idx_preview_time ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.PREVIEW_TIME + ");";
+		sql = "CREATE INDEX IF NOT EXISTS idx_preview_time ON " + TableData.Beatmap.TABLE_NAME + "(" + TableData.Beatmap.PREVIEW_TIME + ");";
 		stmt.execute(sql);
-		sql = "CREATE INDEX IF NOT EXISTS idx_difficulty ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.DIFFICULTY + ");";
+		sql = "CREATE INDEX IF NOT EXISTS idx_difficulty ON " + TableData.Beatmap.TABLE_NAME + "(" + TableData.Beatmap.DIFFICULTY + ");";
 		stmt.execute(sql);
-		sql = "CREATE INDEX IF NOT EXISTS idx_last_played_time ON " + this.Data.Beatmap.TABLE_NAME + "(" + this.Data.Beatmap.LAST_PLAYED_TIME + ");";
+		sql = "CREATE INDEX IF NOT EXISTS idx_last_played_time ON " + TableData.Beatmap.TABLE_NAME + "(" + TableData.Beatmap.LAST_PLAYED_TIME + ");";
 		stmt.execute(sql);
 	}
 	
 	
 	private void insertIntoMetadata(int osuVersion, int folderCount, String playerName, int numberOfBeatmaps) throws SQLException {
-		String sql = "INSERT INTO " + this.Data.Metadata.TABLE_NAME + "(" 
-				+ this.Data.Metadata.OSU_VERSION + "," 
-				+ this.Data.Metadata.FOLDER_COUNT + "," 
-				+ this.Data.Metadata.PLAYER_NAME + "," 
-				+ this.Data.Metadata.NUMBER_OF_BEATMAPS
+		String sql = "INSERT INTO " + TableData.Metadata.TABLE_NAME + "(" 
+				+ TableData.Metadata.OSU_VERSION + "," 
+				+ TableData.Metadata.FOLDER_COUNT + "," 
+				+ TableData.Metadata.PLAYER_NAME + "," 
+				+ TableData.Metadata.NUMBER_OF_BEATMAPS
 				+ ") VALUES(?,?,?,?)";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setInt(1, osuVersion);
@@ -261,22 +265,22 @@ public class SqliteDatabase {
 			boolean isSongTitleShown, boolean isSongTitleUnicodeShown, boolean isCreatorNameShown,
 			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume,
 			boolean isRepeatToggled, boolean isShuffleToggled) throws SQLException {
-		String sql = "INSERT INTO " + this.Data.Config.TABLE_NAME + "(" 
-				+ this.Data.Config.PATH_TO_OSU_DB + ","
-				+ this.Data.Config.PATH_TO_SONGS_FOLDER + ","
-				+ this.Data.Config.SAVE_FOLDER + ","
-				+ this.Data.Config.IS_SONG_SOURCE_SHOWN + ","
-				+ this.Data.Config.IS_ARTIST_NAME_SHOWN + ","
-				+ this.Data.Config.IS_ARTIST_NAME_UNICODE_SHOWN + ","
-				+ this.Data.Config.IS_SONG_TITLE_SHOWN + ","
-				+ this.Data.Config.IS_SONG_TITLE_UNICODE_SHOWN + ","
-				+ this.Data.Config.IS_CREATOR_NAME_SHOWN + ","
-				+ this.Data.Config.IS_TOTAL_TIME_SHOWN + ","
-				+ this.Data.Config.IS_IS_DOWNLOADED_SHOWN + ","
-				+ this.Data.Config.ORDERING + ","
-				+ this.Data.Config.SOUND_VOLUME + ","
-				+ this.Data.Config.IS_REPEAT_TOGGLED + ","
-				+ this.Data.Config.IS_SHUFFLE_TOGGLED
+		String sql = "INSERT INTO " + TableData.Config.TABLE_NAME + "(" 
+				+ TableData.Config.PATH_TO_OSU_DB + ","
+				+ TableData.Config.PATH_TO_SONGS_FOLDER + ","
+				+ TableData.Config.SAVE_FOLDER + ","
+				+ TableData.Config.IS_SONG_SOURCE_SHOWN + ","
+				+ TableData.Config.IS_ARTIST_NAME_SHOWN + ","
+				+ TableData.Config.IS_ARTIST_NAME_UNICODE_SHOWN + ","
+				+ TableData.Config.IS_SONG_TITLE_SHOWN + ","
+				+ TableData.Config.IS_SONG_TITLE_UNICODE_SHOWN + ","
+				+ TableData.Config.IS_CREATOR_NAME_SHOWN + ","
+				+ TableData.Config.IS_TOTAL_TIME_SHOWN + ","
+				+ TableData.Config.IS_IS_DOWNLOADED_SHOWN + ","
+				+ TableData.Config.ORDERING + ","
+				+ TableData.Config.SOUND_VOLUME + ","
+				+ TableData.Config.IS_REPEAT_TOGGLED + ","
+				+ TableData.Config.IS_SHUFFLE_TOGGLED
 				+ ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, pathToOsuDb);
@@ -298,15 +302,15 @@ public class SqliteDatabase {
 	}
 	
 	private PreparedStatement getInsertIntoBeatmapSetPStatement() throws SQLException {
-		String sql = "INSERT OR IGNORE INTO " + this.Data.BeatmapSet.TABLE_NAME + "("
-				+ this.Data.BeatmapSet.BEATMAP_SET_ID + ","
-				+ this.Data.BeatmapSet.ARTIST_ID + ","
-				+ this.Data.BeatmapSet.SONG_ID + ","
-				+ this.Data.BeatmapSet.CREATOR_NAME + ","
-				+ this.Data.BeatmapSet.FOLDER_NAME + ","
-				+ this.Data.BeatmapSet.AUDIO_NAME + ","
-				+ this.Data.BeatmapSet.IS_DOWNLOADED + ","
-				+ this.Data.BeatmapSet.IS_HIDDEN 
+		String sql = "INSERT OR IGNORE INTO " + TableData.BeatmapSet.TABLE_NAME + "("
+				+ TableData.BeatmapSet.BEATMAP_SET_ID + ","
+				+ TableData.BeatmapSet.ARTIST_ID + ","
+				+ TableData.BeatmapSet.SONG_ID + ","
+				+ TableData.BeatmapSet.CREATOR_NAME + ","
+				+ TableData.BeatmapSet.FOLDER_NAME + ","
+				+ TableData.BeatmapSet.AUDIO_NAME + ","
+				+ TableData.BeatmapSet.IS_DOWNLOADED + ","
+				+ TableData.BeatmapSet.IS_HIDDEN 
 				+ ") VALUES(?,?,?,?,?,?,?,?)";
 		return this.getConn().prepareStatement(sql);
 	}
@@ -334,9 +338,9 @@ public class SqliteDatabase {
 	
 	
 	private PreparedStatement getInsertIntoArtistPStatement() throws SQLException {
-		String sql = "INSERT OR IGNORE INTO " + this.Data.Artist.TABLE_NAME + "(" 
-				+ this.Data.Artist.ARTIST_NAME + ","
-				+ this.Data.Artist.ARTIST_NAME_UNICODE
+		String sql = "INSERT OR IGNORE INTO " + TableData.Artist.TABLE_NAME + "(" 
+				+ TableData.Artist.ARTIST_NAME + ","
+				+ TableData.Artist.ARTIST_NAME_UNICODE
 				+ ") VALUES(?,?)";
 		return this.getConn().prepareStatement(sql);
 	}
@@ -349,10 +353,10 @@ public class SqliteDatabase {
 	
 	
 	private PreparedStatement getInsertIntoSongPStatement() throws SQLException {
-		String sql = "INSERT OR IGNORE INTO " + this.Data.Song.TABLE_NAME + "("
-				+ this.Data.Song.SONG_TITLE + ","
-				+ this.Data.Song.SONG_TITLE_UNICODE + ","
-				+ this.Data.Song.SONG_SOURCE
+		String sql = "INSERT OR IGNORE INTO " + TableData.Song.TABLE_NAME + "("
+				+ TableData.Song.SONG_TITLE + ","
+				+ TableData.Song.SONG_TITLE_UNICODE + ","
+				+ TableData.Song.SONG_SOURCE
 				+ ") VALUES(?,?,?)";
 		return this.getConn().prepareStatement(sql);
 	}
@@ -366,8 +370,8 @@ public class SqliteDatabase {
 	
 	
 	private PreparedStatement getInsertIntoSongTagPStatement() throws SQLException {
-		String sql = "INSERT OR IGNORE INTO " + this.Data.SongTag.TABLE_NAME + "(" 
-				+ this.Data.SongTag.SONG_TAG_NAME
+		String sql = "INSERT OR IGNORE INTO " + TableData.SongTag.TABLE_NAME + "(" 
+				+ TableData.SongTag.SONG_TAG_NAME
 				+ ") VALUES(?)";
 		return this.getConn().prepareStatement(sql);
 	}
@@ -380,21 +384,21 @@ public class SqliteDatabase {
 
 			
 	private PreparedStatement getInsertIntoBeatmapPStatement() throws SQLException {
-		String sql = "INSERT INTO " + this.Data.Beatmap.TABLE_NAME + "("
-				+ this.Data.Beatmap.BEATMAP_ID + ","
-				+ this.Data.Beatmap.BEATMAP_SET_AUTO_ID + ","
-				+ this.Data.Beatmap.RANKED_STATUS + ","
-				+ this.Data.Beatmap.LAST_MODIFICATION_TIME + ","
-				+ this.Data.Beatmap.TOTAL_TIME + ","
-				+ this.Data.Beatmap.PREVIEW_TIME + ","
-				+ this.Data.Beatmap.THREAD_ID + ","
-				+ this.Data.Beatmap.DIFFICULTY + ","
-//				+ this.Data.Beatmap.GRADE_STANDARD + ","
-//				+ this.Data.Beatmap.GRADE_TAIKO + ","
-//				+ this.Data.Beatmap.GRADE_CTB + ","
-//				+ this.Data.Beatmap.GRADE_MANIA + ","
-				+ this.Data.Beatmap.IS_UNPLAYED + ","
-				+ this.Data.Beatmap.LAST_PLAYED_TIME
+		String sql = "INSERT INTO " + TableData.Beatmap.TABLE_NAME + "("
+				+ TableData.Beatmap.BEATMAP_ID + ","
+				+ TableData.Beatmap.BEATMAP_SET_AUTO_ID + ","
+				+ TableData.Beatmap.RANKED_STATUS + ","
+				+ TableData.Beatmap.LAST_MODIFICATION_TIME + ","
+				+ TableData.Beatmap.TOTAL_TIME + ","
+				+ TableData.Beatmap.PREVIEW_TIME + ","
+				+ TableData.Beatmap.THREAD_ID + ","
+				+ TableData.Beatmap.DIFFICULTY + ","
+//				+ TableData.Beatmap.GRADE_STANDARD + ","
+//				+ TableData.Beatmap.GRADE_TAIKO + ","
+//				+ TableData.Beatmap.GRADE_CTB + ","
+//				+ TableData.Beatmap.GRADE_MANIA + ","
+				+ TableData.Beatmap.IS_UNPLAYED + ","
+				+ TableData.Beatmap.LAST_PLAYED_TIME
 				+ ") VALUES(?,?,?,?,?,?,?,?,?,?)";
 		return this.getConn().prepareStatement(sql);
 	}
@@ -426,9 +430,9 @@ public class SqliteDatabase {
 	
 	
 	private PreparedStatement getInsertIntoBeatmapSet_SongTagPStatement() throws SQLException {
-		String sql = "INSERT OR IGNORE INTO " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "(" 
-				+ this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + ","
-				+ this.Data.BeatmapSet_SongTag.SONG_TAG_ID 
+		String sql = "INSERT OR IGNORE INTO " + TableData.BeatmapSet_SongTag.TABLE_NAME + "(" 
+				+ TableData.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + ","
+				+ TableData.BeatmapSet_SongTag.SONG_TAG_ID 
 				+ ") VALUES(?,?)";
 		return this.getConn().prepareStatement(sql);
 	}
@@ -897,7 +901,7 @@ public class SqliteDatabase {
 		int totalProgress = 4;
 		boolean isAnyUpdated = false;
 		
-		String selectAllBeatmapSetAutoIDSql = "SELECT " + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " FROM " + this.Data.BeatmapSet.TABLE_NAME;
+		String selectAllBeatmapSetAutoIDSql = "SELECT " + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + " FROM " + TableData.BeatmapSet.TABLE_NAME;
 		Statement allBeatmapSetAutoIDStatement = this.getConn().createStatement();
 		
 		System.out.println("Start getting all ID");
@@ -912,8 +916,8 @@ public class SqliteDatabase {
 		System.out.println("Finish getting all ID");
 		
 		
-		String selectBeatmapCountUsingBeatmapSetAutoIDSql = "SELECT COUNT(*) FROM " + this.Data.Beatmap.TABLE_NAME 
-				+ " WHERE " + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?";
+		String selectBeatmapCountUsingBeatmapSetAutoIDSql = "SELECT COUNT(*) FROM " + TableData.Beatmap.TABLE_NAME 
+				+ " WHERE " + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?";
 		PreparedStatement beatmapCountUsingBeatmapSetAutoIDPStatement = this.getConn().prepareStatement(selectBeatmapCountUsingBeatmapSetAutoIDSql);
 		
 		
@@ -1078,10 +1082,10 @@ public class SqliteDatabase {
 			if (!dbRecords.isEmpty()) {
 				System.out.println("Start deleting");
 				// delete
-				String deleteFromBeatmapSetSql = "DELETE FROM " + this.Data.BeatmapSet.TABLE_NAME + " WHERE "; 
+				String deleteFromBeatmapSetSql = "DELETE FROM " + TableData.BeatmapSet.TABLE_NAME + " WHERE "; 
 				StringJoiner sj = new StringJoiner(" OR ");
 				for (int i = 0; i < dbRecords.size(); i++) {
-					sj.add(this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?");
+					sj.add(TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?");
 				}
 				deleteFromBeatmapSetSql += sj.toString();
 				PreparedStatement deleteFromBeatmapSetPStatement = this.getConn().prepareStatement(deleteFromBeatmapSetSql);
@@ -1107,13 +1111,13 @@ public class SqliteDatabase {
 				System.out.println("Start modifying");
 				
 				// modified songs
-				String getBeatmapAutoIDAndDifficultySql = "SELECT " + this.Data.Beatmap.BEATMAP_AUTO_ID 
-						+ "," + this.Data.Beatmap.DIFFICULTY + " FROM "
-						+ this.Data.Beatmap.TABLE_NAME + " WHERE " + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?";
+				String getBeatmapAutoIDAndDifficultySql = "SELECT " + TableData.Beatmap.BEATMAP_AUTO_ID 
+						+ "," + TableData.Beatmap.DIFFICULTY + " FROM "
+						+ TableData.Beatmap.TABLE_NAME + " WHERE " + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?";
 				PreparedStatement getBeatmapAutoIDAndDifficultyPStatement = this.getConn().prepareStatement(getBeatmapAutoIDAndDifficultySql);
 				
-				String deleteFromBeatmapSql = "DELETE FROM " + this.Data.Beatmap.TABLE_NAME + " WHERE "
-						+ this.Data.Beatmap.BEATMAP_AUTO_ID + " = ?";
+				String deleteFromBeatmapSql = "DELETE FROM " + TableData.Beatmap.TABLE_NAME + " WHERE "
+						+ TableData.Beatmap.BEATMAP_AUTO_ID + " = ?";
 				PreparedStatement deleteFromBeatmapPStatement = this.getConn().prepareStatement(deleteFromBeatmapSql);
 				
 				PreparedStatement beatmapPStatement = this.getInsertIntoBeatmapPStatement();
@@ -1249,7 +1253,7 @@ public class SqliteDatabase {
 		// to update again if no change was done to osuDb between this period
 		ResultSet metadataRs = this.selectMetadata();
 		if (metadataRs.next()) {
-			int metadataID = metadataRs.getInt(this.Data.Metadata.METADATA_ID);
+			int metadataID = metadataRs.getInt(TableData.Metadata.METADATA_ID);
 			this.updateMetadata(metadataID, osuDb.getOsuVersion(), osuDb.getFolderCount(), osuDb.getPlayerName(), osuDb.getNumberOfBeatmaps());
 		}
 		else {
@@ -1281,16 +1285,16 @@ public class SqliteDatabase {
 //			nestedMap.put(folderName, beatmapsMap);
 //		});
 		
-		String selectBeatmapSql = "SELECT " + this.Data.Beatmap.BEATMAP_AUTO_ID + "," 
-				+ this.Data.BeatmapSet.FOLDER_NAME + ","
-				+ this.Data.Beatmap.LAST_MODIFICATION_TIME + ","
-				+ this.Data.Beatmap.DIFFICULTY
-				+ " FROM " + this.Data.Beatmap.TABLE_NAME
-				+ " INNER JOIN " + this.Data.BeatmapSet.TABLE_NAME + " ON " + this.Data.BeatmapSet.TABLE_NAME + "." 
-				+ this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " = " + this.Data.Beatmap.TABLE_NAME + "."
-				+ this.Data.Beatmap.BEATMAP_SET_AUTO_ID;
+		String selectBeatmapSql = "SELECT " + TableData.Beatmap.BEATMAP_AUTO_ID + "," 
+				+ TableData.BeatmapSet.FOLDER_NAME + ","
+				+ TableData.Beatmap.LAST_MODIFICATION_TIME + ","
+				+ TableData.Beatmap.DIFFICULTY
+				+ " FROM " + TableData.Beatmap.TABLE_NAME
+				+ " INNER JOIN " + TableData.BeatmapSet.TABLE_NAME + " ON " + TableData.BeatmapSet.TABLE_NAME + "." 
+				+ TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + " = " + TableData.Beatmap.TABLE_NAME + "."
+				+ TableData.Beatmap.BEATMAP_SET_AUTO_ID;
 		
-		String[] items = {this.Data.Beatmap.LAST_MODIFICATION_TIME};
+		String[] items = {TableData.Beatmap.LAST_MODIFICATION_TIME};
 		PreparedStatement updateBeatmapPStatement = this.getUpdateBeatmapPStatement(items);
 		Statement stmt = this.getConn().createStatement();
 		
@@ -1354,8 +1358,8 @@ public class SqliteDatabase {
 	
 	
 	private ResultSet selectArtistIDFromArtist(String artistName, String artistNameUnicode) throws SQLException {
-		String sql = "SELECT " + this.Data.Artist.ARTIST_ID + " FROM " + this.Data.Artist.TABLE_NAME + " "
-				+ "WHERE " + this.Data.Artist.ARTIST_NAME + " = ? AND " + this.Data.Artist.ARTIST_NAME_UNICODE + " = ?";
+		String sql = "SELECT " + TableData.Artist.ARTIST_ID + " FROM " + TableData.Artist.TABLE_NAME + " "
+				+ "WHERE " + TableData.Artist.ARTIST_NAME + " = ? AND " + TableData.Artist.ARTIST_NAME_UNICODE + " = ?";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, artistName);
 		pstmt.setString(2, artistNameUnicode);
@@ -1363,9 +1367,9 @@ public class SqliteDatabase {
 	}
 	
 	private ResultSet selectSongIDFromSong(String songTitle, String songTitleUnicode, String songSource) throws SQLException {
-		String sql = "SELECT " + this.Data.Song.SONG_ID + " FROM " + this.Data.Song.TABLE_NAME + " "
-				+ "WHERE " + this.Data.Song.SONG_TITLE + " = ? AND " + this.Data.Song.SONG_TITLE_UNICODE + " = ? AND "
-				+ this.Data.Song.SONG_SOURCE + " = ?";
+		String sql = "SELECT " + TableData.Song.SONG_ID + " FROM " + TableData.Song.TABLE_NAME + " "
+				+ "WHERE " + TableData.Song.SONG_TITLE + " = ? AND " + TableData.Song.SONG_TITLE_UNICODE + " = ? AND "
+				+ TableData.Song.SONG_SOURCE + " = ?";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, songTitle);
 		pstmt.setString(2, songTitleUnicode);
@@ -1374,8 +1378,8 @@ public class SqliteDatabase {
 	}
 	
 	private ResultSet selectBeatmapSetAutoIDFromBeatmapSet(String folderName, String audioName) throws SQLException {
-		String sql = "SELECT " + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " FROM " + this.Data.BeatmapSet.TABLE_NAME + " "
-				+ "WHERE " + this.Data.BeatmapSet.FOLDER_NAME + " = ? AND " + this.Data.BeatmapSet.AUDIO_NAME + " = ?";
+		String sql = "SELECT " + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + " FROM " + TableData.BeatmapSet.TABLE_NAME + " "
+				+ "WHERE " + TableData.BeatmapSet.FOLDER_NAME + " = ? AND " + TableData.BeatmapSet.AUDIO_NAME + " = ?";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, folderName);
 		pstmt.setString(2, audioName);
@@ -1384,8 +1388,8 @@ public class SqliteDatabase {
 	
 	
 	private ResultSet selectSongTagIDFromSongTag(String[] songTagNames) throws SQLException {
-		String sql = "SELECT " + this.Data.SongTag.SONG_TAG_ID + " FROM " + this.Data.SongTag.TABLE_NAME + " "
-				+ "WHERE " + this.Data.SongTag.SONG_TAG_NAME + " IN (" 
+		String sql = "SELECT " + TableData.SongTag.SONG_TAG_ID + " FROM " + TableData.SongTag.TABLE_NAME + " "
+				+ "WHERE " + TableData.SongTag.SONG_TAG_NAME + " IN (" 
 				+  String.join(",", Collections.nCopies(songTagNames.length, "?"))
 				+ ");";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
@@ -1398,50 +1402,50 @@ public class SqliteDatabase {
 	// for public use
 	public ResultSet selectMetadata() throws SQLException {
 		// always select the 1st row in case of duplicated data
-		String sql = "SELECT * FROM " + this.Data.Metadata.TABLE_NAME + " ORDER BY ROWID ASC LIMIT 1";
+		String sql = "SELECT * FROM " + TableData.Metadata.TABLE_NAME + " ORDER BY ROWID ASC LIMIT 1";
 		Statement stmt = this.getConn().createStatement();
 		return stmt.executeQuery(sql);
 	}
 	
 	public ResultSet selectConfig() throws SQLException {
-		String sql = "SELECT * FROM " + this.Data.Config.TABLE_NAME + " ORDER BY ROWID ASC LIMIT 1";
+		String sql = "SELECT * FROM " + TableData.Config.TABLE_NAME + " ORDER BY ROWID ASC LIMIT 1";
 		Statement stmt = this.getConn().createStatement();
 		return stmt.executeQuery(sql);
 	}
 	
 	
 	public ResultSet getTableInitData() throws SQLException {
-		String sql = "SELECT " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + this.Data.Song.SONG_SOURCE + "," + this.Data.Artist.ARTIST_NAME + "," + this.Data.Artist.ARTIST_NAME_UNICODE + "," + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," 
-				+ "MAX(" + this.Data.Beatmap.TOTAL_TIME + ") AS " + this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
-				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(DISTINCT " + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + ","
-				+ this.Data.BeatmapSet.CREATOR_NAME + "\n"
-				+ "FROM " + this.Data.BeatmapSet.TABLE_NAME + "\n"
-				+ "INNER JOIN " + this.Data.Beatmap.TABLE_NAME + " ON " + this.Data.Beatmap.TABLE_NAME + "." + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
-				+ "INNER JOIN " + this.Data.Artist.TABLE_NAME + " ON " + this.Data.Artist.TABLE_NAME + "." + this.Data.Artist.ARTIST_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.ARTIST_ID + "\n"
-				+ "INNER JOIN " + this.Data.Song.TABLE_NAME + " ON " + this.Data.Song.TABLE_NAME + "." + this.Data.Song.SONG_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.SONG_ID + "\n"
-				+ "INNER JOIN " + this.Data.BeatmapSet_SongTag.TABLE_NAME + " ON " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
-				+ "INNER JOIN " + this.Data.SongTag.TABLE_NAME + " ON " + this.Data.SongTag.TABLE_NAME + "." + this.Data.SongTag.SONG_TAG_ID + " = " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
-//				+ "WHERE " + this.Data.BeatmapSet.IS_HIDDEN + " = 0\n"
-				+ "GROUP BY " + this.Data.BeatmapSet.FOLDER_NAME + ", " + this.Data.BeatmapSet.AUDIO_NAME + "\n"
-				+ "ORDER BY MAX(" + this.Data.Beatmap.LAST_MODIFICATION_TIME + ")";
+		String sql = "SELECT " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + TableData.Song.SONG_SOURCE + "," + TableData.Artist.ARTIST_NAME + "," + TableData.Artist.ARTIST_NAME_UNICODE + "," + TableData.Song.SONG_TITLE + "," + TableData.Song.SONG_TITLE_UNICODE + "," 
+				+ "MAX(" + TableData.Beatmap.TOTAL_TIME + ") AS " + TableData.Beatmap.TOTAL_TIME + "," + TableData.Beatmap.LAST_MODIFICATION_TIME + "," + TableData.BeatmapSet.IS_DOWNLOADED + "," + TableData.BeatmapSet.IS_HIDDEN + "," + TableData.BeatmapSet.FOLDER_NAME + "," 
+				+ TableData.BeatmapSet.AUDIO_NAME + ",group_concat(DISTINCT " + TableData.SongTag.SONG_TAG_NAME + ") AS " + TableData.SongTag.SONG_TAG_NAME + ","
+				+ TableData.BeatmapSet.CREATOR_NAME + "\n"
+				+ "FROM " + TableData.BeatmapSet.TABLE_NAME + "\n"
+				+ "INNER JOIN " + TableData.Beatmap.TABLE_NAME + " ON " + TableData.Beatmap.TABLE_NAME + "." + TableData.Beatmap.BEATMAP_SET_AUTO_ID + " = " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+				+ "INNER JOIN " + TableData.Artist.TABLE_NAME + " ON " + TableData.Artist.TABLE_NAME + "." + TableData.Artist.ARTIST_ID + " = " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.ARTIST_ID + "\n"
+				+ "INNER JOIN " + TableData.Song.TABLE_NAME + " ON " + TableData.Song.TABLE_NAME + "." + TableData.Song.SONG_ID + " = " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.SONG_ID + "\n"
+				+ "INNER JOIN " + TableData.BeatmapSet_SongTag.TABLE_NAME + " ON " + TableData.BeatmapSet_SongTag.TABLE_NAME + "." + TableData.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+				+ "INNER JOIN " + TableData.SongTag.TABLE_NAME + " ON " + TableData.SongTag.TABLE_NAME + "." + TableData.SongTag.SONG_TAG_ID + " = " + TableData.BeatmapSet_SongTag.TABLE_NAME + "." + TableData.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
+//				+ "WHERE " + TableData.BeatmapSet.IS_HIDDEN + " = 0\n"
+				+ "GROUP BY " + TableData.BeatmapSet.FOLDER_NAME + ", " + TableData.BeatmapSet.AUDIO_NAME + "\n"
+				+ "ORDER BY MAX(" + TableData.Beatmap.LAST_MODIFICATION_TIME + ")";
 		Statement stmt = this.getConn().createStatement();
 		return stmt.executeQuery(sql);
 		
 		
-//		String sql = "SELECT " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + this.Data.Song.SONG_SOURCE + "," + this.Data.Artist.ARTIST_NAME + "," + this.Data.Artist.ARTIST_NAME_UNICODE + "," + this.Data.Song.SONG_TITLE + "," + this.Data.Song.SONG_TITLE_UNICODE + "," 
-//				+ this.Data.Beatmap.TOTAL_TIME + "," + this.Data.Beatmap.LAST_MODIFICATION_TIME + "," + this.Data.BeatmapSet.IS_DOWNLOADED + "," + this.Data.BeatmapSet.IS_HIDDEN + "," + this.Data.BeatmapSet.FOLDER_NAME + "," 
-//				+ this.Data.BeatmapSet.AUDIO_NAME + ",group_concat(DISTINCT " + this.Data.SongTag.SONG_TAG_NAME + ") AS " + this.Data.SongTag.SONG_TAG_NAME + ","
-//				+ this.Data.BeatmapSet.CREATOR_NAME + "\n"
-//				+ "FROM " + this.Data.BeatmapSet.TABLE_NAME + "\n"
-//				+ "INNER JOIN " + this.Data.Beatmap.TABLE_NAME + " ON " + this.Data.Beatmap.TABLE_NAME + "." + this.Data.Beatmap.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
-//				+ "INNER JOIN " + this.Data.Artist.TABLE_NAME + " ON " + this.Data.Artist.TABLE_NAME + "." + this.Data.Artist.ARTIST_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.ARTIST_ID + "\n"
-//				+ "INNER JOIN " + this.Data.Song.TABLE_NAME + " ON " + this.Data.Song.TABLE_NAME + "." + this.Data.Song.SONG_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.SONG_ID + "\n"
-//				+ "INNER JOIN " + this.Data.BeatmapSet_SongTag.TABLE_NAME + " ON " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + this.Data.BeatmapSet.TABLE_NAME + "." + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
-//				+ "INNER JOIN " + this.Data.SongTag.TABLE_NAME + " ON " + this.Data.SongTag.TABLE_NAME + "." + this.Data.SongTag.SONG_TAG_ID + " = " + this.Data.BeatmapSet_SongTag.TABLE_NAME + "." + this.Data.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
-////				+ "WHERE " + this.Data.BeatmapSet.IS_HIDDEN + " = 0\n"
-//				+ "GROUP BY " + this.Data.BeatmapSet.FOLDER_NAME + ", " + this.Data.BeatmapSet.AUDIO_NAME + "\n"
-//				+ "HAVING MAX(" + this.Data.Beatmap.TOTAL_TIME + ")\n"
-//				+ "ORDER BY " + this.Data.Beatmap.LAST_MODIFICATION_TIME;
+//		String sql = "SELECT " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + "," + TableData.Song.SONG_SOURCE + "," + TableData.Artist.ARTIST_NAME + "," + TableData.Artist.ARTIST_NAME_UNICODE + "," + TableData.Song.SONG_TITLE + "," + TableData.Song.SONG_TITLE_UNICODE + "," 
+//				+ TableData.Beatmap.TOTAL_TIME + "," + TableData.Beatmap.LAST_MODIFICATION_TIME + "," + TableData.BeatmapSet.IS_DOWNLOADED + "," + TableData.BeatmapSet.IS_HIDDEN + "," + TableData.BeatmapSet.FOLDER_NAME + "," 
+//				+ TableData.BeatmapSet.AUDIO_NAME + ",group_concat(DISTINCT " + TableData.SongTag.SONG_TAG_NAME + ") AS " + TableData.SongTag.SONG_TAG_NAME + ","
+//				+ TableData.BeatmapSet.CREATOR_NAME + "\n"
+//				+ "FROM " + TableData.BeatmapSet.TABLE_NAME + "\n"
+//				+ "INNER JOIN " + TableData.Beatmap.TABLE_NAME + " ON " + TableData.Beatmap.TABLE_NAME + "." + TableData.Beatmap.BEATMAP_SET_AUTO_ID + " = " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+//				+ "INNER JOIN " + TableData.Artist.TABLE_NAME + " ON " + TableData.Artist.TABLE_NAME + "." + TableData.Artist.ARTIST_ID + " = " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.ARTIST_ID + "\n"
+//				+ "INNER JOIN " + TableData.Song.TABLE_NAME + " ON " + TableData.Song.TABLE_NAME + "." + TableData.Song.SONG_ID + " = " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.SONG_ID + "\n"
+//				+ "INNER JOIN " + TableData.BeatmapSet_SongTag.TABLE_NAME + " ON " + TableData.BeatmapSet_SongTag.TABLE_NAME + "." + TableData.BeatmapSet_SongTag.BEATMAP_SET_AUTO_ID + " = " + TableData.BeatmapSet.TABLE_NAME + "." + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + "\n"
+//				+ "INNER JOIN " + TableData.SongTag.TABLE_NAME + " ON " + TableData.SongTag.TABLE_NAME + "." + TableData.SongTag.SONG_TAG_ID + " = " + TableData.BeatmapSet_SongTag.TABLE_NAME + "." + TableData.BeatmapSet_SongTag.SONG_TAG_ID + "\n"
+////				+ "WHERE " + TableData.BeatmapSet.IS_HIDDEN + " = 0\n"
+//				+ "GROUP BY " + TableData.BeatmapSet.FOLDER_NAME + ", " + TableData.BeatmapSet.AUDIO_NAME + "\n"
+//				+ "HAVING MAX(" + TableData.Beatmap.TOTAL_TIME + ")\n"
+//				+ "ORDER BY " + TableData.Beatmap.LAST_MODIFICATION_TIME;
 //		Statement stmt = this.getConn().createStatement();
 //		return stmt.executeQuery(sql);
 		
@@ -1449,12 +1453,12 @@ public class SqliteDatabase {
 	
 	
 	public void updateMetadata(int metadataID, int osuVersion, int folderCount, String playerName, int numberOfBeatmaps) throws Exception, SQLException {
-		String sql = "UPDATE " + this.Data.Metadata.TABLE_NAME + "\n"
-				+ "SET " + this.Data.Metadata.OSU_VERSION + " = ?,"
-				+ this.Data.Metadata.FOLDER_COUNT + " = ?,"
-				+ this.Data.Metadata.PLAYER_NAME + " = ?,"
-				+ this.Data.Metadata.NUMBER_OF_BEATMAPS + " = ? "
-				+ "WHERE " + this.Data.Metadata.METADATA_ID + " = ?";
+		String sql = "UPDATE " + TableData.Metadata.TABLE_NAME + "\n"
+				+ "SET " + TableData.Metadata.OSU_VERSION + " = ?,"
+				+ TableData.Metadata.FOLDER_COUNT + " = ?,"
+				+ TableData.Metadata.PLAYER_NAME + " = ?,"
+				+ TableData.Metadata.NUMBER_OF_BEATMAPS + " = ? "
+				+ "WHERE " + TableData.Metadata.METADATA_ID + " = ?";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setInt(1, osuVersion);
 		pstmt.setInt(2, folderCount);
@@ -1470,23 +1474,23 @@ public class SqliteDatabase {
 			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume,
 			boolean isRepeatToggled, boolean isShuffleToggled) throws SQLException {
 		
-		String sql = "UPDATE " + this.Data.Config.TABLE_NAME + "\n"
-				+ "SET " + this.Data.Config.PATH_TO_OSU_DB + " = ?,"
-				+ this.Data.Config.PATH_TO_SONGS_FOLDER + " = ?,"
-				+ this.Data.Config.SAVE_FOLDER + " = ?,"
-				+ this.Data.Config.IS_SONG_SOURCE_SHOWN + " = ?,"
-				+ this.Data.Config.IS_ARTIST_NAME_SHOWN + " = ?,"
-				+ this.Data.Config.IS_ARTIST_NAME_UNICODE_SHOWN + " = ?,"
-				+ this.Data.Config.IS_SONG_TITLE_SHOWN + " = ?,"
-				+ this.Data.Config.IS_SONG_TITLE_UNICODE_SHOWN + " = ?,"
-				+ this.Data.Config.IS_CREATOR_NAME_SHOWN + " = ?,"
-				+ this.Data.Config.IS_TOTAL_TIME_SHOWN + " = ?,"
-				+ this.Data.Config.IS_IS_DOWNLOADED_SHOWN + " = ?,"
-				+ this.Data.Config.ORDERING + " = ?,"
-				+ this.Data.Config.SOUND_VOLUME + " = ?,"
-				+ this.Data.Config.IS_REPEAT_TOGGLED + " = ?,"
-				+ this.Data.Config.IS_SHUFFLE_TOGGLED + " = ? "
-				+ "WHERE " + this.Data.Config.CONFIG_ID + " = ?";
+		String sql = "UPDATE " + TableData.Config.TABLE_NAME + "\n"
+				+ "SET " + TableData.Config.PATH_TO_OSU_DB + " = ?,"
+				+ TableData.Config.PATH_TO_SONGS_FOLDER + " = ?,"
+				+ TableData.Config.SAVE_FOLDER + " = ?,"
+				+ TableData.Config.IS_SONG_SOURCE_SHOWN + " = ?,"
+				+ TableData.Config.IS_ARTIST_NAME_SHOWN + " = ?,"
+				+ TableData.Config.IS_ARTIST_NAME_UNICODE_SHOWN + " = ?,"
+				+ TableData.Config.IS_SONG_TITLE_SHOWN + " = ?,"
+				+ TableData.Config.IS_SONG_TITLE_UNICODE_SHOWN + " = ?,"
+				+ TableData.Config.IS_CREATOR_NAME_SHOWN + " = ?,"
+				+ TableData.Config.IS_TOTAL_TIME_SHOWN + " = ?,"
+				+ TableData.Config.IS_IS_DOWNLOADED_SHOWN + " = ?,"
+				+ TableData.Config.ORDERING + " = ?,"
+				+ TableData.Config.SOUND_VOLUME + " = ?,"
+				+ TableData.Config.IS_REPEAT_TOGGLED + " = ?,"
+				+ TableData.Config.IS_SHUFFLE_TOGGLED + " = ? "
+				+ "WHERE " + TableData.Config.CONFIG_ID + " = ?";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, pathToOsuDb);
 		pstmt.setString(2, pathToSongsFolder);
@@ -1512,14 +1516,14 @@ public class SqliteDatabase {
 			throw new RuntimeException("Update config string argument num doesn't match");
 		}
 		
-		String sql = "UPDATE " + this.Data.Config.TABLE_NAME + "\n"
+		String sql = "UPDATE " + TableData.Config.TABLE_NAME + "\n"
 				+ "SET ";
 		StringJoiner sj = new StringJoiner(",");
 		for (int i = 0; i < items.length; i++) {
 			sj.add(items[i] + " = ?");
 		}
 		sql += sj.toString();
-		sql += " WHERE " + this.Data.Config.CONFIG_ID + " = ?;";
+		sql += " WHERE " + TableData.Config.CONFIG_ID + " = ?;";
 		
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		int index = 1;
@@ -1536,14 +1540,14 @@ public class SqliteDatabase {
 			throw new RuntimeException("Update config boolean argument num doesn't match");
 		}
 		
-		String sql = "UPDATE " + this.Data.Config.TABLE_NAME + "\n"
+		String sql = "UPDATE " + TableData.Config.TABLE_NAME + "\n"
 				+ "SET ";
 		StringJoiner sj = new StringJoiner(",");
 		for (int i = 0; i < items.length; i++) {
 			sj.add(items[i] + " = ?");
 		}
 		sql += sj.toString();
-		sql += " WHERE " + this.Data.Config.CONFIG_ID + " = ?;";
+		sql += " WHERE " + TableData.Config.CONFIG_ID + " = ?;";
 		
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		int index = 1;
@@ -1556,12 +1560,12 @@ public class SqliteDatabase {
 	}
 	
 	private PreparedStatement getUpdateBeatmapPStatement(String[] items) throws SQLException {
-		String sql = "UPDATE " + this.Data.Beatmap.TABLE_NAME + " SET ";
+		String sql = "UPDATE " + TableData.Beatmap.TABLE_NAME + " SET ";
 		StringJoiner sj = new StringJoiner(",");
 		for (int i = 0; i < items.length; i++) {
 			sj.add(items[i] + " = ?");
 		}
-		sql += sj.toString() + " WHERE " + this.Data.Beatmap.BEATMAP_AUTO_ID + " = ?";
+		sql += sj.toString() + " WHERE " + TableData.Beatmap.BEATMAP_AUTO_ID + " = ?";
 		return this.getConn().prepareStatement(sql);
 	}
 	
@@ -1573,12 +1577,12 @@ public class SqliteDatabase {
 	
 	// TODO: make all these statements to be safe by providing checks
 	public PreparedStatement getUpdateBeatmapSetBooleanPStatement(String[] items) throws SQLException {
-		String sql = "UPDATE " + this.Data.BeatmapSet.TABLE_NAME + " SET ";
+		String sql = "UPDATE " + TableData.BeatmapSet.TABLE_NAME + " SET ";
 		StringJoiner sj = new StringJoiner(",");
 		for (int i = 0; i < items.length; i++) {
 			sj.add(items[i] + " = ?");
 		}
-		sql += sj.toString() + " WHERE " + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?";
+		sql += sj.toString() + " WHERE " + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + " = ?";
 		return this.getConn().prepareStatement(sql);
 	}
 	// results order must be same as that of items
@@ -1630,111 +1634,111 @@ public class SqliteDatabase {
 	
 	
 	// TODO: change to static fields(?) instead of this shit
-	public class SongsDbData {
-		public Metadata Metadata = new Metadata();
-		public Config Config = new Config();
-		public Beatmap Beatmap = new Beatmap();
-		public BeatmapSet BeatmapSet = new BeatmapSet();
-		public Artist Artist = new Artist();
-		public Song Song = new Song();
-		public SongTag SongTag = new SongTag();
-		public BeatmapSet_SongTag BeatmapSet_SongTag = new BeatmapSet_SongTag();
+	public class TableData {
+//		public Metadata Metadata = new Metadata();
+//		public Config Config = new Config();
+//		public Beatmap Beatmap = new Beatmap();
+//		public BeatmapSet BeatmapSet = new BeatmapSet();
+//		public Artist Artist = new Artist();
+//		public Song Song = new Song();
+//		public SongTag SongTag = new SongTag();
+//		public BeatmapSet_SongTag BeatmapSet_SongTag = new BeatmapSet_SongTag();
 		
 		public class Metadata {
-			public final String TABLE_NAME = "Metadata";
+			public static final String TABLE_NAME = "Metadata";
 			// ===== Metadata fields =====
-			public final String METADATA_ID = "MetadataID";
-			public final String OSU_VERSION = "OsuVersion";
-			public final String FOLDER_COUNT = "FolderCount";
-			public final String PLAYER_NAME = "PlayerName";
-			public final String NUMBER_OF_BEATMAPS = "NumberOfBeatmaps";
+			public static final String METADATA_ID = "MetadataID";
+			public static final String OSU_VERSION = "OsuVersion";
+			public static final String FOLDER_COUNT = "FolderCount";
+			public static final String PLAYER_NAME = "PlayerName";
+			public static final String NUMBER_OF_BEATMAPS = "NumberOfBeatmaps";
 		}
 		
 		public class Config {
-			public final String TABLE_NAME = "Config";
+			public static final String TABLE_NAME = "Config";
 			// ===== Config fields =====
-			public final String CONFIG_ID = "ConfigID";
-			public final String PATH_TO_OSU_DB = "PathToOsuDb";
-			public final String PATH_TO_SONGS_FOLDER = "PathToSongsFolder";
-			public final String SAVE_FOLDER = "SaveFolder";
-			public final String IS_SONG_SOURCE_SHOWN = "IsSongSourceShown";
-			public final String IS_ARTIST_NAME_SHOWN = "IsArtistNameShown";
-			public final String IS_ARTIST_NAME_UNICODE_SHOWN = "IsArtistNameUnicodeShown";
-			public final String IS_SONG_TITLE_SHOWN = "IsSongTitleShown";
-			public final String IS_SONG_TITLE_UNICODE_SHOWN = "IsSongTitleUnicodeShown";
-			public final String IS_CREATOR_NAME_SHOWN = "IsCreatorNameShown";
-			public final String IS_TOTAL_TIME_SHOWN = "IsTotalTimeShown";
-			public final String IS_IS_DOWNLOADED_SHOWN = "IsIsDownloadedShown";
-			public final String ORDERING = "Ordering";
-			public final String SOUND_VOLUME = "SoundVolume";
-			public final String IS_REPEAT_TOGGLED = "IsRepeatToggled";
-			public final String IS_SHUFFLE_TOGGLED = "IsShuffleToggled";
+			public static final String CONFIG_ID = "ConfigID";
+			public static final String PATH_TO_OSU_DB = "PathToOsuDb";
+			public static final String PATH_TO_SONGS_FOLDER = "PathToSongsFolder";
+			public static final String SAVE_FOLDER = "SaveFolder";
+			public static final String IS_SONG_SOURCE_SHOWN = "IsSongSourceShown";
+			public static final String IS_ARTIST_NAME_SHOWN = "IsArtistNameShown";
+			public static final String IS_ARTIST_NAME_UNICODE_SHOWN = "IsArtistNameUnicodeShown";
+			public static final String IS_SONG_TITLE_SHOWN = "IsSongTitleShown";
+			public static final String IS_SONG_TITLE_UNICODE_SHOWN = "IsSongTitleUnicodeShown";
+			public static final String IS_CREATOR_NAME_SHOWN = "IsCreatorNameShown";
+			public static final String IS_TOTAL_TIME_SHOWN = "IsTotalTimeShown";
+			public static final String IS_IS_DOWNLOADED_SHOWN = "IsIsDownloadedShown";
+			public static final String ORDERING = "Ordering";
+			public static final String SOUND_VOLUME = "SoundVolume";
+			public static final String IS_REPEAT_TOGGLED = "IsRepeatToggled";
+			public static final String IS_SHUFFLE_TOGGLED = "IsShuffleToggled";
 		}
 		
 		public class Beatmap {
-			public final String TABLE_NAME = "Beatmap";
+			public static final String TABLE_NAME = "Beatmap";
 			// ===== Beatmap fields =====
-			public final String BEATMAP_AUTO_ID = "BeatmapAutoID";
-			public final String BEATMAP_ID = "BeatmapID";
-			public final String BEATMAP_SET_AUTO_ID = "BeatmapSetAutoID";
-			public final String RANKED_STATUS = "RankedStatus";
-			public final String LAST_MODIFICATION_TIME = "LastModificationTime";
-			public final String TOTAL_TIME = "TotalTime";
-			public final String PREVIEW_TIME = "PreviewTime";
-			public final String THREAD_ID = "ThreadID";
-			public final String DIFFICULTY = "Difficulty";
-//			public final String NAME_OF_OSU_FILE = "NameOfOsuFile";
-//			public final String GRADE_STANDARD = "GradeStandard";
-//			public final String GRADE_TAIKO = "GradeTaiko";
-//			public final String GRADE_CTB = "GradeCTB";
-//			public final String GRADE_MANIA = "GradeMania";
-			public final String IS_UNPLAYED = "IsUnplayed";
-			public final String LAST_PLAYED_TIME = "LastPlayedTime";
+			public static final String BEATMAP_AUTO_ID = "BeatmapAutoID";
+			public static final String BEATMAP_ID = "BeatmapID";
+			public static final String BEATMAP_SET_AUTO_ID = "BeatmapSetAutoID";
+			public static final String RANKED_STATUS = "RankedStatus";
+			public static final String LAST_MODIFICATION_TIME = "LastModificationTime";
+			public static final String TOTAL_TIME = "TotalTime";
+			public static final String PREVIEW_TIME = "PreviewTime";
+			public static final String THREAD_ID = "ThreadID";
+			public static final String DIFFICULTY = "Difficulty";
+//			public static final String NAME_OF_OSU_FILE = "NameOfOsuFile";
+//			public static final String GRADE_STANDARD = "GradeStandard";
+//			public static final String GRADE_TAIKO = "GradeTaiko";
+//			public static final String GRADE_CTB = "GradeCTB";
+//			public static final String GRADE_MANIA = "GradeMania";
+			public static final String IS_UNPLAYED = "IsUnplayed";
+			public static final String LAST_PLAYED_TIME = "LastPlayedTime";
 		}
 		
 		public class BeatmapSet {
-			public final String TABLE_NAME = "BeatmapSet";
+			public static final String TABLE_NAME = "BeatmapSet";
 			// ===== BeatmapSet fields =====
-			public final String BEATMAP_SET_AUTO_ID = "BeatmapSetAutoID";
-			public final String BEATMAP_SET_ID = "BeatmapSetID";
-			public final String ARTIST_ID = "ArtistID";
-			public final String SONG_ID = "SongID";
-			public final String CREATOR_NAME = "CreatorName";
-			public final String FOLDER_NAME = "FolderName"; 
-			public final String AUDIO_NAME = "AudioName"; 
-			public final String IS_DOWNLOADED = "IsDownloaded";
-			public final String IS_HIDDEN = "IsHidden";
+			public static final String BEATMAP_SET_AUTO_ID = "BeatmapSetAutoID";
+			public static final String BEATMAP_SET_ID = "BeatmapSetID";
+			public static final String ARTIST_ID = "ArtistID";
+			public static final String SONG_ID = "SongID";
+			public static final String CREATOR_NAME = "CreatorName";
+			public static final String FOLDER_NAME = "FolderName"; 
+			public static final String AUDIO_NAME = "AudioName"; 
+			public static final String IS_DOWNLOADED = "IsDownloaded";
+			public static final String IS_HIDDEN = "IsHidden";
 		}
 		
 		public class Artist {
-			public final String TABLE_NAME = "Artist";
+			public static final String TABLE_NAME = "Artist";
 			// ===== Artist fields =====
-			public final String ARTIST_ID = "ArtistID";
-			public final String ARTIST_NAME = "ArtistName";
-			public final String ARTIST_NAME_UNICODE = "ArtistNameUnicode";
+			public static final String ARTIST_ID = "ArtistID";
+			public static final String ARTIST_NAME = "ArtistName";
+			public static final String ARTIST_NAME_UNICODE = "ArtistNameUnicode";
 		}
 		
 		public class Song {
-			public final String TABLE_NAME = "Song";
+			public static final String TABLE_NAME = "Song";
 			// ===== Song fields =====
-			public final String SONG_ID = "SongID";
-			public final String SONG_TITLE = "SongTitle";
-			public final String SONG_TITLE_UNICODE = "SongTitleUnicode";
-			public final String SONG_SOURCE = "SongSource";
+			public static final String SONG_ID = "SongID";
+			public static final String SONG_TITLE = "SongTitle";
+			public static final String SONG_TITLE_UNICODE = "SongTitleUnicode";
+			public static final String SONG_SOURCE = "SongSource";
 		}
 		
 		public class SongTag {
-			public final String TABLE_NAME = "SongTag";
+			public static final String TABLE_NAME = "SongTag";
 			// ===== SongTag fields =====
-			public final String SONG_TAG_ID = "SongTagID";
-			public final String SONG_TAG_NAME = "SongTagName";
+			public static final String SONG_TAG_ID = "SongTagID";
+			public static final String SONG_TAG_NAME = "SongTagName";
 		}
 		
 		public class BeatmapSet_SongTag {
-			public final String TABLE_NAME = "BeatmapSet_SongTag";
+			public static final String TABLE_NAME = "BeatmapSet_SongTag";
 			// ===== BeatmapSet_SongTag fields =====
-			public final String BEATMAP_SET_AUTO_ID = "BeatmapSetAutoID";
-			public final String SONG_TAG_ID = "SongTagID";
+			public static final String BEATMAP_SET_AUTO_ID = "BeatmapSetAutoID";
+			public static final String SONG_TAG_ID = "SongTagID";
 		}
 		
 	}

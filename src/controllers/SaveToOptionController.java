@@ -144,9 +144,9 @@ public class SaveToOptionController {
 		// get metadata from database to initialize some needed variables
 		ResultSet rs = this.songsDb.selectConfig();
 		if (rs.next()) {
-			this.configID = rs.getInt(this.songsDb.Data.Config.CONFIG_ID);
-			this.saveFolder = rs.getString(this.songsDb.Data.Config.SAVE_FOLDER);
-			this.pathToSongsFolder = rs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
+			this.configID = rs.getInt(SqliteDatabase.TableData.Config.CONFIG_ID);
+			this.saveFolder = rs.getString(SqliteDatabase.TableData.Config.SAVE_FOLDER);
+			this.pathToSongsFolder = rs.getString(SqliteDatabase.TableData.Config.PATH_TO_SONGS_FOLDER);
 			if (!this.saveFolder.isEmpty()) {
 				this.chosenPathTextField.setText(this.saveFolder);
 				this.rememberPathCheckBox.setSelected(true);
@@ -226,7 +226,7 @@ public class SaveToOptionController {
 	// start Button
 	@FXML private void startCopying(ActionEvent event) {
 		if (this.rememberPathCheckBox.isSelected() && !this.chosenPathTextField.getText().equals(this.saveFolder)) {
-			String[] items = {this.songsDb.Data.Config.SAVE_FOLDER};
+			String[] items = {SqliteDatabase.TableData.Config.SAVE_FOLDER};
 			String[] results = {this.chosenPathTextField.getText()};
 			try {
 				this.songsDb.updateConfigString(this.configID, items, results);

@@ -163,7 +163,7 @@ public class CopySongsController {
         protected Void call() throws Exception {
 			updateProgress(0, 0);
 			int totalProgress = this.selectedSongsListInTask.size();
-			String[] items = {songsDb.Data.BeatmapSet.IS_DOWNLOADED};
+			String[] items = {SqliteDatabase.TableData.BeatmapSet.IS_DOWNLOADED};
 			Boolean[] results = {true};
 			
 			try {

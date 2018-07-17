@@ -305,37 +305,37 @@ public class SongsDisplayController {
         ObservableList<TableViewData> initSongsObsList = FXCollections.observableArrayList(TableViewData.extractor());
         while (tableInitDataRs.next()) {
 //        	data.add(new TableViewData(
-//        			tableInitDataRs.getInt(this.songsDb.Data.BeatmapSet.BEATMAP_SET_AUTO_ID)
-//					, tableInitDataRs.getString(this.songsDb.Data.Song.SONG_SOURCE)
-//        			, tableInitDataRs.getString(this.songsDb.Data.Artist.ARTIST_NAME)
-//        			, tableInitDataRs.getString(this.songsDb.Data.Artist.ARTIST_NAME_UNICODE)
-//        			, tableInitDataRs.getString(this.songsDb.Data.Song.SONG_TITLE)
-//        			, tableInitDataRs.getString(this.songsDb.Data.Song.SONG_TITLE_UNICODE)
-//        			, tableInitDataRs.getInt(this.songsDb.Data.Beatmap.TOTAL_TIME)
-//        			, tableInitDataRs.getLong(this.songsDb.Data.Beatmap.LAST_MODIFICATION_TIME)
-//        			, tableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_DOWNLOADED)
-//        			, tableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_HIDDEN)
+//        			tableInitDataRs.getInt(SqliteDatabase.TableData.BeatmapSet.BEATMAP_SET_AUTO_ID)
+//					, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_SOURCE)
+//        			, tableInitDataRs.getString(SqliteDatabase.TableData.Artist.ARTIST_NAME)
+//        			, tableInitDataRs.getString(SqliteDatabase.TableData.Artist.ARTIST_NAME_UNICODE)
+//        			, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_TITLE)
+//        			, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_TITLE_UNICODE)
+//        			, tableInitDataRs.getInt(SqliteDatabase.TableData.Beatmap.TOTAL_TIME)
+//        			, tableInitDataRs.getLong(SqliteDatabase.TableData.Beatmap.LAST_MODIFICATION_TIME)
+//        			, tableInitDataRs.getBoolean(SqliteDatabase.TableData.BeatmapSet.IS_DOWNLOADED)
+//        			, tableInitDataRs.getBoolean(SqliteDatabase.TableData.BeatmapSet.IS_HIDDEN)
 //        			, false
-//        			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.FOLDER_NAME)
-//        			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.AUDIO_NAME)
-//        			, tableInitDataRs.getString(this.songsDb.Data.SongTag.SONG_TAG_NAME)
+//        			, tableInitDataRs.getString(SqliteDatabase.TableData.BeatmapSet.FOLDER_NAME)
+//        			, tableInitDataRs.getString(SqliteDatabase.TableData.BeatmapSet.AUDIO_NAME)
+//        			, tableInitDataRs.getString(SqliteDatabase.TableData.SongTag.SONG_TAG_NAME)
 //        			));
         	TableViewData t = new TableViewData(
-        			tableInitDataRs.getInt(this.songsDb.Data.BeatmapSet.BEATMAP_SET_AUTO_ID)
-					, tableInitDataRs.getString(this.songsDb.Data.Song.SONG_SOURCE)
-        			, tableInitDataRs.getString(this.songsDb.Data.Artist.ARTIST_NAME)
-        			, tableInitDataRs.getString(this.songsDb.Data.Artist.ARTIST_NAME_UNICODE)
-        			, tableInitDataRs.getString(this.songsDb.Data.Song.SONG_TITLE)
-        			, tableInitDataRs.getString(this.songsDb.Data.Song.SONG_TITLE_UNICODE)
-        			, tableInitDataRs.getInt(this.songsDb.Data.Beatmap.TOTAL_TIME)
-        			, tableInitDataRs.getLong(this.songsDb.Data.Beatmap.LAST_MODIFICATION_TIME)
-        			, tableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_DOWNLOADED)
-        			, tableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_HIDDEN)
+        			tableInitDataRs.getInt(SqliteDatabase.TableData.BeatmapSet.BEATMAP_SET_AUTO_ID)
+					, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_SOURCE)
+        			, tableInitDataRs.getString(SqliteDatabase.TableData.Artist.ARTIST_NAME)
+        			, tableInitDataRs.getString(SqliteDatabase.TableData.Artist.ARTIST_NAME_UNICODE)
+        			, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_TITLE)
+        			, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_TITLE_UNICODE)
+        			, tableInitDataRs.getInt(SqliteDatabase.TableData.Beatmap.TOTAL_TIME)
+        			, tableInitDataRs.getLong(SqliteDatabase.TableData.Beatmap.LAST_MODIFICATION_TIME)
+        			, tableInitDataRs.getBoolean(SqliteDatabase.TableData.BeatmapSet.IS_DOWNLOADED)
+        			, tableInitDataRs.getBoolean(SqliteDatabase.TableData.BeatmapSet.IS_HIDDEN)
         			, false // set isSelectedProperty default to not selected
-        			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.FOLDER_NAME)
-        			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.AUDIO_NAME)
-        			, tableInitDataRs.getString(this.songsDb.Data.SongTag.SONG_TAG_NAME).replaceAll(",", " ")
-        			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.CREATOR_NAME)
+        			, tableInitDataRs.getString(SqliteDatabase.TableData.BeatmapSet.FOLDER_NAME)
+        			, tableInitDataRs.getString(SqliteDatabase.TableData.BeatmapSet.AUDIO_NAME)
+        			, tableInitDataRs.getString(SqliteDatabase.TableData.SongTag.SONG_TAG_NAME).replaceAll(",", " ")
+        			, tableInitDataRs.getString(SqliteDatabase.TableData.BeatmapSet.CREATOR_NAME)
         			);
         	// TODO: this is flawful! change this implementation alltogether
         	t.isSelectedProperty().addListener((obs, oldValue, newValue) -> {
@@ -371,20 +371,20 @@ public class SongsDisplayController {
         
         ResultSet configRs = this.songsDb.selectConfig();
         if (configRs.next()) {
-        	this.pathToOsuDb = configRs.getString(this.songsDb.Data.Config.PATH_TO_OSU_DB);
-        	this.pathToSongsFolder = configRs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
-        	double soundVolume = configRs.getDouble(this.songsDb.Data.Config.SOUND_VOLUME);
-        	boolean isSongSourceShown = configRs.getBoolean(this.songsDb.Data.Config.IS_SONG_SOURCE_SHOWN);
-        	boolean isArtistNameShown = configRs.getBoolean(this.songsDb.Data.Config.IS_ARTIST_NAME_SHOWN);
-        	boolean isArtistNameUnicodeShown = configRs.getBoolean(this.songsDb.Data.Config.IS_ARTIST_NAME_UNICODE_SHOWN);
-        	boolean isSongTitleShown = configRs.getBoolean(this.songsDb.Data.Config.IS_SONG_TITLE_SHOWN);
-        	boolean isSongTitleUnicodeShown = configRs.getBoolean(this.songsDb.Data.Config.IS_SONG_TITLE_UNICODE_SHOWN);
-        	boolean isCreatorNameShown = configRs.getBoolean(this.songsDb.Data.Config.IS_CREATOR_NAME_SHOWN);
-        	boolean isTotalTimeShown = configRs.getBoolean(this.songsDb.Data.Config.IS_TOTAL_TIME_SHOWN);
-        	boolean isIsDownloadedShown = configRs.getBoolean(this.songsDb.Data.Config.IS_IS_DOWNLOADED_SHOWN);
-        	String ordering = configRs.getString(this.songsDb.Data.Config.ORDERING);
-        	boolean isRepeatToggled = configRs.getBoolean(this.songsDb.Data.Config.IS_REPEAT_TOGGLED);
-        	boolean isShuffleToggled = configRs.getBoolean(this.songsDb.Data.Config.IS_SHUFFLE_TOGGLED);
+        	this.pathToOsuDb = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_OSU_DB);
+        	this.pathToSongsFolder = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_SONGS_FOLDER);
+        	double soundVolume = configRs.getDouble(SqliteDatabase.TableData.Config.SOUND_VOLUME);
+        	boolean isSongSourceShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SONG_SOURCE_SHOWN);
+        	boolean isArtistNameShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_ARTIST_NAME_SHOWN);
+        	boolean isArtistNameUnicodeShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_ARTIST_NAME_UNICODE_SHOWN);
+        	boolean isSongTitleShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SONG_TITLE_SHOWN);
+        	boolean isSongTitleUnicodeShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SONG_TITLE_UNICODE_SHOWN);
+        	boolean isCreatorNameShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_CREATOR_NAME_SHOWN);
+        	boolean isTotalTimeShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_TOTAL_TIME_SHOWN);
+        	boolean isIsDownloadedShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_IS_DOWNLOADED_SHOWN);
+        	String ordering = configRs.getString(SqliteDatabase.TableData.Config.ORDERING);
+        	boolean isRepeatToggled = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_REPEAT_TOGGLED);
+        	boolean isShuffleToggled = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SHUFFLE_TOGGLED);
         	
         	// ordering is empty only when it's the first time loading the app, 
         	// so if it's first time, dun overwrite the menuItem as the data from songsDb is defaulted to false
@@ -857,7 +857,7 @@ public class SongsDisplayController {
 	// hideUnhideButton
 	@FXML private void hideUnhideSelectedSongs(ActionEvent event) throws SQLException {
 		try {
-			String[] items = {this.songsDb.Data.BeatmapSet.IS_HIDDEN};
+			String[] items = {SqliteDatabase.TableData.BeatmapSet.IS_HIDDEN};
 			this.songsDb.getConn().setAutoCommit(false);
 			PreparedStatement updateBeatmapSetBooleanPStatement = this.songsDb.getUpdateBeatmapSetBooleanPStatement(items);
 			if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
@@ -1022,10 +1022,10 @@ public class SongsDisplayController {
 	private void updatePreference() throws SQLException {
 		ResultSet configRs = this.songsDb.selectConfig();
 		if (configRs.next()) {
-			int configID = configRs.getInt(this.songsDb.Data.Config.CONFIG_ID);
-			String pathToOsuDb = configRs.getString(this.songsDb.Data.Config.PATH_TO_OSU_DB);
-			String pathToSongsFolder = configRs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
-			String saveFolder = configRs.getString(this.songsDb.Data.Config.SAVE_FOLDER);
+			int configID = configRs.getInt(SqliteDatabase.TableData.Config.CONFIG_ID);
+			String pathToOsuDb = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_OSU_DB);
+			String pathToSongsFolder = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_SONGS_FOLDER);
+			String saveFolder = configRs.getString(SqliteDatabase.TableData.Config.SAVE_FOLDER);
 			String ordering = this.orderByComboBox.getSelectionModel().getSelectedItem().toString();
 			this.songsDb.updateConfigFull(configID, pathToOsuDb, pathToSongsFolder, saveFolder
 					, this.songSourceShowCheckMenuItem.isSelected(), this.artistNameShowCheckMenuItem.isSelected(), this.artistNameUnicodeShowCheckMenuItem.isSelected()

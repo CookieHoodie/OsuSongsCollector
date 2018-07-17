@@ -23,7 +23,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 // TODO: at the end, ensure only one app can be opened at the same time. Otherwise racing condition can happen in SQL
-// TODO: if any error occurs while welcome screen is showing, after alert, close the program otherwise the screen just hangs there
+// TODO: change all the printStacks to logging
 
 public class InitScreenController {
 	@FXML private Label welcomeLabel;
@@ -42,12 +42,12 @@ public class InitScreenController {
 					songsDb.connect();
 					ResultSet metadataRs = songsDb.selectMetadata();
 					if (metadataRs.next()) {
-						int folderCount = metadataRs.getInt(songsDb.Data.Metadata.FOLDER_COUNT);
-						int numberOfBeatmaps = metadataRs.getInt(songsDb.Data.Metadata.NUMBER_OF_BEATMAPS);
+						int folderCount = metadataRs.getInt(SqliteDatabase.TableData.Metadata.FOLDER_COUNT);
+						int numberOfBeatmaps = metadataRs.getInt(SqliteDatabase.TableData.Metadata.NUMBER_OF_BEATMAPS);
 						ResultSet configRs = songsDb.selectConfig();
 						if (configRs.next()) {
-							pathToOsuDb = configRs.getString(songsDb.Data.Config.PATH_TO_OSU_DB);
-							pathToSongsFolder = configRs.getString(songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
+							pathToOsuDb = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_OSU_DB);
+							pathToSongsFolder = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_SONGS_FOLDER);
 							OsuDbParser osuDbMeta = new OsuDbParser(pathToOsuDb, pathToSongsFolder);
 							osuDbMeta.startParsingMetadataOnly();
 							
