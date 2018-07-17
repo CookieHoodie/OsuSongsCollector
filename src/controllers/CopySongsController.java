@@ -168,7 +168,7 @@ public class CopySongsController {
 			
 			try {
 				songsDb.getConn().setAutoCommit(false);
-				PreparedStatement updateBeatmapSetBooleanPStatement = songsDb.getUpdateBeatmapSetBooleanPreparedStatement(items);
+				PreparedStatement updateBeatmapSetBooleanPStatement = songsDb.getUpdateBeatmapSetBooleanPStatement(items);
 				for (int i = 0; i < totalProgress; i++) {
 					if (!isCancelled()) {
 						TableViewData row = this.selectedSongsListInTask.get(i);

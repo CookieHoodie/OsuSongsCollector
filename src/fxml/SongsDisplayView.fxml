@@ -114,7 +114,7 @@
         <menus>
           <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
             <items>
-                  <MenuItem fx:id="checkNewSongsFileMenuItem" mnemonicParsing="false" text="Check for new songs" />
+                  <MenuItem fx:id="fullBeatmapsUpdateFileMenuItem" mnemonicParsing="false" onAction="#fullBeatmapsUpdate" text="Check beatmaps update" />
                   <MenuItem fx:id="resetAllFileMenuItem" mnemonicParsing="false" onAction="#resetAll" text="Reset all data" />
               <MenuItem fx:id="exitFileMenuItem" mnemonicParsing="false" text="Exit" />
             </items>

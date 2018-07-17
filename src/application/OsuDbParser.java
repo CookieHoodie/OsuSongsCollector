@@ -37,23 +37,23 @@ public class OsuDbParser extends OsuReader{
     }
     
     // public methods
-    public void startParsing() throws IOException, InterruptedException {
+    public Map<String, List<Beatmap>> startParsing() throws IOException, InterruptedException {
     	try {
-			this.startLoading();
+			return this.startLoading();
 		} 
         finally {
         	this.closeFile();
         }
     }
     
-   public void startParsingMetadataOnly() throws IOException {
-	   try {
-		   this.parseAndSetMetadata();
-	   }
-	   finally {
-		   this.closeFile();
-	   }
-   }
+    public void startParsingMetadataOnly() throws IOException {
+	    try {
+		    this.parseAndSetMetadata();
+	    }
+	    finally {
+		    this.closeFile();
+	    }
+    }
     
     public void setThreadData(BiConsumer<Integer, Integer> progressUpdate) {
 		this.setProgressUpdate(progressUpdate);
@@ -68,7 +68,7 @@ public class OsuDbParser extends OsuReader{
     	this.setNumberOfBeatmaps(this.readInt());
     }
     
-    private void startLoading() throws IOException, InterruptedException {
+    private Map<String, List<Beatmap>> startLoading() throws IOException, InterruptedException {
 		this.parseAndSetMetadata();
     	Map<String, List<Beatmap>> folders = new TreeMap<String, List<Beatmap>>();
     	for (int i = 0; i < this.numberOfBeatmaps; i++) {
@@ -87,12 +87,13 @@ public class OsuDbParser extends OsuReader{
 			beatmap.setSongTitle(this.readString());
 			beatmap.setSongTitleUnicode(this.readString());
 			beatmap.setCreatorName(this.readString());
-//			beatmap.setDifficulty(this.readString());
-			this.skipString();
+			beatmap.setDifficulty(this.readString());
+//			this.skipString();
 			beatmap.setAudioFileName(this.readString());
 //			beatmap.setMD5Hash(this.readString());
 			this.skipString();
-			beatmap.setNameOfOsuFile(this.readString());
+//			beatmap.setNameOfOsuFile(this.readString());
+			this.skipString();
 			beatmap.setRankedStatus(this.readByte());
 			this.skipBytes(6); // short * 3
 			beatmap.setLastModificationTime(this.readDate());
@@ -147,8 +148,9 @@ public class OsuDbParser extends OsuReader{
 			}
     	}
     	this.setSongsFolder(new ArrayList<List<Beatmap>>(folders.values()));
+    	return folders;
     }
-
+    
 	public int getOsuVersion() {
 		return osuVersion;
 	}

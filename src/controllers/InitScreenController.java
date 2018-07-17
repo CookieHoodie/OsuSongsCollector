@@ -128,25 +128,6 @@ public class InitScreenController {
 		
 	}
 	
-	// TODO: might consider move all these loading methods to new class and pass callingStage as parameter
-//	private void loadSongsDisplayView() throws IOException, SQLException {
-//		Stage songsDisplayStage = new Stage();
-//		FXMLLoader loader = new FXMLLoader();
-//		loader.setLocation(getClass().getResource("/fxml/SongsDisplayView.fxml"));
-//		BorderPane root = loader.load();
-//		Scene scene = new Scene(root);
-//		Stage primaryStage = (Stage) this.welcomeLabel.getScene().getWindow();
-//		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
-//		
-////		primaryStage.setScene(scene);
-//		songsDisplayStage.setTitle(primaryStage.getTitle());
-//		songsDisplayStage.setScene(scene);
-//		ctr.initData(songsDisplayStage, this.songsDb);
-//		songsDisplayStage.show();
-//		ctr.startMusic(); // TODO: if decide, add this to updateData and LoadAndCreateDB
-//		primaryStage.hide();
-//	}
-//	
 	private void loadSetSongsFolderPathView() throws IOException {
 		Stage setSongsFolderStage = new Stage();
 		FXMLLoader loader = new FXMLLoader();
@@ -163,11 +144,13 @@ public class InitScreenController {
 	private void loadUpdateDataView() throws IOException {
 		Stage updateDataStage = new Stage();
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/UpdateDataView.fxml"));
+		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
+		UpdateDataController ctr = new UpdateDataController();
+		loader.setController(ctr);
 		BorderPane root = loader.load();
 		Scene scene = new Scene(root);
 		Stage primaryStage = (Stage) this.welcomeLabel.getScene().getWindow();
-		UpdateDataController ctr = loader.<UpdateDataController>getController();
+//		UpdateDataController ctr = loader.<UpdateDataController>getController();
 		
 		updateDataStage.setTitle("Update Songs Data");
 		updateDataStage.setScene(scene);
