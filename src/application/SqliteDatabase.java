@@ -491,7 +491,6 @@ public class SqliteDatabase {
 		PreparedStatement artistPStatement = this.getInsertIntoArtistPStatement();
 		PreparedStatement songPStatement = this.getInsertIntoSongPStatement();
 		PreparedStatement songTagPStatement = this.getInsertIntoSongTagPStatement();
-//		this.getConn().setAutoCommit(false);
 		
 		// for progressBar in UI
 		int totalProgress = dataToInsert.size() * 4;
@@ -881,18 +880,15 @@ public class SqliteDatabase {
 		}
 				
 	}
-	// TODO: threadinterrupt handling and progressupdate
 	
-	// TODO: consider update lastModificationTime when requested in menu and update in new stage maybe
-	// To do that, first go through this check first as there may be inconsistency
-	// then, foreach beatmap in osuDb get its folderName, difficulty (or nameOfOsuFile) and modificationTime
-	// then make query in Database with join to load all beatmaps into memory by selecting the same attributes with additional beatmapAutoID for update later.
-	// only then compare each data
-	// maybe make option for osuDb to return map instead of list for easier lookup
-	// if different, means it has been changed, so update in batch
-	public void updateData(OsuDbParser osuDb) throws SQLException, InterruptedException, Exception {
+	
+	// return true if update took place, false otherwise
+	public boolean updateData(OsuDbParser osuDb) throws SQLException, InterruptedException, Exception {
 		// only the key is useful
 		Map<Integer, Integer> dbRecords = new TreeMap<Integer, Integer>();
+		// for progress bar
+		int totalProgress = 4;
+		boolean isAnyUpdated = false;
 		
 		String selectAllBeatmapSetAutoIDSql = "SELECT " + this.Data.BeatmapSet.BEATMAP_SET_AUTO_ID + " FROM " + this.Data.BeatmapSet.TABLE_NAME;
 		Statement allBeatmapSetAutoIDStatement = this.getConn().createStatement();
@@ -1055,11 +1051,21 @@ public class SqliteDatabase {
 			throw new RuntimeException("Logic error in storing states of updateList and modifiedList");
 		}
 		
+		if (this.progressUpdate != null) {
+			this.progressUpdate.accept(1, totalProgress);
+		}
+		
 		System.out.println("Finish");
 		System.out.println("Update list: " + updateList.size());
 		System.out.println("Modified list: " + modifiedList.size());
 		System.out.println("Deleted: " + dbRecords.size());
+		isAnyUpdated = updateList.isEmpty() && modifiedList.isEmpty() && dbRecords.isEmpty() ? false : true;
+		if (Thread.currentThread().isInterrupted()) {
+			// not closing songDb connection here as it might be at an instance where user is already in displaySongs stage
+			throw new InterruptedException("Interrupted while updating data");
+		}
 		
+		// even if all is empty, still go till the end to clean up certain resources
 		// wrap in try to clean resources afterwards
 		try {
 			if (!dbRecords.isEmpty()) {
@@ -1080,6 +1086,10 @@ public class SqliteDatabase {
 				}
 				
 				deleteFromBeatmapSetPStatement.executeUpdate();
+			}
+			
+			if (this.progressUpdate != null) {
+				this.progressUpdate.accept(2, totalProgress);
 			}
 			
 			// start setting autoCommit here
@@ -1149,6 +1159,15 @@ public class SqliteDatabase {
 				this.getConn().commit();
 			}
 			
+			if (Thread.currentThread().isInterrupted()) {
+				throw new InterruptedException("Interrupted while updating data");
+			}
+			
+			if (this.progressUpdate != null) {
+				this.progressUpdate.accept(3, totalProgress);
+			}
+			
+			
 			if (!updateList.isEmpty()) {
 				System.out.println("Start inserting");
 				// insert new songs
@@ -1202,6 +1221,10 @@ public class SqliteDatabase {
 						}
 					}
 				}
+				
+				if (this.progressUpdate != null) {
+					this.progressUpdate.accept(4, totalProgress);
+				}
 				// by here, autoCommit is already set to false
 				// update using info gathered
 				this.insertDataIntoDb(updateList, updateRankedList, unrankedDataMap, atomizedBeatmapSetMap, atomizedBeatmapSetReferenceDataMap, false);
@@ -1225,20 +1248,31 @@ public class SqliteDatabase {
 		else {
 			throw new SQLException("Metadata does not exist");
 		}
+		
+		return isAnyUpdated;
 	}
 	
 	
-	public void updateDetails(Map<String, List<Beatmap>> osuDbBeatmapsMap) throws SQLException {
+	public boolean updateDetails(Map<String, List<Beatmap>> osuDbBeatmapsMap) throws SQLException {
 		Map<String, Map<String, Beatmap>> nestedMap = new HashMap<>();
-		
+		int totalProgress = 0;
+		int currentProgress = 0;
+		boolean isAnyUpdated = false;
 		
 		System.out.println("Creating maps");
 		
-		
-		osuDbBeatmapsMap.forEach((folderName, beatmapSet) -> {
+		for (Map.Entry<String, List<Beatmap>> entry : osuDbBeatmapsMap.entrySet()) {
+			String folderName = entry.getKey();
+			List<Beatmap> beatmapSet = entry.getValue();
 			Map<String, Beatmap> beatmapsMap = beatmapSet.stream().collect(Collectors.toMap(Beatmap::getDifficulty, Function.identity()));
 			nestedMap.put(folderName, beatmapsMap);
-		});
+			totalProgress += beatmapsMap.size();
+		}
+		
+//		osuDbBeatmapsMap.forEach((folderName, beatmapSet) -> {
+//			Map<String, Beatmap> beatmapsMap = beatmapSet.stream().collect(Collectors.toMap(Beatmap::getDifficulty, Function.identity()));
+//			nestedMap.put(folderName, beatmapsMap);
+//		});
 		
 		String selectBeatmapSql = "SELECT " + this.Data.Beatmap.BEATMAP_AUTO_ID + "," 
 				+ this.Data.BeatmapSet.FOLDER_NAME + ","
@@ -1267,20 +1301,28 @@ public class SqliteDatabase {
 				if (beatmap.getLastModificationTime() != lastModificationTime) {
 					int beatmapAutoID = beatmapRs.getInt(1);
 					this.addUpdateBeatmapLMTBatch(updateBeatmapPStatement, beatmapAutoID, beatmap.getLastModificationTime());
-					System.out.println("haha");
+					isAnyUpdated = true;
+				}
+				currentProgress++;
+				if (this.progressUpdate != null) {
+					this.progressUpdate.accept(currentProgress, totalProgress);
 				}
 			}
 			// execute batch here as the size is not likely to be large
 			updateBeatmapPStatement.executeBatch();
 			this.getConn().commit();
-//			this.getConn().rollback();
 		}
 		finally {
 			this.getConn().setAutoCommit(true);
+			
+			if (this.progressUpdate != null) {
+				this.setProgressUpdate(null);
+			}
 		}
 		
 		
 		System.out.println("finish");
+		return isAnyUpdated;
 	}
 	
 	// ------------- for inner use--------------------

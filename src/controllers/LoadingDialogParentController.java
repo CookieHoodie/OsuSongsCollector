@@ -23,6 +23,7 @@ public abstract class LoadingDialogParentController {
 		return new Task<OsuDbParser>() {
 			@Override 
 			protected OsuDbParser call() throws Exception {
+				updateProgress(0, 1);
 				OsuDbParser osuDb = new OsuDbParser(fullPathToOsuDb, pathToSongsFolder);
 				osuDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork));
 				osuDb.startParsing();

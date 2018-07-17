@@ -1,68 +1,45 @@
 package controllers;
 
-import java.awt.Color;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import application.Comparators;
-import application.Comparators.SongTitleComparator;
 import application.Main;
 import application.SqliteDatabase;
-import controllers.FilterDialogController.SimplifiedTableViewData;
-import controllers.SongsDisplayController.TableViewData;
 import javafx.animation.PauseTransition;
-import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
-import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar.ButtonData;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -70,7 +47,6 @@ import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -81,9 +57,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.media.Media;
-import javafx.scene.media.MediaException;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
 import javafx.stage.Modality;
@@ -932,49 +906,56 @@ public class SongsDisplayController {
 		Alert alert = new Alert(AlertType.WARNING, warning, ButtonType.YES, ButtonType.NO);
 		alert.showAndWait().ifPresent(response -> {
 			if (response == ButtonType.YES) {
-				try {
-					if (this.mediaPlayer != null) {
-						this.mediaPlayer.dispose();
-					}
-					this.songsDb.closeConnection();
-					this.songsDb.deleteSongsDb();
-					this.currentStage.hide();
-					Main newApp = new Main();
-					newApp.start(new Stage());
-				} 
-				catch (Exception e) {
-					e.printStackTrace();
-					Alert restartAlert = new Alert(AlertType.ERROR, "Failed to restart", ButtonType.OK);
-					restartAlert.showAndWait();
-				}
+				this.restartProgram(true);
 			}
 		});
 	}
 	
-	@FXML private void fullBeatmapsUpdate(ActionEvent event) {
-//		this.songsDb.updateDetails(osuDbBeatmapsMap);
+	public void restartProgram(boolean deleteSongsDb) {
 		try {
-			this.loadUpdateDetailsView();
-		}
-		catch (IOException e) {
+			if (this.mediaPlayer != null) {
+				this.mediaPlayer.dispose();
+			}
+			this.songsDb.closeConnection();
+			if (deleteSongsDb) {
+				this.songsDb.deleteSongsDb();
+			}
+			this.currentStage.hide();
+			Main newApp = new Main();
+			newApp.start(new Stage());
+		} 
+		catch (Exception e) {
 			e.printStackTrace();
+			Alert restartAlert = new Alert(AlertType.ERROR, "Failed to restart", ButtonType.OK);
+			restartAlert.showAndWait();
 		}
 	}
 	
-	private void loadUpdateDetailsView() throws IOException {
-		// TODO: set modality
+	@FXML private void fullBeatmapsUpdate(ActionEvent event) {
+		try {
+			this.loadUpdateDataView();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			Alert alert = new Alert(AlertType.ERROR, "Failed to load update view", ButtonType.OK);
+			alert.showAndWait();
+		}
+	}
+	
+	private void loadUpdateDataView() throws IOException {
 		Stage updateDetailsStage = new Stage();
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
-		UpdateDetailsController ctr = new UpdateDetailsController();
+		UpdateDataInSongsDisplayController ctr = new UpdateDataInSongsDisplayController();
 		loader.setController(ctr);
 		BorderPane root = loader.load();
 		Scene scene = new Scene(root);
-		
-		updateDetailsStage.setTitle("Update Songs Details");
+		updateDetailsStage.initModality(Modality.WINDOW_MODAL);
+		updateDetailsStage.initOwner(this.currentStage);
+		updateDetailsStage.setTitle("Update Songs Data");
 		updateDetailsStage.setScene(scene);
 		// the last two paths must have already initialized to come to here
-		ctr.initDataAndStart(updateDetailsStage, this.songsDb, this.pathToOsuDb, this.pathToSongsFolder);
+		ctr.newInitDataAndStart(this, updateDetailsStage, this.songsDb, this.pathToOsuDb, this.pathToSongsFolder);
 		updateDetailsStage.setScene(scene);
 		updateDetailsStage.show();
 	}
@@ -996,7 +977,7 @@ public class SongsDisplayController {
 		Scene scene = new Scene(root);
 		SaveToOptionController ctr = loader.<SaveToOptionController>getController();
 		saveToOptionStage.initModality(Modality.WINDOW_MODAL);
-		saveToOptionStage.initOwner(this.testTable.getScene().getWindow());
+		saveToOptionStage.initOwner(this.currentStage);
 		saveToOptionStage.setTitle("Configuration");
 		saveToOptionStage.setScene(scene);
 		ctr.initData(saveToOptionStage, this.songsDb, selectedSongsMap, this.artistNameUnicodeCol.isVisible(), this.songTitleUnicodeCol.isVisible());

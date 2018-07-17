@@ -2,36 +2,18 @@ package controllers;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import application.Comparators;
 import application.Main;
 import application.OsuDbParser;
 import application.SqliteDatabase;
 import application.ViewLoader;
-import application.Beatmap;
 import javafx.animation.PauseTransition;
-import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.concurrent.Worker;
-import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -74,13 +56,14 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 		return new Task<SqliteDatabase>() {
 			@Override
 			protected SqliteDatabase call() throws Exception {
+				updateProgress(0, 1);
 				SqliteDatabase songsDb = new SqliteDatabase(Main.DB_NAME);
-				updateProgress(0, 0);
 				songsDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork));
 				songsDb.createDatabase();
 				songsDb.createTables();
 				if (Thread.currentThread().isInterrupted()) {
-					songsDb.cleanUpThread(true);;
+					songsDb.cleanUpThread(true);
+					throw new InterruptedException("Interrupted while creating songs.db");
 				}
 				songsDb.insertAllData(osuDb);
 				return songsDb;
