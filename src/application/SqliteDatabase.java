@@ -118,7 +118,9 @@ public class SqliteDatabase {
 				+ this.Data.Config.IS_TOTAL_TIME_SHOWN + " BOOLEAN,"
 				+ this.Data.Config.IS_IS_DOWNLOADED_SHOWN + " BOOLEAN,"
 				+ this.Data.Config.ORDERING + " TEXT,"
-				+ this.Data.Config.SOUND_VOLUME + " REAL"
+				+ this.Data.Config.SOUND_VOLUME + " REAL,"
+				+ this.Data.Config.IS_REPEAT_TOGGLED + " BOOLEAN,"
+				+ this.Data.Config.IS_SHUFFLE_TOGGLED + " BOOLEAN"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
@@ -257,7 +259,8 @@ public class SqliteDatabase {
 	private void insertIntoConfig(String pathToOsuDb, String pathToSongsFolder, String saveFolder,
 			boolean isSongSourceShown, boolean isArtistNameShown, boolean isArtistNameUnicodeShown,
 			boolean isSongTitleShown, boolean isSongTitleUnicodeShown, boolean isCreatorNameShown,
-			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume) throws SQLException {
+			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume,
+			boolean isRepeatToggled, boolean isShuffleToggled) throws SQLException {
 		String sql = "INSERT INTO " + this.Data.Config.TABLE_NAME + "(" 
 				+ this.Data.Config.PATH_TO_OSU_DB + ","
 				+ this.Data.Config.PATH_TO_SONGS_FOLDER + ","
@@ -271,8 +274,10 @@ public class SqliteDatabase {
 				+ this.Data.Config.IS_TOTAL_TIME_SHOWN + ","
 				+ this.Data.Config.IS_IS_DOWNLOADED_SHOWN + ","
 				+ this.Data.Config.ORDERING + ","
-				+ this.Data.Config.SOUND_VOLUME
-				+ ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ this.Data.Config.SOUND_VOLUME + ","
+				+ this.Data.Config.IS_REPEAT_TOGGLED + ","
+				+ this.Data.Config.IS_SHUFFLE_TOGGLED
+				+ ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, pathToOsuDb);
 		pstmt.setString(2, pathToSongsFolder);
@@ -287,6 +292,8 @@ public class SqliteDatabase {
 		pstmt.setBoolean(11, isIsDownloadedShown);
 		pstmt.setString(12, ordering);
 		pstmt.setDouble(13, soundVolume);
+		pstmt.setBoolean(14, isRepeatToggled);
+		pstmt.setBoolean(15, isShuffleToggled);
 		pstmt.executeUpdate();
 	}
 	
@@ -753,7 +760,7 @@ public class SqliteDatabase {
 	
 	public void insertAllData(OsuDbParser osuDb) throws SQLException, InterruptedException {
 		this.insertIntoMetadata(osuDb.getOsuVersion(), osuDb.getFolderCount(), osuDb.getPlayerName(), osuDb.getNumberOfBeatmaps());
-		this.insertIntoConfig(osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "", false, false, false, false, false, false, false, false, "", 50.0);
+		this.insertIntoConfig(osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "", false, false, false, false, false, false, false, false, "", 50.0, true, false);
 		
 		// store rankedIndex if ranked, -1 if is not and -2 if multi-audio
 		List<Integer> rankedList = new ArrayList<Integer>();
@@ -1460,7 +1467,8 @@ public class SqliteDatabase {
 	public void updateConfigFull(int configID, String pathToOsuDb, String pathToSongsFolder, String saveFolder,
 			boolean isSongSourceShown, boolean isArtistNameShown, boolean isArtistNameUnicodeShown,
 			boolean isSongTitleShown, boolean isSongTitleUnicodeShown, boolean isCreatorNameShown,
-			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume) throws SQLException {
+			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume,
+			boolean isRepeatToggled, boolean isShuffleToggled) throws SQLException {
 		
 		String sql = "UPDATE " + this.Data.Config.TABLE_NAME + "\n"
 				+ "SET " + this.Data.Config.PATH_TO_OSU_DB + " = ?,"
@@ -1475,7 +1483,9 @@ public class SqliteDatabase {
 				+ this.Data.Config.IS_TOTAL_TIME_SHOWN + " = ?,"
 				+ this.Data.Config.IS_IS_DOWNLOADED_SHOWN + " = ?,"
 				+ this.Data.Config.ORDERING + " = ?,"
-				+ this.Data.Config.SOUND_VOLUME + " = ? "
+				+ this.Data.Config.SOUND_VOLUME + " = ?,"
+				+ this.Data.Config.IS_REPEAT_TOGGLED + " = ?,"
+				+ this.Data.Config.IS_SHUFFLE_TOGGLED + " = ? "
 				+ "WHERE " + this.Data.Config.CONFIG_ID + " = ?";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, pathToOsuDb);
@@ -1491,7 +1501,9 @@ public class SqliteDatabase {
 		pstmt.setBoolean(11, isIsDownloadedShown);
 		pstmt.setString(12, ordering);
 		pstmt.setDouble(13, soundVolume);
-		pstmt.setInt(14, configID);
+		pstmt.setBoolean(14, isRepeatToggled);
+		pstmt.setBoolean(15, isShuffleToggled);
+		pstmt.setInt(16, configID);
 		pstmt.executeUpdate();
 	}
 	
@@ -1655,6 +1667,8 @@ public class SqliteDatabase {
 			public final String IS_IS_DOWNLOADED_SHOWN = "IsIsDownloadedShown";
 			public final String ORDERING = "Ordering";
 			public final String SOUND_VOLUME = "SoundVolume";
+			public final String IS_REPEAT_TOGGLED = "IsRepeatToggled";
+			public final String IS_SHUFFLE_TOGGLED = "IsShuffleToggled";
 		}
 		
 		public class Beatmap {

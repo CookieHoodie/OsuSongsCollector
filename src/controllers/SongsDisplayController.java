@@ -134,7 +134,7 @@ public class SongsDisplayController {
 	private TableViewData currentlyPlayedSong;
 	private String pathToSongsFolder;
 	private String pathToOsuDb;
-	private Double soundVolume;
+//	private Double soundVolume;
 	private boolean userChangedTimeSlider = true; // var for detecting user or comp changed slider value
 
 //	private final String playButtonPlayText = "▶";
@@ -331,7 +331,7 @@ public class SongsDisplayController {
         			, tableInitDataRs.getLong(this.songsDb.Data.Beatmap.LAST_MODIFICATION_TIME)
         			, tableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_DOWNLOADED)
         			, tableInitDataRs.getBoolean(this.songsDb.Data.BeatmapSet.IS_HIDDEN)
-        			, false
+        			, false // set isSelectedProperty default to not selected
         			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.FOLDER_NAME)
         			, tableInitDataRs.getString(this.songsDb.Data.BeatmapSet.AUDIO_NAME)
         			, tableInitDataRs.getString(this.songsDb.Data.SongTag.SONG_TAG_NAME).replaceAll(",", " ")
@@ -373,7 +373,7 @@ public class SongsDisplayController {
         if (configRs.next()) {
         	this.pathToOsuDb = configRs.getString(this.songsDb.Data.Config.PATH_TO_OSU_DB);
         	this.pathToSongsFolder = configRs.getString(this.songsDb.Data.Config.PATH_TO_SONGS_FOLDER);
-        	this.soundVolume = configRs.getDouble(this.songsDb.Data.Config.SOUND_VOLUME);
+        	double soundVolume = configRs.getDouble(this.songsDb.Data.Config.SOUND_VOLUME);
         	boolean isSongSourceShown = configRs.getBoolean(this.songsDb.Data.Config.IS_SONG_SOURCE_SHOWN);
         	boolean isArtistNameShown = configRs.getBoolean(this.songsDb.Data.Config.IS_ARTIST_NAME_SHOWN);
         	boolean isArtistNameUnicodeShown = configRs.getBoolean(this.songsDb.Data.Config.IS_ARTIST_NAME_UNICODE_SHOWN);
@@ -383,6 +383,8 @@ public class SongsDisplayController {
         	boolean isTotalTimeShown = configRs.getBoolean(this.songsDb.Data.Config.IS_TOTAL_TIME_SHOWN);
         	boolean isIsDownloadedShown = configRs.getBoolean(this.songsDb.Data.Config.IS_IS_DOWNLOADED_SHOWN);
         	String ordering = configRs.getString(this.songsDb.Data.Config.ORDERING);
+        	boolean isRepeatToggled = configRs.getBoolean(this.songsDb.Data.Config.IS_REPEAT_TOGGLED);
+        	boolean isShuffleToggled = configRs.getBoolean(this.songsDb.Data.Config.IS_SHUFFLE_TOGGLED);
         	
         	// ordering is empty only when it's the first time loading the app, 
         	// so if it's first time, dun overwrite the menuItem as the data from songsDb is defaulted to false
@@ -438,14 +440,16 @@ public class SongsDisplayController {
 			else {
 				this.orderByComboBox.getSelectionModel().select(lastModificationTimeComparator);
 			}
+			
+			this.initMediaPlayerEssentials(soundVolume, isRepeatToggled, isShuffleToggled);
+	        this.testTable.setItems(initSongsSortedList);
         }
         else {
         	throw new SQLException("Failed to get config data");
         }
        
-        this.initMediaPlayerEssentials();
-        
-        this.testTable.setItems(initSongsSortedList);
+//        this.initMediaPlayerEssentials();
+//        this.testTable.setItems(initSongsSortedList);
         
 	}
 	
@@ -456,17 +460,19 @@ public class SongsDisplayController {
 	// shuffleToggleButton is only used when it's time to get new song
 	// modelSelection prevails all
 	
-	private void initMediaPlayerEssentials() {
-		if (this.soundVolume == null) {
-			throw new RuntimeException("Sound volume is not yet selected from songs.db");
-		}
+	private void initMediaPlayerEssentials(double soundVolume, boolean isRepeatToggled, boolean isShuffleToggled) {
+//		if (this.soundVolume == null) {
+//			throw new RuntimeException("Sound volume is not yet selected from songs.db");
+//		}
 		// this must be set after querying database so that mediaPlayer later can refer to this value when boot
-		this.mediaPlayerVolumeSlider.setValue(this.soundVolume);
+		this.mediaPlayerVolumeSlider.setValue(soundVolume);
 		// default is not mute icon
-		if (Math.abs(this.soundVolume) < 0.01) {
+		if (Math.abs(soundVolume) < 0.01) {
 			this.mediaPlayerSpeakerLabel.setText(this.speakerMuteUTFIcon);
 		}
 		
+		this.mediaPlayerRepeatToggleButton.setSelected(isRepeatToggled);
+		this.mediaPlayerShuffleToggleButton.setSelected(isShuffleToggled);
 		
 		this.testTable.getSelectionModel().selectedItemProperty().addListener((obs, wasSelected, isSelected) -> {
 //			// when switching display, this is also fired but isSelected is null this time
@@ -1022,9 +1028,10 @@ public class SongsDisplayController {
 			String saveFolder = configRs.getString(this.songsDb.Data.Config.SAVE_FOLDER);
 			String ordering = this.orderByComboBox.getSelectionModel().getSelectedItem().toString();
 			this.songsDb.updateConfigFull(configID, pathToOsuDb, pathToSongsFolder, saveFolder
-					, songSourceShowCheckMenuItem.isSelected(), artistNameShowCheckMenuItem.isSelected(), artistNameUnicodeShowCheckMenuItem.isSelected()
-					, songTitleShowCheckMenuItem.isSelected(), songTitleUnicodeShowCheckMenuItem.isSelected(), creatorNameShowCheckMenuItem.isSelected()
-					, totalTimeShowCheckMenuItem.isSelected(), isDownloadedShowCheckMenuItem.isSelected(), ordering, this.mediaPlayerVolumeSlider.getValue());
+					, this.songSourceShowCheckMenuItem.isSelected(), this.artistNameShowCheckMenuItem.isSelected(), this.artistNameUnicodeShowCheckMenuItem.isSelected()
+					, this.songTitleShowCheckMenuItem.isSelected(), this.songTitleUnicodeShowCheckMenuItem.isSelected(), this.creatorNameShowCheckMenuItem.isSelected()
+					, this.totalTimeShowCheckMenuItem.isSelected(), this.isDownloadedShowCheckMenuItem.isSelected(), ordering, this.mediaPlayerVolumeSlider.getValue()
+					, this.mediaPlayerRepeatToggleButton.isSelected(), this.mediaPlayerShuffleToggleButton.isSelected());
 		}
 	}
 	

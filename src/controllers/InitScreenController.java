@@ -86,13 +86,15 @@ public class InitScreenController {
 					catch (SQLException e1) {
 						// this exception comes from initTableData method for populating the tableView
 						e1.printStackTrace();
-						Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
-						alert.showAndWait();
+						this.displayAlertAndExit("Failed to retrieve table data from songs.db");
+//						Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
+//						alert.showAndWait();
 					}
 					catch (Exception e1) {
 						e1.printStackTrace();
-						Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
-						alert.showAndWait();
+						this.displayAlertAndExit("Failed to load displaying screen");
+//						Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
+//						alert.showAndWait();
 					}
 				}
 				else {
@@ -101,16 +103,18 @@ public class InitScreenController {
 					} 
 					catch (Exception e1) {
 						e1.printStackTrace();
-						Alert alert = new Alert(AlertType.ERROR, "Failed to load update screen", ButtonType.OK);
-						alert.showAndWait();
+						this.displayAlertAndExit("Failed to load update screen");
+//						Alert alert = new Alert(AlertType.ERROR, "Failed to load update screen", ButtonType.OK);
+//						alert.showAndWait();
 					}
 				}
 			});
 			
 			checkAllSetService.setOnFailed(e -> {
 				checkAllSetService.getException().printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "Corrupted or interrupted when checking for songs added or deleted", ButtonType.OK);
-				alert.showAndWait();
+				this.displayAlertAndExit("Corrupted or interrupted when checking for songs added or deleted");
+//				Alert alert = new Alert(AlertType.ERROR, "Corrupted or interrupted when checking for songs added or deleted", ButtonType.OK);
+//				alert.showAndWait();
 			});
 			checkAllSetService.start();
 		}
@@ -121,11 +125,19 @@ public class InitScreenController {
 			}
 			catch (Exception e) {
 				e.printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "Failed to load initialization screen", ButtonType.OK);
-				alert.showAndWait();
+				this.displayAlertAndExit("Failed to load initialization screen");
+//				Alert alert = new Alert(AlertType.ERROR, "Failed to load initialization screen", ButtonType.OK);
+//				alert.showAndWait();
 			}
 		}
 		
+	}
+	
+	private void displayAlertAndExit(String message) {
+		Alert alert = new Alert(AlertType.ERROR, message, ButtonType.OK);
+		alert.showAndWait();
+		Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
+		currentStage.hide();
 	}
 	
 	private void loadSetSongsFolderPathView() throws IOException {
