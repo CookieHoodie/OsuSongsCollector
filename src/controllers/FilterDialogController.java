@@ -32,6 +32,7 @@ public class FilterDialogController {
 	private Map<String, List<TableViewData>> selectedSongsMap;
 	private ObservableList<SimplifiedTableViewData> possibleDuplicatedObsList;
 	
+	@FXML private Button selectOneFromEachButton;
 	@FXML private Button okButton;
 	@FXML private Button cancelButton;
 	@FXML private TableView<SimplifiedTableViewData> displayTable;
@@ -67,16 +68,16 @@ public class FilterDialogController {
 		this.selectedSongsMap = selectedSongsMap;
 		this.possibleDuplicatedObsList = possibleDuplicatedObsList;
 		this.displayTable.setItems(possibleDuplicatedObsList);
-		possibleDuplicatedObsList.addListener(new ListChangeListener<SimplifiedTableViewData>() {
-		    @Override
-		    public void onChanged(ListChangeListener.Change<? extends SimplifiedTableViewData> c) {
-		        while (c.next()) {
-		            if (c.wasUpdated()) {
-		                System.out.println(possibleDuplicatedObsList.get(c.getFrom()).folderNameProperty().get() + " -> " + possibleDuplicatedObsList.get(c.getFrom()).isSelectedProperty().get());
-		            }
-		          }
-		    }
-		});
+//		possibleDuplicatedObsList.addListener(new ListChangeListener<SimplifiedTableViewData>() {
+//		    @Override
+//		    public void onChanged(ListChangeListener.Change<? extends SimplifiedTableViewData> c) {
+//		        while (c.next()) {
+//		            if (c.wasUpdated()) {
+//		                System.out.println(possibleDuplicatedObsList.get(c.getFrom()).folderNameProperty().get() + " -> " + possibleDuplicatedObsList.get(c.getFrom()).isSelectedProperty().get());
+//		            }
+//		          }
+//		    }
+//		});
 	}
 	
 	@FXML private void removeDuplicates(ActionEvent event) {
@@ -91,6 +92,26 @@ public class FilterDialogController {
 		}
 		this.exit();
 	}
+	
+	
+	@FXML private void selectOneFromEach(ActionEvent event) {
+		boolean isNewGroup = true;
+		for (SimplifiedTableViewData row : this.displayTable.getItems()) {
+			if (!row.folderNameProperty().get().isEmpty()) {
+				if (isNewGroup) {
+					row.isSelectedProperty().set(true);
+					isNewGroup = false;
+				}
+				else {
+					row.isSelectedProperty().set(false);
+				}
+			}
+			else {
+				isNewGroup = true;
+			}
+		}
+	}
+	
 	
 	@FXML private void closeWindow(ActionEvent event) {
 		this.exit();

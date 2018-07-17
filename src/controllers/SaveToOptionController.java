@@ -298,7 +298,15 @@ public class SaveToOptionController {
 					int previousTime = previousRow.totalTimeProperty().get();
 					if (Math.abs(currentTime - previousTime) < range) {
 						// if the streak breaks, we need to add both rows if duplicated
-						if (l.isEmpty() || !previousRow.equals(l.get(l.size() - 1))) {
+						if (l.isEmpty()) {
+							l.add(previousRow);
+						}
+						// separate if same name but two groups of different length (ie. 1:30, 1:30 --- 4:30, 4:30)
+						else if (!previousRow.equals(l.get(l.size() - 1))) {
+							TableViewData lastRow = l.get(l.size() - 1);
+							if (Math.abs(previousTime - lastRow.totalTimeProperty().get()) >= range) {
+								l.add(null);
+							}
 							l.add(previousRow);
 						}
 						l.add(currentRow);
@@ -309,15 +317,20 @@ public class SaveToOptionController {
 				}
 				if (!l.isEmpty()) {
 					for (TableViewData row : l) {
+						if (row == null) {
+							dialogObsList.add(new SimplifiedTableViewData());
+							continue;
+						}
 						String name;
 						String artistName = this.useArtistNameUnicode && !row.artistNameUnicodeProperty().get().isEmpty() ? row.artistNameUnicodeProperty().get() : row.artistNameProperty().get();
 						String songTitle = this.useSongTitleUnicode && !row.songTitleUnicodeProperty().get().isEmpty() ? row.songTitleUnicodeProperty().get() : row.songTitleProperty().get();
-						if (!row.songSourceProperty().get().isEmpty()) {
-							name = row.songSourceProperty().get() + " (" + artistName + ") - " + songTitle;
-						}
-						else {
-							name = artistName + " - " + songTitle;
-						}
+//						if (!row.songSourceProperty().get().isEmpty()) {
+//							name = row.songSourceProperty().get() + " (" + artistName + ") - " + songTitle;
+//						}
+//						else {
+//							name = artistName + " - " + songTitle;
+//						}
+						name = artistName + " - " + songTitle;
 						SimplifiedTableViewData data = new SimplifiedTableViewData(name, TableViewData.totalTimeToString(row.totalTimeProperty().get()), row.isSelectedProperty().get(), row.folderNameProperty().get());
 						dialogObsList.add(data);
 					}
@@ -332,6 +345,8 @@ public class SaveToOptionController {
 			alert.showAndWait();
 		}
 		else {
+			// remove last empty row added
+			dialogObsList.remove(dialogObsList.size() - 1, dialogObsList.size());
 			try {
 				this.loadFilterDialogView(dialogObsList);
 			} catch (Exception e) {
