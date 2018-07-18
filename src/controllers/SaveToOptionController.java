@@ -65,7 +65,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class SaveToOptionController {
-	enum ComboBoxChoice {
+	public enum ComboBoxChoice {
 		NONE("None", ""),
 		SONG_SOURCE("Source", "やはり俺の青春ラブコメはまちがっている。続"),
 		ARTIST_NAME("Artist", "yanaginagi"),
@@ -116,13 +116,11 @@ public class SaveToOptionController {
 	
 	
 	@FXML private void initialize() {
-		// TODO: might want to save to db as well
-		// in that case, remember to change the isOptionsSet also
 		ObservableList<ComboBoxChoice> prefixSuffixComboBoxObsList = FXCollections.observableArrayList(ComboBoxChoice.values());
 		this.prefixComboBox.setItems(prefixSuffixComboBoxObsList);
-		this.prefixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
+//		this.prefixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
 		this.suffixComboBox.setItems(prefixSuffixComboBoxObsList);
-		this.suffixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
+//		this.suffixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
 //		this.taskDetailsTextArea.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
 //		this.sampleTextField.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
 //		this.sampleTextField.setText("No attribute is chosen");
@@ -147,12 +145,43 @@ public class SaveToOptionController {
 			this.configID = rs.getInt(SqliteDatabase.TableData.Config.CONFIG_ID);
 			this.saveFolder = rs.getString(SqliteDatabase.TableData.Config.SAVE_FOLDER);
 			this.pathToSongsFolder = rs.getString(SqliteDatabase.TableData.Config.PATH_TO_SONGS_FOLDER);
+			String comboBoxPrefix = rs.getString(SqliteDatabase.TableData.Config.COMBO_BOX_PREFIX);
+			String comboBoxSuffix = rs.getString(SqliteDatabase.TableData.Config.COMBO_BOX_SUFFIX);
 			if (!this.saveFolder.isEmpty()) {
 				this.chosenPathTextField.setText(this.saveFolder);
 				this.rememberPathCheckBox.setSelected(true);
 				this.isPathSet = true;
 				this.setStartButtonDisability();
 			}
+			
+			boolean isPrefixSet = false;
+			boolean isSuffixSet = false;
+			// select the values
+			for (ComboBoxChoice cbc : ComboBoxChoice.values()) {
+				if (cbc.toString().equals(comboBoxPrefix)) {
+					this.prefixComboBox.getSelectionModel().select(cbc);
+					isPrefixSet = true;
+					if (isPrefixSet && isSuffixSet) {
+						break;
+					}
+				}
+				
+				if (cbc.toString().equals(comboBoxSuffix)) {
+					this.suffixComboBox.getSelectionModel().select(cbc);
+					isSuffixSet = true;
+					if (isPrefixSet && isSuffixSet) {
+						break;
+					}
+				}
+			}
+			// unlikely but juz in case set them to none
+			if (!isPrefixSet || !isSuffixSet) {
+				this.prefixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
+				this.suffixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
+			}
+			// render the sample in textField and to enable the start button if already all set
+			this.renderSample();
+			
 		}
 		// shouldn't be the case
 		else {
@@ -179,7 +208,7 @@ public class SaveToOptionController {
 	}
 	
 	// comboBoxOnSelected
-	@FXML private void renderSample(ActionEvent event) {
+	@FXML private void renderSample() {
 		ComboBoxChoice prefix = this.prefixComboBox.getSelectionModel().getSelectedItem();
 		ComboBoxChoice suffix = this.suffixComboBox.getSelectionModel().getSelectedItem();
 		
@@ -190,8 +219,9 @@ public class SaveToOptionController {
 			if (prefix != ComboBoxChoice.NONE) {
 				this.sampleTextField.setText("Attributes can't be the same!");
 			}
+			// both are none
 			else {
-				this.sampleTextField.setText("No attribute is chosen!");
+				this.sampleTextField.setText("Choose your filename format below:");
 			}
 		}
 		else if (((prefix == ComboBoxChoice.ARTIST_NAME || prefix == ComboBoxChoice.ARTIST_NAME_UNICODE) && (suffix == ComboBoxChoice.ARTIST_NAME || suffix == ComboBoxChoice.ARTIST_NAME_UNICODE))
@@ -225,22 +255,32 @@ public class SaveToOptionController {
 	
 	// start Button
 	@FXML private void startCopying(ActionEvent event) {
-		if (this.rememberPathCheckBox.isSelected() && !this.chosenPathTextField.getText().equals(this.saveFolder)) {
-			String[] items = {SqliteDatabase.TableData.Config.SAVE_FOLDER};
-			String[] results = {this.chosenPathTextField.getText()};
-			try {
-				this.songsDb.updateConfigString(this.configID, items, results);
-			}
-			// runtimeException & SQLException should show similar result to user
-			catch (Exception e) {
-				e.printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "Failed to remember chosen path", ButtonType.OK);
-				alert.show();
-			}
-		}
-		
 		ComboBoxChoice prefix = this.prefixComboBox.getSelectionModel().getSelectedItem();
 		ComboBoxChoice suffix = this.suffixComboBox.getSelectionModel().getSelectedItem();
+		
+		try {
+			// save saveFolder if specified
+			if ((this.rememberPathCheckBox.isSelected() && !this.chosenPathTextField.getText().equals(this.saveFolder))) {
+				String[] items = {SqliteDatabase.TableData.Config.SAVE_FOLDER, SqliteDatabase.TableData.Config.COMBO_BOX_PREFIX
+						, SqliteDatabase.TableData.Config.COMBO_BOX_SUFFIX};
+				String[] results = {this.chosenPathTextField.getText(), prefix.toString(), suffix.toString()};
+				this.songsDb.updateConfigString(this.configID, items, results);
+			}
+			// otherwise, store the comboBoxChoice anyway
+			else {
+				String[] items = {SqliteDatabase.TableData.Config.COMBO_BOX_PREFIX, SqliteDatabase.TableData.Config.COMBO_BOX_SUFFIX};
+				String[] results = {prefix.toString(), suffix.toString()};
+				this.songsDb.updateConfigString(this.configID, items, results);
+			}
+		}
+		// runtimeException & SQLException should show similar result to user
+		catch (Exception e) {
+			e.printStackTrace();
+			Alert alert = new Alert(AlertType.ERROR, "Failed to remember chosen path", ButtonType.OK);
+			alert.show();
+		}
+		
+		
 		List<TableViewData> selectedSongsList = this.selectedSongsMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
 //		Task<Void> copySongsTask = new CopySongsTask(selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix); 
 		

@@ -1,5 +1,7 @@
 package application;
 
+import controllers.SaveToOptionController.ComboBoxChoice;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
@@ -124,7 +126,9 @@ public class SqliteDatabase {
 				+ TableData.Config.ORDERING + " TEXT,"
 				+ TableData.Config.SOUND_VOLUME + " REAL,"
 				+ TableData.Config.IS_REPEAT_TOGGLED + " BOOLEAN,"
-				+ TableData.Config.IS_SHUFFLE_TOGGLED + " BOOLEAN"
+				+ TableData.Config.IS_SHUFFLE_TOGGLED + " BOOLEAN,"
+				+ TableData.Config.COMBO_BOX_PREFIX + " TEXT,"
+				+ TableData.Config.COMBO_BOX_SUFFIX + " TEXT"
 				+ ");";
 		Statement stmt = this.getConn().createStatement();
 		stmt.execute(sql);
@@ -264,7 +268,8 @@ public class SqliteDatabase {
 			boolean isSongSourceShown, boolean isArtistNameShown, boolean isArtistNameUnicodeShown,
 			boolean isSongTitleShown, boolean isSongTitleUnicodeShown, boolean isCreatorNameShown,
 			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume,
-			boolean isRepeatToggled, boolean isShuffleToggled) throws SQLException {
+			boolean isRepeatToggled, boolean isShuffleToggled, String comboBoxPrefix,
+			String comboBoxSuffix) throws SQLException {
 		String sql = "INSERT INTO " + TableData.Config.TABLE_NAME + "(" 
 				+ TableData.Config.PATH_TO_OSU_DB + ","
 				+ TableData.Config.PATH_TO_SONGS_FOLDER + ","
@@ -280,8 +285,10 @@ public class SqliteDatabase {
 				+ TableData.Config.ORDERING + ","
 				+ TableData.Config.SOUND_VOLUME + ","
 				+ TableData.Config.IS_REPEAT_TOGGLED + ","
-				+ TableData.Config.IS_SHUFFLE_TOGGLED
-				+ ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+				+ TableData.Config.IS_SHUFFLE_TOGGLED + ","
+				+ TableData.Config.COMBO_BOX_PREFIX + ","
+				+ TableData.Config.COMBO_BOX_SUFFIX
+				+ ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, pathToOsuDb);
 		pstmt.setString(2, pathToSongsFolder);
@@ -298,6 +305,8 @@ public class SqliteDatabase {
 		pstmt.setDouble(13, soundVolume);
 		pstmt.setBoolean(14, isRepeatToggled);
 		pstmt.setBoolean(15, isShuffleToggled);
+		pstmt.setString(16, comboBoxPrefix);
+		pstmt.setString(17, comboBoxSuffix);
 		pstmt.executeUpdate();
 	}
 	
@@ -764,7 +773,7 @@ public class SqliteDatabase {
 	
 	public void insertAllData(OsuDbParser osuDb) throws SQLException, InterruptedException {
 		this.insertIntoMetadata(osuDb.getOsuVersion(), osuDb.getFolderCount(), osuDb.getPlayerName(), osuDb.getNumberOfBeatmaps());
-		this.insertIntoConfig(osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "", false, false, false, false, false, false, false, false, "", 50.0, true, false);
+		this.insertIntoConfig(osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "", false, false, false, false, false, false, false, false, "", 50.0, true, false, ComboBoxChoice.NONE.toString(), ComboBoxChoice.NONE.toString());
 		
 		// store rankedIndex if ranked, -1 if is not and -2 if multi-audio
 		List<Integer> rankedList = new ArrayList<Integer>();
@@ -1472,7 +1481,8 @@ public class SqliteDatabase {
 			boolean isSongSourceShown, boolean isArtistNameShown, boolean isArtistNameUnicodeShown,
 			boolean isSongTitleShown, boolean isSongTitleUnicodeShown, boolean isCreatorNameShown,
 			boolean isTotalTimeShown, boolean isIsDownloadedShown, String ordering, double soundVolume,
-			boolean isRepeatToggled, boolean isShuffleToggled) throws SQLException {
+			boolean isRepeatToggled, boolean isShuffleToggled, String comboBoxPrefix,
+			String comboBoxSuffix) throws SQLException {
 		
 		String sql = "UPDATE " + TableData.Config.TABLE_NAME + "\n"
 				+ "SET " + TableData.Config.PATH_TO_OSU_DB + " = ?,"
@@ -1489,7 +1499,9 @@ public class SqliteDatabase {
 				+ TableData.Config.ORDERING + " = ?,"
 				+ TableData.Config.SOUND_VOLUME + " = ?,"
 				+ TableData.Config.IS_REPEAT_TOGGLED + " = ?,"
-				+ TableData.Config.IS_SHUFFLE_TOGGLED + " = ? "
+				+ TableData.Config.IS_SHUFFLE_TOGGLED + " = ?,"
+				+ TableData.Config.COMBO_BOX_PREFIX + " = ?,"
+				+ TableData.Config.COMBO_BOX_SUFFIX + " = ? "
 				+ "WHERE " + TableData.Config.CONFIG_ID + " = ?";
 		PreparedStatement pstmt = this.getConn().prepareStatement(sql);
 		pstmt.setString(1, pathToOsuDb);
@@ -1507,7 +1519,9 @@ public class SqliteDatabase {
 		pstmt.setDouble(13, soundVolume);
 		pstmt.setBoolean(14, isRepeatToggled);
 		pstmt.setBoolean(15, isShuffleToggled);
-		pstmt.setInt(16, configID);
+		pstmt.setString(16, comboBoxPrefix);
+		pstmt.setString(17, comboBoxSuffix);
+		pstmt.setInt(18, configID);
 		pstmt.executeUpdate();
 	}
 	
@@ -1633,17 +1647,7 @@ public class SqliteDatabase {
 	}
 	
 	
-	// TODO: change to static fields(?) instead of this shit
 	public class TableData {
-//		public Metadata Metadata = new Metadata();
-//		public Config Config = new Config();
-//		public Beatmap Beatmap = new Beatmap();
-//		public BeatmapSet BeatmapSet = new BeatmapSet();
-//		public Artist Artist = new Artist();
-//		public Song Song = new Song();
-//		public SongTag SongTag = new SongTag();
-//		public BeatmapSet_SongTag BeatmapSet_SongTag = new BeatmapSet_SongTag();
-		
 		public class Metadata {
 			public static final String TABLE_NAME = "Metadata";
 			// ===== Metadata fields =====
@@ -1673,6 +1677,8 @@ public class SqliteDatabase {
 			public static final String SOUND_VOLUME = "SoundVolume";
 			public static final String IS_REPEAT_TOGGLED = "IsRepeatToggled";
 			public static final String IS_SHUFFLE_TOGGLED = "IsShuffleToggled";
+			public static final String COMBO_BOX_PREFIX = "ComboBoxPrefix";
+			public static final String COMBO_BOX_SUFFIX = "ComboBoxSuffix";
 		}
 		
 		public class Beatmap {

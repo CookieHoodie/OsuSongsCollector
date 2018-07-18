@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import application.Comparators;
 import application.Main;
 import application.SqliteDatabase;
+import application.SqliteDatabase.TableData;
 import javafx.animation.PauseTransition;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -388,30 +389,30 @@ public class SongsDisplayController {
         	// ordering is empty only when it's the first time loading the app, 
         	// so if it's first time, dun overwrite the menuItem as the data from songsDb is defaulted to false
         	if (!ordering.isEmpty()) {
-        		if (this.songSourceShowCheckMenuItem.isSelected() != isSongSourceShown) {
+//        		if (this.songSourceShowCheckMenuItem.isSelected() != isSongSourceShown) {
             		this.songSourceShowCheckMenuItem.setSelected(isSongSourceShown);
-            	}
-            	if (this.artistNameShowCheckMenuItem.isSelected() != isArtistNameShown) {
+//            	}
+//            	if (this.artistNameShowCheckMenuItem.isSelected() != isArtistNameShown) {
             		this.artistNameShowCheckMenuItem.setSelected(isArtistNameShown);
-            	}
-            	if (this.artistNameUnicodeShowCheckMenuItem.isSelected() != isArtistNameUnicodeShown) {
+//            	}
+//            	if (this.artistNameUnicodeShowCheckMenuItem.isSelected() != isArtistNameUnicodeShown) {
             		this.artistNameUnicodeShowCheckMenuItem.setSelected(isArtistNameUnicodeShown);
-            	}
-            	if (this.songTitleShowCheckMenuItem.isSelected() != isSongTitleShown) {
+//            	}
+//            	if (this.songTitleShowCheckMenuItem.isSelected() != isSongTitleShown) {
             		this.songTitleShowCheckMenuItem.setSelected(isSongTitleShown);
-            	}
-            	if (this.songTitleUnicodeShowCheckMenuItem.isSelected() != isSongTitleUnicodeShown) {
+//            	}
+//            	if (this.songTitleUnicodeShowCheckMenuItem.isSelected() != isSongTitleUnicodeShown) {
             		this.songTitleUnicodeShowCheckMenuItem.setSelected(isSongTitleUnicodeShown);
-            	}
-            	if (this.creatorNameShowCheckMenuItem.isSelected() != isCreatorNameShown) {
+//            	}
+//            	if (this.creatorNameShowCheckMenuItem.isSelected() != isCreatorNameShown) {
             		this.creatorNameShowCheckMenuItem.setSelected(isCreatorNameShown);
-            	}
-            	if (this.totalTimeShowCheckMenuItem.isSelected() != isTotalTimeShown) {
+//            	}
+//            	if (this.totalTimeShowCheckMenuItem.isSelected() != isTotalTimeShown) {
             		this.totalTimeShowCheckMenuItem.setSelected(isTotalTimeShown);
-            	}
-            	if (this.isDownloadedShowCheckMenuItem.isSelected() != isIsDownloadedShown) {
+//            	}
+//            	if (this.isDownloadedShowCheckMenuItem.isSelected() != isIsDownloadedShown) {
             		this.isDownloadedShowCheckMenuItem.setSelected(isIsDownloadedShown);
-            	}
+//            	}
         	}
         	
         	// default comparator
@@ -954,11 +955,14 @@ public class SongsDisplayController {
 			String pathToSongsFolder = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_SONGS_FOLDER);
 			String saveFolder = configRs.getString(SqliteDatabase.TableData.Config.SAVE_FOLDER);
 			String ordering = this.orderByComboBox.getSelectionModel().getSelectedItem().toString();
+			String comboBoxPrefix = configRs.getString(SqliteDatabase.TableData.Config.COMBO_BOX_PREFIX);
+			String comboBoxSuffix = configRs.getString(SqliteDatabase.TableData.Config.COMBO_BOX_SUFFIX);
 			this.songsDb.updateConfigFull(configID, pathToOsuDb, pathToSongsFolder, saveFolder
 					, this.songSourceShowCheckMenuItem.isSelected(), this.artistNameShowCheckMenuItem.isSelected(), this.artistNameUnicodeShowCheckMenuItem.isSelected()
 					, this.songTitleShowCheckMenuItem.isSelected(), this.songTitleUnicodeShowCheckMenuItem.isSelected(), this.creatorNameShowCheckMenuItem.isSelected()
 					, this.totalTimeShowCheckMenuItem.isSelected(), this.isDownloadedShowCheckMenuItem.isSelected(), ordering, this.mediaPlayerVolumeSlider.getValue()
-					, this.mediaPlayerRepeatToggleButton.isSelected(), this.mediaPlayerShuffleToggleButton.isSelected());
+					, this.mediaPlayerRepeatToggleButton.isSelected(), this.mediaPlayerShuffleToggleButton.isSelected(), comboBoxPrefix
+					, comboBoxSuffix);
 		}
 	}
 	
