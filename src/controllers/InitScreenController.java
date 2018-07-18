@@ -24,6 +24,7 @@ import javafx.stage.Stage;
 
 // TODO: at the end, ensure only one app can be opened at the same time. Otherwise racing condition can happen in SQL
 // TODO: change all the printStacks to logging
+// TODO: refine all stage titles, description and variable names (including @FXML) before releasing
 
 public class InitScreenController {
 	@FXML private Label welcomeLabel;

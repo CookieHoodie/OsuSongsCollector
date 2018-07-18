@@ -6,8 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import application.SqliteDatabase;
 import controllers.SaveToOptionController.ComboBoxChoice;
@@ -20,7 +22,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
@@ -85,13 +86,41 @@ public class CopySongsController {
 			}
 		});
 	}
-
+	
+	// for update message in task
+	private class MessageConsumer extends AnimationTimer {
+		private final BlockingQueue<String> messageQueue;
+		private final TextArea textArea;
+		public final String poisonPill = MessageConsumer.class.getName();
+		
+		public MessageConsumer(BlockingQueue<String> messageQueue, TextArea textArea) {
+			this.messageQueue = messageQueue;
+			this.textArea = textArea;
+		}
+		
+		@Override public void handle(long now) {
+			List<String> messages = new ArrayList<String>();
+	        messageQueue.drainTo(messages);
+	        StringBuilder sb = new StringBuilder();
+	        for (String message : messages) {
+	        	if (message.equals(this.poisonPill)) {
+	        		// stop and break out to append the last text if any
+	        		this.stop();
+	        		break;
+	        	}
+	        	sb.append(message + "\n");
+	        }
+	        this.textArea.appendText(sb.toString());
+		}
+	}
+	
 	private class CopySongsTask extends Task<Void> {
 		private final String pathToSongsFolderInTask;
 		private final String destinationFolder;
 		private final ComboBoxChoice prefix;
 		private final ComboBoxChoice suffix;
 		private final List<TableViewData> selectedSongsListInTask;
+		private BlockingQueue<String> messageQueue = new LinkedBlockingQueue<>();
 		
 		public CopySongsTask(List<TableViewData> selectedSongsList, String pathToSongsFolder, String destinationFolder, ComboBoxChoice prefix, ComboBoxChoice suffix) {
 			this.selectedSongsListInTask = selectedSongsList;
@@ -152,19 +181,34 @@ public class CopySongsController {
 			return fileNamePart;
 		}
 		
-		// TODO: if possible, use another way instead of congesting UI Thread with runlater like this
-		private void appendTextArea(final String text) {
-			Platform.runLater(() -> {
-				copyDetailsTextArea.appendText(text + "\n");
-			});
+		// as put is a blocking call, InterruptedException is likely to be thrown if task is cancelled
+		// so wrap in try and catch and put again so that the message can be updated anyway
+		private void putMessageToQueue(String message) throws InterruptedException {
+			try {
+				messageQueue.put(message);
+			}
+			catch (InterruptedException e) {
+				if (this.isCancelled()) {
+					messageQueue.put(message);
+				}
+				else {
+					// should not be happening so throw it to be handled at higher level
+					throw e;
+				}
+			}
 		}
+		
 		
 		@Override
         protected Void call() throws Exception {
-			updateProgress(0, 0);
+			updateProgress(0, 1);
 			int totalProgress = this.selectedSongsListInTask.size();
 			String[] items = {SqliteDatabase.TableData.BeatmapSet.IS_DOWNLOADED};
 			Boolean[] results = {true};
+			MessageConsumer messageConsumer = new MessageConsumer(messageQueue, copyDetailsTextArea);
+			Platform.runLater(() -> {
+				messageConsumer.start();
+			});
 			
 			try {
 				songsDb.getConn().setAutoCommit(false);
@@ -177,8 +221,7 @@ public class CopySongsController {
 						Path oriPath = Paths.get(this.pathToSongsFolderInTask, row.folderNameProperty().get(), row.audioNameProperty().get());
 						File oriFile = oriPath.toFile();
 						if (!oriFile.exists()) {
-//							updateMessage("(" + (i+1) + "/" + totalProgress + ") " + " Error: " + oriPath.toString() + " is not found!");
-							this.appendTextArea("(" + (i+1) + "/" + totalProgress + ") " + " Error: " + oriPath.toString() + " is not found!");
+							messageQueue.put("(" + (i+1) + "/" + totalProgress + ") " + " Error: " + oriPath.toString() + " is not found!");
 							updateProgress(i + 1, totalProgress);
 							continue;
 						}
@@ -207,37 +250,35 @@ public class CopySongsController {
 							Files.copy(oriPath, cpPath);
 						}
 						catch (UnsupportedOperationException | IOException | SecurityException e) {
+							// directly throw and exit as these errors are likely to persist without user action
+							messageQueue.put(e.getMessage());
 							updateBeatmapSetBooleanPStatement.executeBatch();
 							songsDb.getConn().commit();
 							throw e;
 						}
 						songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, beatmapSetAutoID, results);
 						
-						// combine all together instead of using separate this.appendTextArea to reduce overhead
-						final String updateText = "(" + (i+1) + "/" + totalProgress + ") " + fileName + "\n";
 						Platform.runLater(() -> {
 							row.isDownloadedProperty().set(true);
 							row.isSelectedProperty().set(false);
-							copyDetailsTextArea.appendText(updateText);
 						}); 
 						updateProgress(i + 1, totalProgress);
-//						updateMessage("(" + (i+1) + "/" + totalProgress + ") " + fileName);
-//						this.appendTextArea("(" + (i+1) + "/" + totalProgress + ") " + fileName);
+						this.putMessageToQueue("(" + (i+1) + "/" + totalProgress + ") " + fileName);
 					}
 					else {
-//						updateMessage(i + " songs are copied, " + (totalProgress-i-1) + " are cancelled.");
-						this.appendTextArea(i + " songs are copied, " + (totalProgress - i) + " are cancelled.");
+						this.putMessageToQueue(i + " songs are copied, " + (totalProgress - i) + " are cancelled.");
 						break;
 					}
 				}
-//				updateMessage("Updating copied songs data...");
-				this.appendTextArea("Updating copied songs data... Please don't close the window!");
+				this.putMessageToQueue("Updating copied songs data... Please don't close the window!");
 				updateBeatmapSetBooleanPStatement.executeBatch();
 				songsDb.getConn().commit();
 			}
 			finally {
-				this.appendTextArea("Finish");
 				songsDb.getConn().setAutoCommit(true);
+				this.putMessageToQueue("Finish");
+				// stopping the AnimationTimer
+				this.putMessageToQueue(messageConsumer.poisonPill);
 			}
 			return null;
         }

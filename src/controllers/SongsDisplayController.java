@@ -148,7 +148,6 @@ public class SongsDisplayController {
 	// and check the corresponding items in controller instead of fxml
 	// TODO: add rotating screen while changing view, searching, etc.
 	// TODO: allow user to select and copy words but not edit
-	// TODO: add action to checkForNewSongs menuitem with popup windows
 	
 	@FXML private void initialize() {
 		this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
@@ -567,7 +566,6 @@ public class SongsDisplayController {
 					if (this.mediaPlayer.getStatus() == Status.PAUSED || this.mediaPlayer.getStatus() == Status.STOPPED) {
 						this.mediaPlayer.play();
 					}
-					// TODO: think carefully for play when stopped
 					else if (this.mediaPlayer.getStatus() == Status.PLAYING) {
 						this.mediaPlayer.seek(this.mediaPlayer.getStartTime());
 					}
@@ -614,7 +612,6 @@ public class SongsDisplayController {
 		
 	}
 	
-	// TODO: might want to save the option (repeat, shuffle) into songs.db at the end
 	private void playNewSong(TableViewData rowToBePlayed) {
 		Path mp3Path = Paths.get(this.pathToSongsFolder, rowToBePlayed.folderNameProperty().get(), rowToBePlayed.audioNameProperty().get());
 		
@@ -685,19 +682,6 @@ public class SongsDisplayController {
 		return artistName + " - " + songTitle;
 	}
 	
-//	@FXML private void playOrPause(ActionEvent event) {
-//		if (this.mediaPlayer == null) return;
-//		
-//		if (this.mediaPlayer.getStatus() == Status.PAUSED) {
-//			this.mediaPlayer.play();
-//			this.mediaPlayerPlayButton.setText(this.playButtonPauseText);
-//		}
-//		else if (this.mediaPlayer.getStatus() == Status.PLAYING) {
-//			this.mediaPlayer.pause();
-//			this.mediaPlayerPlayButton.setText(this.playButtonPlayText);
-//		}
-//	}
-	
 	
 	// This is only called when stage is shown (ie. every required initialization has been done)
 	public void startMusic() {
@@ -728,8 +712,6 @@ public class SongsDisplayController {
 			}
 		}
 		else {
-			// TODO: check back using old implementation whether it will still jump or not
-			// if yes, try modify the selectionModel
 			List<TableViewData> songList = this.testTable.getItems();
 			int index = Collections.binarySearch(songList, this.currentlyPlayedSong, this.orderByComboBox.getSelectionModel().getSelectedItem());
 			// if found, return directly
@@ -752,46 +734,6 @@ public class SongsDisplayController {
 				// return 1st in list (ie. when filtering and currentlyPlayedSong is not in, play the first in the list)
 				return this.testTable.getItems().get(0);
 			}
-			
-//			// use iterator becuz the list might be filtered at the same time this is working
-//			for (ListIterator<TableViewData> iter = this.testTable.getItems().listIterator(); iter.hasNext();) {
-//				TableViewData row = iter.next();
-//				// if ever found this song in current tableview (ie. user does not switch to hidden display (for etc))
-//				if (row.equals(this.currentlyPlayedSong)) {
-//					if (!reverse) {
-//						// get next song
-//						if (iter.hasNext()) {
-//							return iter.next();
-//						}
-//					}
-//					else {
-//						if (iter.hasPrevious()) {
-//							iter.previous(); // same as row
-//							if (iter.hasPrevious()) {
-//								return iter.previous(); // this is the real previous row
-//							}
-//						}
-//					}
-//					// if no next song (ie. current view is empty or at the end of list), break out for default return
-//					break;
-//				}
-//			}
-		
-//			// return 1st row if not empty
-//			if (this.testTable.getItems().isEmpty()) {
-//				return this.currentlyPlayedSong;
-//			}
-//			else {
-//				// if at 1st position and reverse, play the last song in the list
-//				if (reverse) {
-//					return this.testTable.getItems().get(this.testTable.getItems().size() - 1);
-//				}
-//				else {
-//					return this.testTable.getItems().get(0);
-//				}
-//			}
-////			return this.testTable.getItems().isEmpty() ? this.currentlyPlayedSong : this.testTable.getItems().get(0);
-			
 		}
 	}
 	
@@ -802,16 +744,6 @@ public class SongsDisplayController {
 	
 	// testCopySongButton
 	@FXML private void copySong(ActionEvent event) {
-//		List<TableViewData> selectedSongsList = new ArrayList<TableViewData>();
-//		boolean containCopiedSongs = false;
-//		for (TableViewData row : this.testTable.getItems()) {
-//			if (row.isSelectedProperty().get()) {
-//				selectedSongsList.add(row);
-//				if (row.isDownloadedProperty().get()) {
-//					containCopiedSongs = true;
-//				}
-//			}
-//		}
 		Map<String, List<TableViewData>> selectedSongsMap = this.testTable.getItems().stream()
 				.filter(row -> row.isSelectedProperty().get())
 				.collect(Collectors.groupingBy(row -> row.folderNameProperty().get()));
@@ -822,9 +754,6 @@ public class SongsDisplayController {
 			alert.showAndWait();
 		}
 		else {
-//			Map<String, List<TableViewData>> selectedSongsMap = selectedSongsList.stream()
-//					.collect(Collectors.groupingBy(row -> row.folderNameProperty().get()));
-//			List<TableViewData> x = selectedSongsMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
 			boolean containCopiedSongs = selectedSongsMap.values().stream().anyMatch(list -> list.stream().anyMatch(row -> row.isDownloadedProperty().get()));
 			boolean proceed = true;
 			if (containCopiedSongs) {
@@ -885,6 +814,7 @@ public class SongsDisplayController {
 			this.selectAllCheckBoxInCheckBoxCol.setSelected(false);
 			// TODO: wrap this in task
 			updateBeatmapSetBooleanPStatement.executeBatch();
+			this.songsDb.getConn().commit();
 		}
 		catch (SQLException e) {
 			e.printStackTrace();
@@ -911,7 +841,6 @@ public class SongsDisplayController {
 		
 		if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
 			this.hideUnhideButton.setText("Hide");
-			// TODO: the following line can violate the user choice
 			this.isDownloadedShowCheckMenuItem.setVisible(true);
 			this.hideUnhideButton.setVisible(true);
 //			this.checkBoxCol.setVisible(true);
@@ -923,8 +852,6 @@ public class SongsDisplayController {
 			this.hideUnhideButton.setVisible(true);
 //			this.checkBoxCol.setVisible(true);
 		}
-		// TODO: might want to allow selecting in here also
-		// TODO: add one more invisible label in VBox or HBox and show that label instead of sharing labels
 		else if (this.downloadedSongsRadioMenuItemInDisplayMenu.isSelected()) {
 			this.isDownloadedShowCheckMenuItem.setVisible(false);
 			this.hideUnhideButton.setVisible(false);
@@ -1172,6 +1099,11 @@ public class SongsDisplayController {
 				displayCondition = row.isDownloadedProperty().get() ? true : false;
 			}
 			
+			// to speed up searching becuz if this is false, return value at the end is always false
+			if (!displayCondition) {
+				return false;
+			}
+			
 			if (this.searchedText.isEmpty()) {
 				return displayCondition && true;
 			}
@@ -1183,7 +1115,6 @@ public class SongsDisplayController {
 				return this.matchLengthCondition(words[0], row.totalTimeProperty().get());
 			}
 			
-			// TODO: can optimize this by using map of sorts instead of this linear search
 			// normal search
 //			String[] items = {row.songSourceProperty().get(), row.artistNameProperty().get()
 //    				, row.artistNameUnicodeProperty().get(), row.songTitleProperty().get()
@@ -1256,7 +1187,6 @@ public class SongsDisplayController {
 		private final SimpleStringProperty songTagNames;
 		private final SimpleStringProperty creatorName;
 		
-		// TODO: add previewTime, ranked?, last play time
 		public TableViewData(int beatmapSetAutoID, String songSource, String artistName, String artistNameUnicode, String songTitle, String songTitleUnicode, int totalTime
 				, long lastModificationTime, boolean isDownloaded, boolean isHidden, boolean isSelected, String folderName, String audioName, String songTagNames, String creatorName) {
 			this.beatmapSetAutoID = new SimpleIntegerProperty(beatmapSetAutoID);
