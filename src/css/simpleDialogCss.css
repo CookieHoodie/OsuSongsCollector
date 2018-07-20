@@ -1,0 +1,60 @@
+/* shared */
+.root-pane {
+	-fx-font-family: "Century Gothic";
+}
+
+.image-pane {
+	/*-fx-background-image: url(../resources/dialogBg.jpg);*/
+	-fx-background-image: url(../resources/initScreenBg9.png);  
+	-fx-background-size: cover;
+}
+
+.instruction-label {
+	-fx-font-size: 15px;
+}
+
+.container-light-dropshadow {
+	-fx-effect: dropshadow(three-pass-box, #32e3d6, 5, 0, 0, 2.0);
+}
+
+.container-heavy-dropshadow {
+	-fx-effect: dropshadow(three-pass-box, #32e3d6, 10, 0, 0, 5.0);
+}
+
+.white-rounded-container {
+	-fx-background-color: white;
+	-fx-background-radius: 10;
+}
+
+/* setSongsView */
+.text-color {
+	-fx-text-fill: white;
+}
+
+.text-heavy-dropshadow {
+	-fx-effect: dropshadow(three-pass-box, #05469a, 10, 0.2, 0, 0);
+}
+
+.button-design {
+	-fx-background-color:  white;
+	-fx-text-fill: #4e9bbf;
+	-fx-background-insets: 0;
+	-fx-font-weight: bold;
+}
+
+.button-design:hover {
+	-fx-background-color:  #32e3d6;
+	-fx-text-fill: white;
+	-fx-effect: none;
+	-fx-cursor: hand;
+}
+
+/* dialogs */
+.progress-bar-design > .bar{
+	-fx-background-color: linear-gradient(to right, #84fab0 0%, #8fd3f4 100%);
+}
+
+
+.label-padding {
+	-fx-padding: 0px 20px 20px 20px;
+}

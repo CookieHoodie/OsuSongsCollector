@@ -10,12 +10,17 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import controllers.InitScreenController;
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.util.Duration;
 import javafx.scene.Scene;
+import javafx.scene.layout.Background;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 
 
@@ -31,10 +36,10 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) throws IOException, SQLException {
 		primaryStage.setTitle("Osu! Songs Collector");
-//		scene.getStylesheets().add(getClass().getResource("/css/application.css").toExternalForm());
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/InitScreenView.fxml"));
-		BorderPane root = loader.load();
+//		BorderPane root = loader.load();
+		StackPane root = loader.load();
 		Scene scene = new Scene(root);
 		primaryStage.initStyle(StageStyle.TRANSPARENT);
 		scene.setFill(Color.TRANSPARENT);
@@ -43,7 +48,12 @@ public class Main extends Application {
 		// show the screen 1st, then start the checking progress
 		// and handle subsequent processes in the controllers
 		InitScreenController initScreenController = loader.<InitScreenController>getController();
-		initScreenController.startChecking();
+		// wait for at least one second
+		PauseTransition pause = new PauseTransition(Duration.millis(1000));
+    	pause.setOnFinished(e1 -> {
+    		initScreenController.startChecking();
+    	});
+    	pause.play();
 	}
 	
 	public static void main(String[] args) {

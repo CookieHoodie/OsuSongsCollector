@@ -1,15 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.InitScreenController">
-   <center>
-      <AnchorPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+<StackPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="300.0" prefWidth="500.0" styleClass="stack-pane-root" stylesheets="@../css/InitScreenCss.css" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.InitScreenController">
+   <children>
+      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" styleClass="vbox-parent">
          <children>
-            <Label fx:id="welcomeLabel" layoutX="172.0" layoutY="141.0" text="Welcome" />
+            <Label fx:id="welcomeLabel" text="osu! Songs Collector">
+               <styleClass>
+                  <String fx:value="welcome-label" />
+                  <String fx:value="label-color" />
+               </styleClass>
+            </Label>
+            <Label text="By CookieHoodie">
+               <styleClass>
+                  <String fx:value="author-label" />
+                  <String fx:value="label-color" />
+               </styleClass></Label>
          </children>
-      </AnchorPane>
-   </center>
-</BorderPane>
+      </VBox>
+   </children>
+   <opaqueInsets>
+      <Insets />
+   </opaqueInsets>
+</StackPane>

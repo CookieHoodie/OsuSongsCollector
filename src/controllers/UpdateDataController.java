@@ -91,10 +91,13 @@ public class UpdateDataController extends LoadingDialogParentController {
 		});
 		
 		loadOsuDbTask.setOnFailed(e -> {
-			loadOsuDbTask.getException().printStackTrace();
-//			Alert alert = new Alert(AlertType.ERROR, "Failed to load osu!.db", ButtonType.OK);
-//			alert.showAndWait();
-			this.onFailedProceedAlert("Failed to load osu!.db. Proceed anyway?");
+			Throwable e1 = loadOsuDbTask.getException();
+			if (!(e1 instanceof InterruptedException)) {
+				e1.printStackTrace();
+	//			Alert alert = new Alert(AlertType.ERROR, "Failed to load osu!.db", ButtonType.OK);
+	//			alert.showAndWait();
+				this.onFailedProceedAlert("Failed to load osu!.db. Proceed anyway?");
+			}
 		});
 	}
 	
@@ -126,8 +129,10 @@ public class UpdateDataController extends LoadingDialogParentController {
 		
 		updateSongsDbTask.setOnFailed(e -> {
 			Throwable e1 = updateSongsDbTask.getException();
-			e1.printStackTrace();
-			this.onFailedProceedAlert("Failed to update songs data. Proceed anyway?");
+			if (!(e1 instanceof InterruptedException)) {
+				e1.printStackTrace();
+				this.onFailedProceedAlert("Failed to update songs data. Proceed anyway?");
+			}
 		});
 	}
 	
@@ -165,8 +170,10 @@ public class UpdateDataController extends LoadingDialogParentController {
 		
 		updateBeatmapDetailsTask.setOnFailed(e -> {
 			Throwable e1 = updateBeatmapDetailsTask.getException();
-			e1.printStackTrace();
-			this.onFailedProceedAlert("Failed to update beatmaps details. Proceed anyway?");
+			if (!(e1 instanceof InterruptedException)) {
+				e1.printStackTrace();
+				this.onFailedProceedAlert("Failed to update beatmaps details. Proceed anyway?");
+			}
 		});
 	}
 	

@@ -1,17 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" stylesheets="@../css/simpleDialogCss.css" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <center>
-      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+      <VBox alignment="CENTER" fillWidth="false" prefHeight="400.0" prefWidth="600.0" BorderPane.alignment="CENTER">
          <children>
-            <Label fx:id="instructionLabel" text="Label" />
-            <ProgressBar fx:id="progressBar" prefWidth="200.0" progress="0.0" />
+            <VBox alignment="CENTER" prefHeight="161.0" prefWidth="300.0" VBox.vgrow="NEVER">
+               <children>
+                  <Label fx:id="instructionLabel" text="Label" textAlignment="CENTER" wrapText="true">
+                     <VBox.margin>
+                        <Insets />
+                     </VBox.margin>
+                     <styleClass>
+                        <String fx:value="instruction-label" />
+                        <String fx:value="label-padding" />
+                     </styleClass>
+                  </Label>
+                  <ProgressBar fx:id="progressBar" prefHeight="34.0" prefWidth="200.0" styleClass="progress-bar-design" />
+               </children>
+               <styleClass>
+                  <String fx:value="white-rounded-container" />
+                  <String fx:value="container-heavy-dropshadow" />
+               </styleClass>
+            </VBox>
          </children>
       </VBox>
    </center>
+   <styleClass>
+      <String fx:value="root-pane" />
+      <String fx:value="image-pane" />
+   </styleClass>
 </BorderPane>
