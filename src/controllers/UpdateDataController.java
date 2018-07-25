@@ -94,8 +94,6 @@ public class UpdateDataController extends LoadingDialogParentController {
 			Throwable e1 = loadOsuDbTask.getException();
 			if (!(e1 instanceof InterruptedException)) {
 				e1.printStackTrace();
-	//			Alert alert = new Alert(AlertType.ERROR, "Failed to load osu!.db", ButtonType.OK);
-	//			alert.showAndWait();
 				this.onFailedProceedAlert("Failed to load osu!.db. Proceed anyway?");
 			}
 		});

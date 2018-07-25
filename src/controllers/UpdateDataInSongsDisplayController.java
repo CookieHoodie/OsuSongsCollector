@@ -31,9 +31,12 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 		});
 		
 		loadOsuDbTask.setOnFailed(e -> {
-			loadOsuDbTask.getException().printStackTrace();
-			Alert alert = new Alert(AlertType.ERROR, "Failed to load osu!.db", ButtonType.OK);
-			alert.showAndWait();
+			Throwable e1 = loadOsuDbTask.getException();
+			if (!(e1 instanceof InterruptedException)) {
+				e1.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Failed to load osu!.db", ButtonType.OK);
+				alert.showAndWait();
+			}
 		});
 	}
 	
@@ -45,9 +48,11 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 		
 		updateSongsDbTask.setOnFailed(e -> {
 			Throwable e1 = updateSongsDbTask.getException();
-			e1.printStackTrace();
-			Alert alert = new Alert(AlertType.ERROR, "Failed to update songs data.", ButtonType.OK);
-			alert.showAndWait();
+			if (!(e1 instanceof InterruptedException)) {
+				e1.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Failed to update songs data.", ButtonType.OK);
+				alert.showAndWait();
+			}
 		});
 	}
 	
@@ -60,9 +65,11 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 		
 		updateBeatmapDetailsTask.setOnFailed(e -> {
 			Throwable e1 = updateBeatmapDetailsTask.getException();
-			e1.printStackTrace();
-			Alert alert = new Alert(AlertType.ERROR, "Failed to update beatmaps details.", ButtonType.OK);
-			alert.showAndWait();
+			if (!(e1 instanceof InterruptedException)) {
+				e1.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "FFailed to update beatmaps details.", ButtonType.OK);
+				alert.showAndWait();
+			}
 		});
 	}
 	

@@ -58,6 +58,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.TilePane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -100,6 +101,7 @@ public class SaveToOptionController {
 	@FXML private TextField sampleTextField;
 	@FXML private Button duplicatedSongsCheckButton;
 	@FXML private Label warningLabel;
+	private Tooltip collisionTooltip;
 	
 	private Stage currentStage;
 	private SqliteDatabase songsDb;
@@ -128,6 +130,9 @@ public class SaveToOptionController {
 		this.warningLabel.setText("*Filename with only one attribute can result in numerous duplicates!");
 //		this.duplicatedSongsCheckButton.setTooltip(new Tooltip("Search for possible duplicated songs in the chosen songs list"
 //				+ " base on similar Artist, Title, and Length"));
+		this.collisionTooltip = new Tooltip("When Source is empty, Artist(Unicode) will be used instead and finally Artist if Unicode is also empty."
+				+ " This can result in filename with something like: 'ArtistName - ArtistName'.");
+		this.collisionTooltip.getStyleClass().add("tooltip-design");
 	}
 	
 	public void initData(Stage currentStage, SqliteDatabase songsDb, Map<String, List<TableViewData>> selectedSongsMap
@@ -232,8 +237,7 @@ public class SaveToOptionController {
 				 (prefix == ComboBoxChoice.ARTIST_NAME || prefix == ComboBoxChoice.ARTIST_NAME_UNICODE
 				|| suffix == ComboBoxChoice.ARTIST_NAME || suffix == ComboBoxChoice.ARTIST_NAME_UNICODE)) {
 			this.sampleTextField.setText("Possible attribute collision �");
-			this.sampleTextField.setTooltip(new Tooltip("When Source is empty, Artist(Unicode) will be used instead and finally Artist if Unicode is also empty."
-					+ " This can result in filename with something like: 'ArtistName - ArtistName'."));
+			this.sampleTextField.setTooltip(this.collisionTooltip);
 		}
 		else {
 			// either one is empty but not both
@@ -287,11 +291,12 @@ public class SaveToOptionController {
 		try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(getClass().getResource("/fxml/CopySongsView.fxml"));
-			BorderPane root = loader.load();
+			StackPane root = loader.load();
 			Scene scene = new Scene(root);
 			CopySongsController ctr = loader.<CopySongsController>getController();
 			ctr.initDataAndStart(this.currentStage, this.songsDb, selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix);
 			this.currentStage.setScene(scene);
+			this.currentStage.setResizable(true);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -415,7 +420,7 @@ public class SaveToOptionController {
 		dialogStage.initOwner(this.currentStage);
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/FilterDialogView.fxml"));
-		BorderPane root = loader.load();
+		StackPane root = loader.load();
 		Scene scene = new Scene(root);
 		FilterDialogController ctr = loader.<FilterDialogController>getController();
 		ctr.initData(this.selectedSongsMap, dialogObsList);

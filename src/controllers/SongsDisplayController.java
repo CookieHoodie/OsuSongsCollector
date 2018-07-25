@@ -22,6 +22,7 @@ import application.Comparators;
 import application.Main;
 import application.SqliteDatabase;
 import application.SqliteDatabase.TableData;
+import application.ViewLoader;
 import javafx.animation.PauseTransition;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -58,12 +59,17 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.effect.InnerShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.media.Media;
+import javafx.scene.media.MediaException;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
@@ -142,13 +148,23 @@ public class SongsDisplayController {
 //	private final String playButtonPauseText = "⏸";
 //	private final String shuffleButtonShuffleText = "🔀";
 //	private final String shuffleButtonRepeatText = "∞";
-	private final String speakerUTFIcon = "🔊";
-	private final String speakerMuteUTFIcon = "🔇";
-
+//	private final String speakerUTFIcon = "🔊";
+//	private final String speakerMuteUTFIcon = "🔇";
+	private final ImageView speakerIcon = new ImageView(new Image(getClass().getResourceAsStream("/resources/sound-on-icon2.png"), 24, 24, true, true));
+	private final ImageView speakerMuteIcon = new ImageView(new Image(getClass().getResourceAsStream("/resources/mute-icon2.png"), 24, 24, true, true));
 	
 	// and check the corresponding items in controller instead of fxml
 	// TODO: add rotating screen while changing view, searching, etc.
 	// TODO: allow user to select and copy words but not edit
+	
+	
+	// TODO: change help(?) logo to png and high resolution
+	// TODO: do alert css if possible
+	// TODO: change back the select listener to its original form (no selectedCounter)
+	// TODO: if nothing is selected, hide the buttons
+	// TODO: fill out the labels (name, currently visible, ...)
+	// TODO: remove and rename the icons png if still using those
+	
 	
 	@FXML private void initialize() {
 		this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
@@ -177,9 +193,9 @@ public class SongsDisplayController {
         	};
         });
         // for the sake of tooltip
-        Label totalTimeLabel = new Label("Length �");
-        totalTimeLabel.setTooltip(new Tooltip("This length corresponds to the length of beatmap in osu!. Real mp3 length may be longer than this."));
-        this.totalTimeCol.setGraphic(totalTimeLabel);
+//        Label totalTimeLabel = new Label("Length �");
+//        totalTimeLabel.setTooltip(new Tooltip("This length corresponds to the length of beatmap in osu!. Real mp3 length may be longer than this."));
+//        this.totalTimeCol.setGraphic(totalTimeLabel);
         this.checkBoxCol.setCellValueFactory(new PropertyValueFactory<TableViewData, Boolean>("isSelected"));
         this.checkBoxCol.setCellFactory(tc -> new CheckBoxTableCell<>());
 //        this.checkBoxCol.setCellFactory(tc -> new CustomCheckBoxCell());
@@ -189,8 +205,9 @@ public class SongsDisplayController {
         		@Override protected void updateItem(TableViewData item, boolean empty) {
         			super.updateItem(item, empty);
     				if (item != null && item.isDownloadedProperty().get()) {
-        				setStyle("-fx-background-color:#c0bcf2");
-        			}
+//    					setStyle("-fx-background-color: linear-gradient(to right, #20bdff, #a5fecb 1%, transparent 1%, transparent 99%, #a5fecb 99%, #20bdff);");
+    					setStyle("-fx-background-color: linear-gradient(to right, rgba(116, 235, 213, 0.2), rgba(165, 254, 203, 0.2) , transparent);");
+    				}
         			else {
         				setStyle("");
         			}
@@ -468,7 +485,8 @@ public class SongsDisplayController {
 		this.mediaPlayerVolumeSlider.setValue(soundVolume);
 		// default is not mute icon
 		if (Math.abs(soundVolume) < 0.01) {
-			this.mediaPlayerSpeakerLabel.setText(this.speakerMuteUTFIcon);
+//			this.mediaPlayerSpeakerLabel.setText(this.speakerMuteUTFIcon);
+			this.mediaPlayerSpeakerLabel.setGraphic(this.speakerIcon);
 		}
 		
 		this.mediaPlayerRepeatToggleButton.setSelected(isRepeatToggled);
@@ -519,10 +537,12 @@ public class SongsDisplayController {
         		double volume = this.mediaPlayerVolumeSlider.getValue() / 100.0;
         		this.mediaPlayer.setVolume(volume);
         		if (Math.abs(volume) < 0.01) {
-        			this.mediaPlayerSpeakerLabel.setText(this.speakerMuteUTFIcon);
+//        			this.mediaPlayerSpeakerLabel.setText(this.speakerMuteUTFIcon);
+        			this.mediaPlayerSpeakerLabel.setGraphic(this.speakerMuteIcon);
         		}
         		else {
-        			this.mediaPlayerSpeakerLabel.setText(this.speakerUTFIcon);
+//        			this.mediaPlayerSpeakerLabel.setText(this.speakerUTFIcon);
+        			this.mediaPlayerSpeakerLabel.setGraphic(this.speakerIcon);
         		}
         	}
         });
@@ -625,7 +645,15 @@ public class SongsDisplayController {
 	    	}
 			
 			// load next song
-			this.mediaPlayer = new MediaPlayer(new Media(mp3Path.toUri().toString()));
+			try {
+				this.mediaPlayer = new MediaPlayer(new Media(mp3Path.toUri().toString()));
+			}
+			catch (MediaException e) {
+				String errorMessage =  "Failed to play " + mp3Path.getFileName().toString() + " (probably due to unsupported format)";
+				Alert alert = new Alert(AlertType.ERROR, errorMessage, ButtonType.OK);
+				alert.showAndWait();
+				return;
+			}
 			// always set to repeat so that if shuffle is removed, it can repeat itself
 			this.mediaPlayer.setCycleCount(MediaPlayer.INDEFINITE);
 			// if repeat is not chosen, play next song when current song ends
@@ -752,6 +780,8 @@ public class SongsDisplayController {
 		
 		if (selectedSongsMap.size() == 0) {
 			Alert alert = new Alert(AlertType.INFORMATION, "No Song is chosen!", ButtonType.OK);
+//			alert.setHeaderText("No Song is chosen!");
+//			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 		else {
@@ -907,6 +937,7 @@ public class SongsDisplayController {
 	
 	private void loadUpdateDataView() throws IOException {
 		Stage updateDetailsStage = new Stage();
+		updateDetailsStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
 		UpdateDataInSongsDisplayController ctr = new UpdateDataInSongsDisplayController();
@@ -925,6 +956,7 @@ public class SongsDisplayController {
 	
 	private void loadSaveToOptionView(Map<String, List<TableViewData>> selectedSongsMap) throws SQLException, IOException {
 		Stage saveToOptionStage = new Stage();
+		saveToOptionStage.setResizable(false);
 		// pretty save to use this here as the new stage opened is not minimizable
 		// if that changes later, this must be changed as well
 		saveToOptionStage.showingProperty().addListener((obs, oldValue, newValue) -> {

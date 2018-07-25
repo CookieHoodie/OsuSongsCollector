@@ -48,12 +48,7 @@ public class Main extends Application {
 		// show the screen 1st, then start the checking progress
 		// and handle subsequent processes in the controllers
 		InitScreenController initScreenController = loader.<InitScreenController>getController();
-		// wait for at least one second
-		PauseTransition pause = new PauseTransition(Duration.millis(1000));
-    	pause.setOnFinished(e1 -> {
-    		initScreenController.startChecking();
-    	});
-    	pause.play();
+		initScreenController.startChecking();
 	}
 	
 	public static void main(String[] args) {

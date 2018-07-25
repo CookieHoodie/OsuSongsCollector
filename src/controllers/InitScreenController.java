@@ -5,13 +5,17 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.concurrent.Callable;
 
 import application.Main;
 import application.OsuDbParser;
 import application.SqliteDatabase;
 import application.ViewLoader;
+import javafx.animation.PauseTransition;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -21,9 +25,11 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 // TODO: at the end, ensure only one app can be opened at the same time. Otherwise racing condition can happen in SQL
 // TODO: change all the printStacks to logging
+// TODO: change all fxml api to get rid of warnings
 // TODO: refine all stage titles, description and variable names (including @FXML) before releasing
 
 public class InitScreenController {
@@ -105,8 +111,6 @@ public class InitScreenController {
 					catch (Exception e1) {
 						e1.printStackTrace();
 						this.displayAlertAndExit("Failed to load update screen");
-//						Alert alert = new Alert(AlertType.ERROR, "Failed to load update screen", ButtonType.OK);
-//						alert.showAndWait();
 					}
 				}
 			});
@@ -114,22 +118,23 @@ public class InitScreenController {
 			checkAllSetService.setOnFailed(e -> {
 				checkAllSetService.getException().printStackTrace();
 				this.displayAlertAndExit("Corrupted or interrupted when checking for songs added or deleted");
-//				Alert alert = new Alert(AlertType.ERROR, "Corrupted or interrupted when checking for songs added or deleted", ButtonType.OK);
-//				alert.showAndWait();
 			});
 			checkAllSetService.start();
 		}
 		// if not, prompt user for initialization
 		else {
-			try {
-				this.loadSetSongsFolderPathView();
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-				this.displayAlertAndExit("Failed to load initialization screen");
-//				Alert alert = new Alert(AlertType.ERROR, "Failed to load initialization screen", ButtonType.OK);
-//				alert.showAndWait();
-			}
+			// wait for at least one second for first time load
+			PauseTransition pause = new PauseTransition(Duration.millis(1000));
+	    	pause.setOnFinished(e1 -> {
+	    		try {
+	    			this.loadSetSongsFolderPathView();
+	    		}
+				catch (Exception e) {
+					e.printStackTrace();
+					this.displayAlertAndExit("Failed to load initialization screen");
+				}
+	    	});
+	    	pause.play();
 		}
 		
 	}
@@ -143,6 +148,7 @@ public class InitScreenController {
 	
 	private void loadSetSongsFolderPathView() throws IOException {
 		Stage setSongsFolderStage = new Stage();
+		setSongsFolderStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/SetSongsFolderPathView.fxml"));
 		BorderPane root = loader.load();
@@ -156,6 +162,7 @@ public class InitScreenController {
 	
 	private void loadUpdateDataView() throws IOException {
 		Stage updateDataStage = new Stage();
+		updateDataStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
 		UpdateDataController ctr = new UpdateDataController();

@@ -1,19 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.String?>
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.CopySongsController">
-   <center>
-      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
-         <children>
-            <ProgressBar fx:id="copyProgressBar" prefWidth="200.0" progress="0.0" />
-            <TextArea fx:id="copyDetailsTextArea" prefHeight="200.0" prefWidth="200.0" />
-            <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#stopCopying" text="Cancel" />
-         </children>
-      </VBox>
-   </center>
-</BorderPane>
+
+<StackPane xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.CopySongsController">
+   <children>
+      <StackPane prefHeight="150.0" prefWidth="200.0" styleClass="image-pane" />
+      <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
+         <top>
+            <ProgressBar fx:id="copyProgressBar" maxWidth="1.7976931348623157E308" prefHeight="30.0" prefWidth="200.0" BorderPane.alignment="CENTER_LEFT">
+               <BorderPane.margin>
+                  <Insets left="50.0" right="50.0" top="50.0" />
+               </BorderPane.margin>
+               <styleClass>
+                  <String fx:value="progress-bar-bar-color" />
+                  <String fx:value="transparent-progress-bar" />
+               </styleClass>
+            </ProgressBar>
+         </top>
+         <bottom>
+            <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#stopCopying" styleClass="button-design" text="Cancel" BorderPane.alignment="CENTER_RIGHT">
+               <BorderPane.margin>
+                  <Insets bottom="40.0" left="50.0" right="50.0" />
+               </BorderPane.margin>
+            </Button>
+         </bottom>
+         <center>
+            <TextArea fx:id="copyDetailsTextArea" editable="false" prefHeight="200.0" prefWidth="200.0" styleClass="text-area-design" BorderPane.alignment="CENTER">
+               <BorderPane.margin>
+                  <Insets bottom="20.0" left="50.0" right="50.0" top="20.0" />
+               </BorderPane.margin>
+            </TextArea>
+         </center>
+      </BorderPane>
+   </children>
+   <stylesheets>
+      <URL value="@../css/shared.css" />
+      <URL value="@../css/simpleDialog.css" />
+   </stylesheets>
+   <styleClass>
+      <String fx:value="root-pane" />
+      <String fx:value="bigger-font" />
+   </styleClass>
+</StackPane>

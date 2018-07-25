@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ButtonBar?>
@@ -8,40 +9,58 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.FilterDialogController">
-   <center>
-      <TableView fx:id="displayTable" editable="true" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-        <columns>
-          <TableColumn fx:id="nameCol" minWidth="20.0" prefWidth="350.0" sortable="false" text="Name" />
-          <TableColumn fx:id="totalTimeCol" prefWidth="100.0" sortable="false" />
-            <TableColumn fx:id="checkBoxCol" prefWidth="100.0" sortable="false" />
-        </columns>
-         <BorderPane.margin>
-            <Insets left="20.0" right="20.0" />
-         </BorderPane.margin>
-      </TableView>
-   </center>
-   <bottom>
-      <ButtonBar prefHeight="40.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-        <buttons>
-            <Button fx:id="selectOneFromEachButton" mnemonicParsing="false" onAction="#selectOneFromEach" text="Select one from each" ButtonBar.buttonData="LEFT" />
-            <Button fx:id="okButton" mnemonicParsing="false" onAction="#removeDuplicates" text="Ok" />
-          <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#closeWindow" text="Cancel" />
-        </buttons>
-         <BorderPane.margin>
-            <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
-         </BorderPane.margin>
-      </ButtonBar>
-   </bottom>
-   <top>
-      <HBox alignment="CENTER_LEFT" prefHeight="28.0" prefWidth="600.0" BorderPane.alignment="CENTER">
-         <children>
-            <Label alignment="CENTER" text="Unselected songs will be removed from the copy list" />
-         </children>
-         <BorderPane.margin>
-            <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
-         </BorderPane.margin>
-      </HBox>
-   </top>
-</BorderPane>
+
+<StackPane styleClass="root-pane" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.FilterDialogController">
+   <children>
+      <StackPane prefHeight="150.0" prefWidth="200.0" styleClass="image-pane" />
+      <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
+         <center>
+            <TableView fx:id="displayTable" editable="true" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+              <columns>
+                <TableColumn fx:id="nameCol" minWidth="20.0" prefWidth="310.0" sortable="false" text="Name" />
+                <TableColumn fx:id="totalTimeCol" prefWidth="100.0" sortable="false" />
+                  <TableColumn fx:id="checkBoxCol" prefWidth="100.0" sortable="false" />
+              </columns>
+               <BorderPane.margin>
+                  <Insets left="20.0" right="20.0" />
+               </BorderPane.margin>
+            </TableView>
+         </center>
+         <bottom>
+            <ButtonBar prefHeight="40.0" prefWidth="200.0" styleClass="top-bar" BorderPane.alignment="CENTER">
+              <buttons>
+                  <Button fx:id="selectOneFromEachButton" mnemonicParsing="false" onAction="#selectOneFromEach" styleClass="button-design" text="Select one from each" ButtonBar.buttonData="LEFT" />
+                  <Button fx:id="okButton" mnemonicParsing="false" onAction="#removeDuplicates" styleClass="button-design" text="Ok" />
+                <Button fx:id="cancelButton" cancelButton="true" mnemonicParsing="false" onAction="#closeWindow" styleClass="button-design" text="Cancel" />
+              </buttons>
+               <BorderPane.margin>
+                  <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+               </BorderPane.margin>
+               <padding>
+                  <Insets bottom="5.0" top="5.0" />
+               </padding>
+            </ButtonBar>
+         </bottom>
+         <top>
+            <HBox alignment="CENTER_LEFT" prefHeight="28.0" prefWidth="600.0" BorderPane.alignment="CENTER_LEFT">
+               <children>
+                  <Label alignment="CENTER" styleClass="top-bar" text="Unselected songs will be removed from the copy list" wrapText="true">
+                     <padding>
+                        <Insets bottom="5.0" top="5.0" />
+                     </padding>
+                  </Label>
+               </children>
+               <BorderPane.margin>
+                  <Insets bottom="10.0" left="20.0" right="20.0" top="10.0" />
+               </BorderPane.margin>
+            </HBox>
+         </top>
+      </BorderPane>
+   </children>
+   <stylesheets>
+      <URL value="@../css/shared.css" />
+      <URL value="@../css/songsDisplay.css" />
+   </stylesheets>
+</StackPane>
