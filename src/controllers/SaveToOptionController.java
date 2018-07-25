@@ -23,6 +23,7 @@ import application.Comparators;
 import application.Main;
 import application.OsuDbParser;
 import application.SqliteDatabase;
+import application.ViewLoader;
 import controllers.FilterDialogController.SimplifiedTableViewData;
 import controllers.SongsDisplayController.TableViewData;
 import javafx.application.Platform;
@@ -281,6 +282,7 @@ public class SaveToOptionController {
 		catch (Exception e) {
 			e.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to remember chosen path", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.show();
 		}
 		
@@ -301,6 +303,7 @@ public class SaveToOptionController {
 		catch (Exception e) {
 			e.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load copy songs screen", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 	}
@@ -387,6 +390,7 @@ public class SaveToOptionController {
 		
 		if (dialogObsList.isEmpty()) {
 			Alert alert = new Alert(AlertType.INFORMATION, "No possible duplicate is found!", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 		else {
@@ -397,6 +401,7 @@ public class SaveToOptionController {
 			} catch (Exception e) {
 				e.printStackTrace();
 				Alert alert = new Alert(AlertType.ERROR, "Failed to load duplicate check screen", ButtonType.OK);
+				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}
 		}

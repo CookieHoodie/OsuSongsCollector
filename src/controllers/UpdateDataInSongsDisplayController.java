@@ -2,6 +2,7 @@ package controllers;
 
 import application.OsuDbParser;
 import application.SqliteDatabase;
+import application.ViewLoader;
 import javafx.animation.PauseTransition;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
@@ -35,6 +36,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			if (!(e1 instanceof InterruptedException)) {
 				e1.printStackTrace();
 				Alert alert = new Alert(AlertType.ERROR, "Failed to load osu!.db", ButtonType.OK);
+				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}
 		});
@@ -51,6 +53,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			if (!(e1 instanceof InterruptedException)) {
 				e1.printStackTrace();
 				Alert alert = new Alert(AlertType.ERROR, "Failed to update songs data.", ButtonType.OK);
+				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}
 		});
@@ -68,6 +71,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			if (!(e1 instanceof InterruptedException)) {
 				e1.printStackTrace();
 				Alert alert = new Alert(AlertType.ERROR, "FFailed to update beatmaps details.", ButtonType.OK);
+				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}
 		});
@@ -78,6 +82,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			String message = "Data is successfully updated. Restarting the program is required to take effect. Restart now?"
 					+ " (data may be inconsistent if you proceed without restarting)";
 			Alert alert = new Alert(AlertType.INFORMATION, message, ButtonType.YES, ButtonType.NO);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait().ifPresent(response -> {
 				if (response == ButtonType.YES) {
 					this.currentStage.hide();
@@ -90,6 +95,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 		}
 		else {
 			Alert alert = new Alert(AlertType.INFORMATION, "Data is already up-to-date!", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 			this.currentStage.hide();
 		}

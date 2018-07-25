@@ -651,6 +651,7 @@ public class SongsDisplayController {
 			catch (MediaException e) {
 				String errorMessage =  "Failed to play " + mp3Path.getFileName().toString() + " (probably due to unsupported format)";
 				Alert alert = new Alert(AlertType.ERROR, errorMessage, ButtonType.OK);
+				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 				return;
 			}
@@ -685,6 +686,7 @@ public class SongsDisplayController {
 			// TODO: after deciding the final name for the 'check for new songs', change this warning messsage!
 			String errorMessage =  mp3Path.toString() + " is not found! Data is likely to be outdated. Try to check for new songs.";
 			Alert alert = new Alert(AlertType.ERROR, errorMessage, ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 	}
@@ -780,8 +782,7 @@ public class SongsDisplayController {
 		
 		if (selectedSongsMap.size() == 0) {
 			Alert alert = new Alert(AlertType.INFORMATION, "No Song is chosen!", ButtonType.OK);
-//			alert.setHeaderText("No Song is chosen!");
-//			ViewLoader.addStyleToAlert(alert);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 		else {
@@ -790,6 +791,7 @@ public class SongsDisplayController {
 			if (containCopiedSongs) {
 				String warningText = "One or more copied songs are found in your copy list. Are you sure you want to proceed to copy those songs again? (This will result in duplicated songs in the same folder)";
 				Alert duplicatedAlert = new Alert(AlertType.WARNING, warningText, ButtonType.YES, ButtonType.NO);
+				ViewLoader.addStyleToAlert(duplicatedAlert);
 				Optional<ButtonType> result = duplicatedAlert.showAndWait();
 				if (result.isPresent() && result.get() == ButtonType.NO) {
 				    proceed = false;
@@ -803,11 +805,13 @@ public class SongsDisplayController {
 				catch (SQLException e) {
 					e.printStackTrace();
 					Alert alert = new Alert(AlertType.ERROR, "Error getting data from songs.db", ButtonType.OK);
+					ViewLoader.addStyleToAlert(alert);
 					alert.showAndWait();
 				}
 				catch (Exception e) {
 					e.printStackTrace();
 					Alert alert = new Alert(AlertType.ERROR, "Failed to load copy option screen", ButtonType.OK);
+					ViewLoader.addStyleToAlert(alert);
 					alert.showAndWait();
 				}
 			}
@@ -850,6 +854,7 @@ public class SongsDisplayController {
 		catch (SQLException e) {
 			e.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to update hidden preference in songs.db", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 		finally {
@@ -897,6 +902,7 @@ public class SongsDisplayController {
 		String warning = "Are you sure you want to reset all data? All stored data such as copied songs, hidden songs, chosen path, and preferences"
 				+ " will be lost! (Application will be restarted after reset)";
 		Alert alert = new Alert(AlertType.WARNING, warning, ButtonType.YES, ButtonType.NO);
+		ViewLoader.addStyleToAlert(alert);
 		alert.showAndWait().ifPresent(response -> {
 			if (response == ButtonType.YES) {
 				this.restartProgram(true);
@@ -920,6 +926,7 @@ public class SongsDisplayController {
 		catch (Exception e) {
 			e.printStackTrace();
 			Alert restartAlert = new Alert(AlertType.ERROR, "Failed to restart", ButtonType.OK);
+			ViewLoader.addStyleToAlert(restartAlert);
 			restartAlert.showAndWait();
 		}
 	}
@@ -931,6 +938,7 @@ public class SongsDisplayController {
 		catch (Exception e) {
 			e.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load update view", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 	}

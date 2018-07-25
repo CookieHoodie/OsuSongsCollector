@@ -1,6 +1,7 @@
 package controllers;
 
 import application.Main;
+import application.ViewLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,6 +78,7 @@ public class SetSongsFolderPathController {
 		catch (IOException e) {
 			e.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load setup screen", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 	}

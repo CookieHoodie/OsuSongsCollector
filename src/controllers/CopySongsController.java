@@ -12,6 +12,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import application.SqliteDatabase;
+import application.ViewLoader;
 import controllers.SaveToOptionController.ComboBoxChoice;
 import controllers.SongsDisplayController.TableViewData;
 import javafx.animation.AnimationTimer;
@@ -68,6 +69,7 @@ public class CopySongsController {
 			this.cancelButton.setDisable(true);
 			copySongsTask.getException().printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Error occured while copying songs: " + copySongsTask.getException().getMessage(), ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		});
 		new Thread(copySongsTask).start();
@@ -80,6 +82,7 @@ public class CopySongsController {
 	
 	private void cancelTaskAlert() {
 		Alert alert = new Alert(AlertType.WARNING, "Are you sure you want to cancel copying?", ButtonType.YES, ButtonType.NO);
+		ViewLoader.addStyleToAlert(alert);
 		alert.showAndWait().ifPresent(response -> {
 			if (response == ButtonType.YES) {
 				this.copySongsTask.cancel();

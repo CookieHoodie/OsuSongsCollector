@@ -9,11 +9,16 @@ import controllers.UpdateDataController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.control.DialogPane;
+import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 
 // class for reuse purpose. Loaders which only associate with one controller (ie. no repeated code) are not included here
@@ -37,7 +42,12 @@ public class ViewLoader {
 	
 	public static void addStyleToAlert(Alert alert) {
 		DialogPane dialogPane = alert.getDialogPane();
-		dialogPane.getStylesheets().add(ViewLoader.class.getResource("/css/alert.css").toExternalForm());
-		dialogPane.getStyleClass().add("dialog-root");
+		dialogPane.getStylesheets().addAll(ViewLoader.class.getResource("/css/shared.css").toExternalForm(),
+				ViewLoader.class.getResource("/css/simpleDialog.css").toExternalForm());
+		dialogPane.getStyleClass().addAll("root-pane", "bigger-font");
+		Label headerLabel = (Label) ((GridPane) dialogPane.getChildren().get(0)).getChildren().get(0);
+		headerLabel.getStyleClass().add("instruction-label");
+		ButtonBar buttonBar = (ButtonBar) dialogPane.getChildren().get(2);
+		buttonBar.getButtons().forEach(button -> button.getStyleClass().add("button-design"));
 	}
 }

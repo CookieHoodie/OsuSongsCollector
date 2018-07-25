@@ -30,6 +30,7 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 		currentStage.setOnCloseRequest(e -> {
 			// show alert to user to reconfirm exit
 			Alert alert = new Alert(AlertType.WARNING, "Unexpected results can happen if the window is closed now. Close anyway?", ButtonType.YES, ButtonType.NO);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait().ifPresent(response -> {
 				if (response == ButtonType.YES) {
 					this.exec.shutdownNow();
@@ -39,6 +40,7 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 						e1.printStackTrace();
 						// TODO: show more specific instructions when this happen
 						Alert corruptionAlert = new Alert(AlertType.ERROR, "Program is interrupted without cleaning up while initializing. Relevant files might be corrupted. Consider Reset All to repair.", ButtonType.OK);
+						ViewLoader.addStyleToAlert(corruptionAlert);
 						corruptionAlert.show();
 					}
 				}
@@ -81,10 +83,12 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 			e.printStackTrace();
 			if (e instanceof FileNotFoundException) {
 				Alert alert = new Alert(AlertType.ERROR, "osu!.db is not found. Please make sure the folder chosen is correct!", ButtonType.OK);
+				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}
 			else {
 				Alert alert = new Alert(AlertType.ERROR, "Error loading osu!.db or interrupted", ButtonType.OK);
+				ViewLoader.addStyleToAlert(alert);
 				alert.show();
 			}
 		});
@@ -105,6 +109,7 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 		createSongsDbTask.setOnFailed(event -> {
 			createSongsDbTask.getException().printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to store data from osu!.db", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		});
 		
@@ -122,11 +127,13 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
         		catch (SQLException e1) {
     				e1.printStackTrace();
     				Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
+    				ViewLoader.addStyleToAlert(alert);
     				alert.showAndWait();
     			}
         		catch (IOException e1) {
     				e1.printStackTrace();
     				Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
+    				ViewLoader.addStyleToAlert(alert);
     				alert.showAndWait();
     			} 
         	});

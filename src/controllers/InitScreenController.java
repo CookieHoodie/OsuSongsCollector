@@ -141,6 +141,7 @@ public class InitScreenController {
 	
 	private void displayAlertAndExit(String message) {
 		Alert alert = new Alert(AlertType.ERROR, message, ButtonType.OK);
+		ViewLoader.addStyleToAlert(alert);
 		alert.showAndWait();
 		Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
 		currentStage.hide();

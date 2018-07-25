@@ -40,6 +40,7 @@ public class UpdateDataController extends LoadingDialogParentController {
 		this.pathToSongsFolder = pathToSongsFolder;
 		currentStage.setOnCloseRequest(e -> {
 			Alert closeAlert = new Alert(AlertType.WARNING, "Closing now may cause inconsistency in songs data. Close anyway?", ButtonType.YES, ButtonType.NO);
+			ViewLoader.addStyleToAlert(closeAlert);
 			closeAlert.showAndWait().ifPresent(response -> {
 				if (response == ButtonType.YES) {
 					this.exec.shutdownNow();
@@ -50,6 +51,7 @@ public class UpdateDataController extends LoadingDialogParentController {
 						e1.printStackTrace();
 						// TODO: show more specific instructions when this happen
 						Alert alert = new Alert(AlertType.ERROR, "Program is interrupted while updating data without cleaning up. Relevant files might be corrupted. Consider Reset All to repair.", ButtonType.OK);
+						ViewLoader.addStyleToAlert(alert);
 						alert.show();
 					}
 				}
@@ -186,16 +188,19 @@ public class UpdateDataController extends LoadingDialogParentController {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		} catch (SQLException e1) {
 			e1.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 	}
 	
 	private void onFailedProceedAlert(String message) {
 		Alert alert = new Alert(AlertType.ERROR, message, ButtonType.YES, ButtonType.NO);
+		ViewLoader.addStyleToAlert(alert);
 		alert.showAndWait().ifPresent(response -> {
 			if (response == ButtonType.YES) {
 				this.loadSongDisplayViewWrapperForTaskEvent(this.songsDb);
