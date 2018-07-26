@@ -7,10 +7,12 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
-
 
 <StackPane styleClass="root-pane" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.FilterDialogController">
    <children>
@@ -20,7 +22,21 @@
             <TableView fx:id="displayTable" editable="true" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
               <columns>
                 <TableColumn fx:id="nameCol" minWidth="20.0" prefWidth="310.0" sortable="false" text="Name" />
-                <TableColumn fx:id="totalTimeCol" prefWidth="100.0" sortable="false" />
+                <TableColumn fx:id="totalTimeCol" prefWidth="100.0" sortable="false">
+                     <graphic>
+                        <Label contentDisplay="RIGHT" text="Length">
+                           <graphic>
+                              <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                                 <image>
+                                    <Image url="@../resources/help-icon.png" />
+                                 </image>
+                              </ImageView>
+                           </graphic>
+                           <tooltip>
+                              <Tooltip styleClass="tooltip-design" text="This length corresponds to the length of beatmap in osu!. Real mp3 length may be longer than this." />
+                           </tooltip>
+                        </Label>
+                     </graphic></TableColumn>
                   <TableColumn fx:id="checkBoxCol" prefWidth="100.0" sortable="false" />
               </columns>
                <BorderPane.margin>
