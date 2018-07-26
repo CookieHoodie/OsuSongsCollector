@@ -174,7 +174,7 @@ public class UpdateDataController extends LoadingDialogParentController {
 	private void loadSongDisplayViewWrapperForTaskEvent(SqliteDatabase songsDb) {
 		try {
 			Stage currentStage = (Stage) this.instructionLabel.getScene().getWindow();
-			ViewLoader.loadNewSongsDisplayView(currentStage, songsDb);
+			ViewLoader.loadNewSongsDisplayView(currentStage, songsDb, this.hostServices);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load display window", ButtonType.OK);

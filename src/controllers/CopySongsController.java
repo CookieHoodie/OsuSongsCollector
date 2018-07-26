@@ -11,11 +11,13 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import application.Constants;
 import application.SqliteDatabase;
 import application.ViewLoader;
 import controllers.SaveToOptionController.ComboBoxChoice;
 import controllers.SongsDisplayController.TableViewData;
 import javafx.animation.AnimationTimer;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
@@ -29,8 +31,14 @@ import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
 
 public class CopySongsController {
+	private HostServices hostServices;
+	public void setHostServices(HostServices hostServices) {
+		this.hostServices = hostServices;
+	}
+	
 	@FXML private ProgressBar copyProgressBar;
 	@FXML private TextArea copyDetailsTextArea;
+	@FXML private Button donateButton;
 	@FXML private Button cancelButton;
 	
 	private Task<Void> copySongsTask;
@@ -69,6 +77,10 @@ public class CopySongsController {
 			alert.showAndWait();
 		});
 		new Thread(copySongsTask).start();
+	}
+	
+	@FXML private void openDonateLink(ActionEvent event) {
+		this.hostServices.showDocument(Constants.DONATE_LINK);
 	}
 	
 	// cancelButton

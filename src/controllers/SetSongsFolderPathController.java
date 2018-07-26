@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 
+import application.Constants;
 import application.Main;
 import application.ViewLoader;
+import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -28,6 +30,11 @@ public class SetSongsFolderPathController {
 	
 	private String fullPathToOsuDb;
 	private String pathToSongsFolder;
+	private HostServices hostServices;
+	
+	public void setHostServices(HostServices hostServices) {
+		this.hostServices = hostServices;
+	}
 	
 	// choosePathButton pressed
 	@FXML
@@ -43,8 +50,8 @@ public class SetSongsFolderPathController {
         }
         else {
         	if (fileIsValid(selectedFile.getName())) {
-        		this.pathToSongsFolder = Paths.get(selectedFile.getParent(), Main.SONGS_FOLDER).toString();
-        		this.fullPathToOsuDb = Paths.get(selectedFile.getParent(), Main.OSU_DB_NAME).toString();
+        		this.pathToSongsFolder = Paths.get(selectedFile.getParent(), Constants.SONGS_FOLDER).toString();
+        		this.fullPathToOsuDb = Paths.get(selectedFile.getParent(), Constants.OSU_DB_NAME).toString();
         		this.chosenPathTextField.setText(selectedFile.getAbsolutePath());
         		this.continueButton.setDisable(false);
         		this.continueButton.requestFocus();
@@ -66,6 +73,7 @@ public class SetSongsFolderPathController {
 			BorderPane root = loader.load();
 			Scene scene = new Scene(root);
 			Stage currentStage = (Stage) this.continueButton.getScene().getWindow();
+			ctr.setHostServices(this.hostServices);
 			ctr.initDataAndStart(currentStage, this.fullPathToOsuDb, this.pathToSongsFolder);
 			currentStage.setScene(scene);
 		}
@@ -78,6 +86,6 @@ public class SetSongsFolderPathController {
 	}
 	
 	private boolean fileIsValid(String filename) {
-		return filename.equals(Main.OSU_EXE);
+		return filename.equals(Constants.OSU_EXE);
 	}
 }

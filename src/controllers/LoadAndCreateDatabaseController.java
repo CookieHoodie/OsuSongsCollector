@@ -4,11 +4,13 @@ import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 
+import application.Constants;
 import application.Main;
 import application.OsuDbParser;
 import application.SqliteDatabase;
 import application.ViewLoader;
 import javafx.animation.PauseTransition;
+import javafx.application.HostServices;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -20,7 +22,6 @@ import javafx.util.Duration;
 public class LoadAndCreateDatabaseController extends LoadingDialogParentController {
 	private String fullPathToOsuDb;
 	private String pathToSongsFolder;
-	
 	
 	public void initDataAndStart(Stage currentStage, String fullPathToOsuDb, String pathToSongsFolder) {
 		this.fullPathToOsuDb = fullPathToOsuDb;
@@ -56,7 +57,7 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 			@Override
 			protected SqliteDatabase call() throws Exception {
 				updateProgress(0, 1);
-				SqliteDatabase songsDb = new SqliteDatabase(Main.DB_NAME);
+				SqliteDatabase songsDb = new SqliteDatabase(Constants.DB_NAME);
 				songsDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork));
 				songsDb.createDatabase();
 				songsDb.createTables();
@@ -121,7 +122,7 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
         		SqliteDatabase songsDb = createSongsDbTask.getValue();
         		try {
         			Stage currentStage = (Stage) this.instructionLabel.getScene().getWindow();
-        			ViewLoader.loadNewSongsDisplayView(currentStage, songsDb);
+        			ViewLoader.loadNewSongsDisplayView(currentStage, songsDb, this.hostServices);
     			}
         		catch (SQLException e1) {
     				e1.printStackTrace();

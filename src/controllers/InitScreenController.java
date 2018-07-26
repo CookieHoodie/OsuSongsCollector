@@ -4,11 +4,13 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import application.Constants;
 import application.Main;
 import application.OsuDbParser;
 import application.SqliteDatabase;
 import application.ViewLoader;
 import javafx.animation.PauseTransition;
+import javafx.application.HostServices;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
@@ -32,6 +34,11 @@ public class InitScreenController {
 	private SqliteDatabase songsDb;
 	private String pathToOsuDb;
 	private String pathToSongsFolder;
+	private HostServices hostServices;
+	
+	public void setHostServices(HostServices hostServices) {
+		this.hostServices = hostServices;
+	}
 	
 	private class CheckOsuDbUpdateService extends Service<Boolean> {
 		@Override
@@ -72,7 +79,7 @@ public class InitScreenController {
 	
 	public void startChecking() {
 		// 1st quick check if songs db is ald created (not created means 1st time use)
-		this.songsDb = new SqliteDatabase(Main.DB_NAME);
+		this.songsDb = new SqliteDatabase(Constants.DB_NAME);
 		// if db exists, check for any new songs or deleted songs
 		if (songsDb.isDbExist()) {
 			CheckOsuDbUpdateService checkAllSetService = new CheckOsuDbUpdateService();
@@ -81,7 +88,7 @@ public class InitScreenController {
 				if (isUpToDate) {
 					try {
 						Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
-						ViewLoader.loadNewSongsDisplayView(currentStage, this.songsDb);
+						ViewLoader.loadNewSongsDisplayView(currentStage, this.songsDb, this.hostServices);
 					}
 					catch (SQLException e1) {
 						// this exception comes from initTableData method for populating the tableView
@@ -143,6 +150,8 @@ public class InitScreenController {
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/SetSongsFolderPathView.fxml"));
 		BorderPane root = loader.load();
+		SetSongsFolderPathController setSongsFolderPathController = loader.<SetSongsFolderPathController>getController();
+		setSongsFolderPathController.setHostServices(this.hostServices);
 		Scene scene = new Scene(root);
 		Stage primaryStage = (Stage) this.welcomeLabel.getScene().getWindow();
 		setSongsFolderStage.setTitle(primaryStage.getTitle());
@@ -165,6 +174,7 @@ public class InitScreenController {
 		
 		updateDataStage.setScene(scene);
 		// the last two paths must have already initialized to come to here
+		ctr.setHostServices(this.hostServices);
 		ctr.initDataAndStart(updateDataStage, this.songsDb, this.pathToOsuDb, this.pathToSongsFolder);
 		updateDataStage.setScene(scene);
 		updateDataStage.show();

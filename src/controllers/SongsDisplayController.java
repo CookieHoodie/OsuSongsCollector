@@ -18,10 +18,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import application.Comparators;
+import application.Constants;
 import application.Main;
 import application.SqliteDatabase;
 import application.ViewLoader;
 import javafx.animation.PauseTransition;
+import javafx.application.HostServices;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -46,6 +48,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
@@ -74,6 +77,10 @@ import javafx.util.Callback;
 import javafx.util.Duration;
 
 public class SongsDisplayController {
+	private HostServices hostServices;
+	public void setHostServices(HostServices hostServices) {
+		this.hostServices = hostServices;
+	}
 	private SqliteDatabase songsDb;
 	private Stage currentStage;
 	private ObservableList<TableViewData> initSongsObsList;
@@ -123,7 +130,8 @@ public class SongsDisplayController {
 	@FXML private RadioMenuItem downloadedSongsRadioMenuItemInDisplayMenu;
 	
 	@FXML private Menu helpMenu;
-	@FXML private MenuItem aboutHelpMenuItem;
+	@FXML private MenuItem donateMenuItemInHelpMenu;
+	@FXML private MenuItem imageMenuItemInHelpMenu;
 	
 	@FXML private Label mediaPlayerTitleLabel;
 	@FXML private Button mediaPlayerPlayButton;
@@ -136,6 +144,8 @@ public class SongsDisplayController {
 	@FXML private Slider mediaPlayerTimeSlider;
 	@FXML private ToggleButton mediaPlayerRepeatToggleButton;
 	@FXML private ToggleButton mediaPlayerShuffleToggleButton;
+	
+	@FXML private Hyperlink donateHyperlink;
 	
 	private final String numOfSelectedSongsLabelText = "Selected: ";
 	private final String totalSongsLabelText = "Total songs: ";
@@ -866,9 +876,10 @@ public class SongsDisplayController {
 		}
 	}
 	
+	// display menu radioMenuItem 
 	@FXML private void displaySongs(ActionEvent event) {
 		this.searchBar.clear();
-		
+
 		if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
 			this.hideUnhideButton.setText("Hide");
 			this.isDownloadedShowCheckMenuItem.setVisible(true);
@@ -900,6 +911,15 @@ public class SongsDisplayController {
 		});
 	}
 	
+	@FXML private void openDonateLink(ActionEvent event) {
+		this.hostServices.showDocument(Constants.DONATE_LINK);
+	}
+	
+	@FXML private void openImageLink(ActionEvent event) {
+		this.hostServices.showDocument(Constants.IMAGE_LINK);
+	}
+	
+	// file menu exit menuitem
 	@FXML private void exit(ActionEvent event) {
 		this.currentStage.fireEvent(new WindowEvent(this.currentStage, WindowEvent.WINDOW_CLOSE_REQUEST));
 	}
@@ -977,6 +997,7 @@ public class SongsDisplayController {
 		saveToOptionStage.initModality(Modality.WINDOW_MODAL);
 		saveToOptionStage.initOwner(this.currentStage);
 		saveToOptionStage.setScene(scene);
+		ctr.setHostServices(this.hostServices);
 		ctr.initData(saveToOptionStage, this.songsDb, selectedSongsMap, this.artistNameUnicodeCol.isVisible(), this.songTitleUnicodeCol.isVisible());
 		saveToOptionStage.show();
 	}

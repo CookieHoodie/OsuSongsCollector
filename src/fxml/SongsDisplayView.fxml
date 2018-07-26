@@ -6,6 +6,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
@@ -189,7 +190,7 @@
                   </TableView>
                </children>
                <BorderPane.margin>
-                  <Insets bottom="17.0" left="17.0" right="17.0" top="17.0" />
+                  <Insets left="17.0" right="17.0" top="17.0" />
                </BorderPane.margin>
             </VBox>
          </center>
@@ -232,12 +233,33 @@
                   </Menu>
                 <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
                   <items>
-                    <MenuItem fx:id="aboutHelpMenuItem" mnemonicParsing="false" text="About" />
+                        <MenuItem mnemonicParsing="false" text="How to use" />
+                        <MenuItem fx:id="imageMenuItemInHelpMenu" mnemonicParsing="false" onAction="#openImageLink" text="Background image source (Anmi)" />
+                        <MenuItem fx:id="donateButtonInHelpMenu" mnemonicParsing="false" onAction="#openDonateLink" text="Donate" />
                   </items>
                 </Menu>
               </menus>
             </MenuBar>
          </top>
+         <bottom>
+            <HBox alignment="CENTER" BorderPane.alignment="CENTER">
+               <children>
+                  <Hyperlink onAction="#openImageLink" text="Background image by Anmi (Pixiv)">
+                     <HBox.margin>
+                        <Insets right="10.0" />
+                     </HBox.margin>
+                  </Hyperlink>
+                  <Hyperlink fx:id="donateHyperlink" onAction="#openDonateLink" text="Donate to support this program">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </Hyperlink>
+               </children>
+               <BorderPane.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </BorderPane.margin>
+            </HBox>
+         </bottom>
       </BorderPane>
    </children>
    <stylesheets>

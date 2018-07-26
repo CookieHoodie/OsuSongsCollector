@@ -16,6 +16,7 @@ import application.SqliteDatabase;
 import application.ViewLoader;
 import controllers.FilterDialogController.SimplifiedTableViewData;
 import controllers.SongsDisplayController.TableViewData;
+import javafx.application.HostServices;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -37,6 +38,11 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class SaveToOptionController {
+	private HostServices hostServices;
+	public void setHostServices(HostServices hostServices) {
+		this.hostServices = hostServices;
+	}
+	
 	public enum ComboBoxChoice {
 		NONE("None", ""),
 		SONG_SOURCE("Source", "やはり俺の青春ラブコメはまちがっている。続"),
@@ -258,6 +264,7 @@ public class SaveToOptionController {
 			StackPane root = loader.load();
 			Scene scene = new Scene(root);
 			CopySongsController ctr = loader.<CopySongsController>getController();
+			ctr.setHostServices(this.hostServices);
 			ctr.initDataAndStart(this.currentStage, this.songsDb, selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix);
 			this.currentStage.setTitle("Collect songs");
 			this.currentStage.setScene(scene);

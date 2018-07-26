@@ -15,12 +15,12 @@ import javafx.stage.StageStyle;
 
 public class Main extends Application {
 	// centralized constants
-	public static final String OSU_EXE = "osu!.exe";
-	public static final String DB_NAME = "songs.db";
-	public static final String OSU_DB_NAME = "osu! - Copy.db";
-	public static final String SONGS_FOLDER = "Songs";
+//	public static final String OSU_EXE = "osu!.exe";
+//	public static final String DB_NAME = "songs.db";
+//	public static final String OSU_DB_NAME = "osu! - Copy.db";
+//	public static final String SONGS_FOLDER = "Songs";
 	
-	// TODO: change OSU_DB_NAME
+	// TODO: change OSU_DB_NAME, and move all these to corresponding controllers instead of static
 	
 	@Override
 	public void start(Stage primaryStage) {
@@ -37,6 +37,7 @@ public class Main extends Application {
 			// show the screen 1st, then start the checking progress
 			// and handle subsequent processes in the controllers
 			InitScreenController initScreenController = loader.<InitScreenController>getController();
+			initScreenController.setHostServices(getHostServices());
 			initScreenController.startChecking();
 		}
 		catch (Exception e) {

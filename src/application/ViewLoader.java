@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 import controllers.SongsDisplayController;
+import javafx.application.HostServices;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -18,7 +19,7 @@ import javafx.stage.Stage;
 // class for reuse purpose. Loaders which only associate with one controller (ie. no repeated code) are not included here
 public class ViewLoader {
 	// hide currentStage and open up new SongsDisplay stage, setting title, starting music by default
-	public static void loadNewSongsDisplayView(Stage currentStage, SqliteDatabase connectedSongsDb) throws SQLException, IOException {
+	public static void loadNewSongsDisplayView(Stage currentStage, SqliteDatabase connectedSongsDb, HostServices hostServices) throws SQLException, IOException {
 		Stage songsDisplayStage = new Stage();
 		songsDisplayStage.setTitle("osu! Songs Collector");
 		FXMLLoader loader = new FXMLLoader();
@@ -28,6 +29,7 @@ public class ViewLoader {
 		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
 		
 		songsDisplayStage.setScene(scene);
+		ctr.setHostServices(hostServices);
 		ctr.initData(songsDisplayStage, connectedSongsDb);
 		songsDisplayStage.show();
 		ctr.startMusic(); 
