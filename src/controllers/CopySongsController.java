@@ -21,12 +21,12 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
-import javafx.scene.control.Alert.AlertType;
 
 public class CopySongsController {
 	@FXML private ProgressBar copyProgressBar;
@@ -53,22 +53,18 @@ public class CopySongsController {
 	
 	private void startCopying() {
 		this.copyProgressBar.progressProperty().bind(this.copySongsTask.progressProperty());
-		copySongsTask.messageProperty().addListener((obs, oldValue, newValue) -> {
-			this.copyDetailsTextArea.appendText(newValue + "\n");
-		});
 		
 		copySongsTask.setOnCancelled(e -> {
 			this.copyDetailsTextArea.appendText("Cancelling. Waiting for the last song to finish...\n");
 			this.cancelButton.setDisable(true);
 		});
 		copySongsTask.setOnSucceeded(e -> {
-//			this.copyDetailsTextArea.appendText("Finish!");
 			this.cancelButton.setDisable(true);
 		});
 		copySongsTask.setOnFailed(e -> {
 			this.cancelButton.setDisable(true);
 			copySongsTask.getException().printStackTrace();
-			Alert alert = new Alert(AlertType.ERROR, "Error occured while copying songs: " + copySongsTask.getException().getMessage(), ButtonType.OK);
+			Alert alert = new Alert(AlertType.ERROR, "Error occured while collecting songs: " + copySongsTask.getException().getMessage(), ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		});
@@ -81,7 +77,7 @@ public class CopySongsController {
 	}
 	
 	private void cancelTaskAlert() {
-		Alert alert = new Alert(AlertType.WARNING, "Are you sure you want to cancel copying?", ButtonType.YES, ButtonType.NO);
+		Alert alert = new Alert(AlertType.WARNING, "Are you sure you want to cancel collecting?", ButtonType.YES, ButtonType.NO);
 		ViewLoader.addStyleToAlert(alert);
 		alert.showAndWait().ifPresent(response -> {
 			if (response == ButtonType.YES) {
@@ -269,11 +265,11 @@ public class CopySongsController {
 						this.putMessageToQueue("(" + (i+1) + "/" + totalProgress + ") " + fileName);
 					}
 					else {
-						this.putMessageToQueue(i + " songs are copied, " + (totalProgress - i) + " are cancelled.");
+						this.putMessageToQueue(i + " songs are collected, " + (totalProgress - i) + " are cancelled.");
 						break;
 					}
 				}
-				this.putMessageToQueue("Updating copied songs data... Please don't close the window!");
+				this.putMessageToQueue("Updating collected songs data... Please don't close the window!");
 				updateBeatmapSetBooleanPStatement.executeBatch();
 				songsDb.getConn().commit();
 			}

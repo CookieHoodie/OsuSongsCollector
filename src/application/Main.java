@@ -1,30 +1,16 @@
 package application;
 	
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 import controllers.InitScreenController;
-import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import javafx.util.Duration;
 import javafx.scene.Scene;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.control.ButtonType;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 
 public class Main extends Application {
@@ -34,12 +20,11 @@ public class Main extends Application {
 	public static final String OSU_DB_NAME = "osu! - Copy.db";
 	public static final String SONGS_FOLDER = "Songs";
 	
-	// TODO: change all testlabels etc. in controllers to proper names
+	// TODO: change OSU_DB_NAME
 	
 	@Override
 	public void start(Stage primaryStage) {
 		try {
-			primaryStage.setTitle("Osu! Songs Collector");
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(getClass().getResource("/fxml/InitScreenView.fxml"));
 //			BorderPane root = loader.load();

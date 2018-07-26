@@ -1,13 +1,7 @@
 package controllers;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -17,54 +11,28 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.management.RuntimeErrorException;
-
 import application.Comparators;
-import application.Main;
-import application.OsuDbParser;
 import application.SqliteDatabase;
 import application.ViewLoader;
 import controllers.FilterDialogController.SimplifiedTableViewData;
 import controllers.SongsDisplayController.TableViewData;
-import javafx.application.Platform;
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.Dragboard;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.TransferMode;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.TilePane;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -123,16 +91,9 @@ public class SaveToOptionController {
 	@FXML private void initialize() {
 		ObservableList<ComboBoxChoice> prefixSuffixComboBoxObsList = FXCollections.observableArrayList(ComboBoxChoice.values());
 		this.prefixComboBox.setItems(prefixSuffixComboBoxObsList);
-//		this.prefixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
 		this.suffixComboBox.setItems(prefixSuffixComboBoxObsList);
-//		this.suffixComboBox.getSelectionModel().select(ComboBoxChoice.NONE);
-//		this.taskDetailsTextArea.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
-//		this.sampleTextField.setText(this.prefixComboBox.getSelectionModel().getSelectedItem().getSample() + " - " + this.suffixComboBox.getSelectionModel().getSelectedItem().getSample());
-//		this.sampleTextField.setText("No attribute is chosen");
 		// invisible by default
-		this.warningLabel.setText("*Filename with only one attribute can result in numerous duplicates!");
-//		this.duplicatedSongsCheckButton.setTooltip(new Tooltip("Search for possible duplicated songs in the chosen songs list"
-//				+ " base on similar Artist, Title, and Length"));
+		this.warningLabel.setText("Filename with only one attribute can result in numerous duplicates!");
 		this.collisionTooltip = new Tooltip("When Source is empty, Artist(Unicode) will be used instead and finally Artist if Unicode is also empty."
 				+ " This can result in filename with something like: 'ArtistName - ArtistName'.");
 		this.collisionTooltip.getStyleClass().add("tooltip-design");
@@ -290,7 +251,6 @@ public class SaveToOptionController {
 		
 		
 		List<TableViewData> selectedSongsList = this.selectedSongsMap.values().stream().flatMap(List::stream).collect(Collectors.toList());
-//		Task<Void> copySongsTask = new CopySongsTask(selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix); 
 		
 		try {
 			FXMLLoader loader = new FXMLLoader();
@@ -299,17 +259,20 @@ public class SaveToOptionController {
 			Scene scene = new Scene(root);
 			CopySongsController ctr = loader.<CopySongsController>getController();
 			ctr.initDataAndStart(this.currentStage, this.songsDb, selectedSongsList, this.pathToSongsFolder, this.chosenPathTextField.getText(), prefix, suffix);
+			this.currentStage.setTitle("Collect songs");
 			this.currentStage.setScene(scene);
 			this.currentStage.setResizable(true);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			Alert alert = new Alert(AlertType.ERROR, "Failed to load copy songs screen", ButtonType.OK);
+			Alert alert = new Alert(AlertType.ERROR, "Failed to load collect songs window", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
 	}
 	
+	// TODO: might consider adding option for user to choose all duplicated Name instead of examining the totalTIme
+	// and option for user to choose longest, shortest, etc.
 	@FXML private void checkForDuplicatedSongs(ActionEvent event) {
 		// add data into map with Song as key
 		// if similar song, the value (list) size will be > 1
@@ -333,7 +296,6 @@ public class SaveToOptionController {
 		Comparator<TableViewData> totalTimeComparator = new Comparators.TotalTimeComparator();
 		// from dialogView
 		ObservableList<SimplifiedTableViewData> dialogObsList = FXCollections.observableArrayList(SimplifiedTableViewData.extractor());
-//		List<List<TableViewData>> possibleDuplicatedList = new ArrayList<List<TableViewData>>();
 		final int range = 15000;  // in range of 15 seconds
 		for (List<TableViewData> r : duplicatedMap.values()) {
 			if (r.size() > 1) {
@@ -361,37 +323,29 @@ public class SaveToOptionController {
 						}
 						l.add(currentRow);
 					}
-					// TODO: if ever want to deselect for user, it can be done here by unselecting currentRow
-					// might consider adding option for user to choose all duplicated Name instead of examining the totalTIme
-					// and option for user to choose longest, shortest, etc.
 				}
 				if (!l.isEmpty()) {
 					for (TableViewData row : l) {
 						if (row == null) {
+							// add empty row
 							dialogObsList.add(new SimplifiedTableViewData());
 							continue;
 						}
 						String name;
 						String artistName = this.useArtistNameUnicode && !row.artistNameUnicodeProperty().get().isEmpty() ? row.artistNameUnicodeProperty().get() : row.artistNameProperty().get();
 						String songTitle = this.useSongTitleUnicode && !row.songTitleUnicodeProperty().get().isEmpty() ? row.songTitleUnicodeProperty().get() : row.songTitleProperty().get();
-//						if (!row.songSourceProperty().get().isEmpty()) {
-//							name = row.songSourceProperty().get() + " (" + artistName + ") - " + songTitle;
-//						}
-//						else {
-//							name = artistName + " - " + songTitle;
-//						}
 						name = artistName + " - " + songTitle;
 						SimplifiedTableViewData data = new SimplifiedTableViewData(name, TableViewData.totalTimeToString(row.totalTimeProperty().get()), row.isSelectedProperty().get(), row.folderNameProperty().get());
 						dialogObsList.add(data);
 					}
+					
 					dialogObsList.add(new SimplifiedTableViewData());
-//					possibleDuplicatedList.add(l);
 				}
 			}
 		}
 		
 		if (dialogObsList.isEmpty()) {
-			Alert alert = new Alert(AlertType.INFORMATION, "No possible duplicate is found!", ButtonType.OK);
+			Alert alert = new Alert(AlertType.INFORMATION, "No duplicate is found!", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		}
@@ -402,7 +356,7 @@ public class SaveToOptionController {
 				this.loadFilterDialogView(dialogObsList);
 			} catch (Exception e) {
 				e.printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "Failed to load duplicate check screen", ButtonType.OK);
+				Alert alert = new Alert(AlertType.ERROR, "Failed to load duplicate check window", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}

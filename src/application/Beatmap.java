@@ -1,7 +1,5 @@
 package application;
 
-import java.util.Date;
-
 public class Beatmap {
 	private String artistName;
 	private String artistNameUnicode;

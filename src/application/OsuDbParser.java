@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
 
-import javafx.concurrent.Task;
-
 public class OsuDbParser extends OsuReader{
 	// for threading
 	private BiConsumer<Integer, Integer> progressUpdate = null;

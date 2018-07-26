@@ -1,7 +1,5 @@
 package application;
 
-import controllers.SaveToOptionController.ComboBoxChoice;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
@@ -15,7 +13,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +22,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javafx.concurrent.Task;
+import controllers.SaveToOptionController.ComboBoxChoice;
 
 
 // TODO: if any modification to the table (ie. add or delete fields) in the future, bear in mind

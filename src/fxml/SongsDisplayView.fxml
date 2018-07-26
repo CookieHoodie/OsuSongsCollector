@@ -53,13 +53,13 @@
                                           <Insets right="10.0" />
                                        </HBox.margin>
                                     </Label>
-                                    <ComboBox fx:id="orderByComboBox" onAction="#testSort" prefWidth="150.0" styleClass="combo-box-design" />
+                                    <ComboBox fx:id="orderByComboBox" onAction="#sortSongs" prefWidth="150.0" styleClass="combo-box-design" />
                                  </children>
                                  <VBox.margin>
                                     <Insets bottom="5.0" />
                                  </VBox.margin>
                               </HBox>
-                              <TextField fx:id="testSearchText" promptText="🔍 Search for..." styleClass="search-bar-design">
+                              <TextField fx:id="searchBar" promptText="🔍 Search for..." styleClass="search-bar-design">
                                  <VBox.margin>
                                     <Insets top="5.0" />
                                  </VBox.margin>
@@ -76,7 +76,7 @@
                                     <Insets bottom="3.0" />
                                  </VBox.margin>
                               </Button>
-                              <Button fx:id="testCopySongButton" alignment="CENTER" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#copySong" styleClass="button-design" text="Collect">
+                              <Button fx:id="copySongButton" alignment="CENTER" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#copySong" styleClass="button-design" text="Collect">
                                  <VBox.margin>
                                     <Insets top="3.0" />
                                  </VBox.margin>
@@ -157,7 +157,7 @@
                         <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
                      </padding>
                   </HBox>
-                  <TableView fx:id="testTable" editable="true" prefHeight="500.0" prefWidth="800.0" VBox.vgrow="ALWAYS">
+                  <TableView fx:id="songsTable" editable="true" prefHeight="500.0" prefWidth="800.0" VBox.vgrow="ALWAYS">
                      <columns>
                         <TableColumn fx:id="songSourceCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Source" />
                         <TableColumn fx:id="artistNameCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Artist" />
@@ -198,7 +198,7 @@
               <menus>
                 <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
                   <items>
-                        <MenuItem fx:id="fullBeatmapsUpdateFileMenuItem" mnemonicParsing="false" onAction="#fullBeatmapsUpdate" style="-fx-min-height: 50;" text="Check beatmaps update" />
+                        <MenuItem fx:id="fullBeatmapsUpdateFileMenuItem" mnemonicParsing="false" onAction="#fullBeatmapsUpdate" style="-fx-min-height: 50;" text="Check for new songs" />
                         <MenuItem fx:id="resetAllFileMenuItem" mnemonicParsing="false" onAction="#resetAll" text="Reset all data" />
                     <MenuItem fx:id="exitFileMenuItem" mnemonicParsing="false" text="Exit" />
                   </items>
@@ -214,7 +214,7 @@
                               <CheckMenuItem fx:id="songTitleUnicodeShowCheckMenuItem" mnemonicParsing="false" text="Song Title (Unicode)" />
                               <CheckMenuItem fx:id="creatorNameShowCheckMenuItem" mnemonicParsing="false" text="Creator" />
                               <CheckMenuItem fx:id="totalTimeShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Length" />
-                              <CheckMenuItem fx:id="isDownloadedShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Copied Songs" />
+                              <CheckMenuItem fx:id="isDownloadedShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Collected Songs" />
                            </items>
                       </Menu>
                         <Menu fx:id="displayMenuInViewMenu" mnemonicParsing="false" text="Display">
@@ -225,7 +225,7 @@
                                  </toggleGroup>
                               </RadioMenuItem>
                               <RadioMenuItem fx:id="hiddenSongsRadioMenuItemInDisplayMenu" mnemonicParsing="false" onAction="#displaySongs" text="Hidden songs" toggleGroup="$displayToggleGroup" />
-                              <RadioMenuItem fx:id="downloadedSongsRadioMenuItemInDisplayMenu" mnemonicParsing="false" onAction="#displaySongs" text="Copied songs" toggleGroup="$displayToggleGroup" />
+                              <RadioMenuItem fx:id="downloadedSongsRadioMenuItemInDisplayMenu" mnemonicParsing="false" onAction="#displaySongs" text="Collected songs" toggleGroup="$displayToggleGroup" />
                           </items>
                         </Menu>
                     </items>

@@ -1,11 +1,8 @@
 package controllers;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.concurrent.Callable;
 
 import application.Main;
 import application.OsuDbParser;
@@ -14,8 +11,6 @@ import application.ViewLoader;
 import javafx.animation.PauseTransition;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -86,22 +81,17 @@ public class InitScreenController {
 				boolean isUpToDate = checkAllSetService.getValue();
 				if (isUpToDate) {
 					try {
-//						this.loadSongsDisplayView();
 						Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
 						ViewLoader.loadNewSongsDisplayView(currentStage, this.songsDb);
 					}
 					catch (SQLException e1) {
 						// this exception comes from initTableData method for populating the tableView
 						e1.printStackTrace();
-						this.displayAlertAndExit("Failed to retrieve table data from songs.db");
-//						Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve table data from songs.db", ButtonType.OK);
-//						alert.showAndWait();
+						this.displayAlertAndExit("Failed to retrieve data from songs.db");
 					}
 					catch (Exception e1) {
 						e1.printStackTrace();
-						this.displayAlertAndExit("Failed to load displaying screen");
-//						Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
-//						alert.showAndWait();
+						this.displayAlertAndExit("Failed to load display window");
 					}
 				}
 				else {
@@ -110,7 +100,7 @@ public class InitScreenController {
 					} 
 					catch (Exception e1) {
 						e1.printStackTrace();
-						this.displayAlertAndExit("Failed to load update screen");
+						this.displayAlertAndExit("Failed to load update window");
 					}
 				}
 			});
@@ -149,6 +139,7 @@ public class InitScreenController {
 	
 	private void loadSetSongsFolderPathView() throws IOException {
 		Stage setSongsFolderStage = new Stage();
+		setSongsFolderStage.setTitle("Configuration");
 		setSongsFolderStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/SetSongsFolderPathView.fxml"));
@@ -163,6 +154,7 @@ public class InitScreenController {
 	
 	private void loadUpdateDataView() throws IOException {
 		Stage updateDataStage = new Stage();
+		updateDataStage.setTitle("Update Songs Data");
 		updateDataStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
@@ -171,9 +163,7 @@ public class InitScreenController {
 		BorderPane root = loader.load();
 		Scene scene = new Scene(root);
 		Stage primaryStage = (Stage) this.welcomeLabel.getScene().getWindow();
-//		UpdateDataController ctr = loader.<UpdateDataController>getController();
 		
-		updateDataStage.setTitle("Update Songs Data");
 		updateDataStage.setScene(scene);
 		// the last two paths must have already initialized to come to here
 		ctr.initDataAndStart(updateDataStage, this.songsDb, this.pathToOsuDb, this.pathToSongsFolder);

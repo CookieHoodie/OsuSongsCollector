@@ -3,13 +3,11 @@ package controllers;
 import application.OsuDbParser;
 import application.SqliteDatabase;
 import application.ViewLoader;
-import javafx.animation.PauseTransition;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 
 public class UpdateDataInSongsDisplayController extends UpdateDataController {
@@ -52,7 +50,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			Throwable e1 = updateSongsDbTask.getException();
 			if (!(e1 instanceof InterruptedException)) {
 				e1.printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "Failed to update songs data.", ButtonType.OK);
+				Alert alert = new Alert(AlertType.ERROR, "Failed to update songs list.", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}
@@ -70,7 +68,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			Throwable e1 = updateBeatmapDetailsTask.getException();
 			if (!(e1 instanceof InterruptedException)) {
 				e1.printStackTrace();
-				Alert alert = new Alert(AlertType.ERROR, "FFailed to update beatmaps details.", ButtonType.OK);
+				Alert alert = new Alert(AlertType.ERROR, "Failed to update beatmaps details.", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}

@@ -4,7 +4,6 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Date;
 
 public abstract class OsuReader {
 	// private member

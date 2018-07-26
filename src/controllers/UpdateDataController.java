@@ -13,25 +13,18 @@ import application.ViewLoader;
 import javafx.animation.PauseTransition;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
 
-// TODO: update details inherit this class after this class has added updateDetails functionality
-// remember to override getOsuDbTask to get map
-// in updateDetails class, override initDataAndStart to give different warning when exiting (ie. changes might have been made
-// but not yet reflected, restart to take effect)
-// and also, in that class, override finish method to not close stage but gv alert whether to restart now or not
-// if restart, move the restart function in SongsDisplay to new public method and then after closing the popup, invoke that method
 public class UpdateDataController extends LoadingDialogParentController {
 	
 	protected SqliteDatabase songsDb;
 	protected String fullPathToOsuDb;
 	protected String pathToSongsFolder;
 	protected Map<String, List<Beatmap>> osuDbFolders;
-	
 	
 	
 	public void initDataAndStart(Stage currentStage, SqliteDatabase songsDb, String fullPathToOsuDb, String pathToSongsFolder) {
@@ -50,7 +43,7 @@ public class UpdateDataController extends LoadingDialogParentController {
 					catch (InterruptedException e1) {
 						e1.printStackTrace();
 						// TODO: show more specific instructions when this happen
-						Alert alert = new Alert(AlertType.ERROR, "Program is interrupted while updating data without cleaning up. Relevant files might be corrupted. Consider Reset All to repair.", ButtonType.OK);
+						Alert alert = new Alert(AlertType.ERROR, "Program is interrupted while updating data without cleaning up. Relevant files might have corrupted.", ButtonType.OK);
 						ViewLoader.addStyleToAlert(alert);
 						alert.show();
 					}
@@ -115,8 +108,7 @@ public class UpdateDataController extends LoadingDialogParentController {
 	protected void updateSongsDb(OsuDbParser loadedOsuDb) {
 		Task<Boolean> updateSongsDbTask = this.getUpdateSongsDbTask(loadedOsuDb, this.songsDb); 
 		this.progressBar.progressProperty().bind(updateSongsDbTask.progressProperty());
-//		this.instructionLabel.textProperty().bind(updateSongsDbTask.messageProperty());
-		this.instructionLabel.setText("Updating songs data");
+		this.instructionLabel.setText("Updating songs list");
 		
 		this.setUpdateSongsDbTaskOnHandlers(updateSongsDbTask);
 		this.exec.submit(updateSongsDbTask);
@@ -131,7 +123,7 @@ public class UpdateDataController extends LoadingDialogParentController {
 			Throwable e1 = updateSongsDbTask.getException();
 			if (!(e1 instanceof InterruptedException)) {
 				e1.printStackTrace();
-				this.onFailedProceedAlert("Failed to update songs data. Proceed anyway?");
+				this.onFailedProceedAlert("Failed to update songs list. Proceed anyway?");
 			}
 		});
 	}
@@ -150,7 +142,6 @@ public class UpdateDataController extends LoadingDialogParentController {
 	protected void updateBeatmapDetails(Map<String, List<Beatmap>> osuDbFolders, SqliteDatabase songsDb) {
 		Task<Boolean> updateBeatmapDetailsTask = this.getUpdateBeatmapDetailsTask(osuDbFolders, songsDb);
 		this.progressBar.progressProperty().bind(updateBeatmapDetailsTask.progressProperty());
-//		this.instructionLabel.textProperty().bind(updateBeatmapDetailsTask.messageProperty());
 		this.instructionLabel.setText("Updating beatmaps details");
 		
 		this.setUpdateBeatmapDetailsTaskOnHandlers(updateBeatmapDetailsTask);
@@ -159,7 +150,7 @@ public class UpdateDataController extends LoadingDialogParentController {
 	
 	protected void setUpdateBeatmapDetailsTaskOnHandlers(Task<Boolean> updateBeatmapDetailsTask) {
 		updateBeatmapDetailsTask.setOnSucceeded(e -> {
-			this.instructionLabel.setText("Finish updating. Loading table data...");
+			this.instructionLabel.setText("Finish updating. Loading display window...");
 			// use pause so that the label text can be properly shown
 			PauseTransition pause = new PauseTransition(Duration.millis(10));
         	pause.setOnFinished(e1 -> {
@@ -182,12 +173,11 @@ public class UpdateDataController extends LoadingDialogParentController {
 	// for reuse
 	private void loadSongDisplayViewWrapperForTaskEvent(SqliteDatabase songsDb) {
 		try {
-//			this.loadSongsDisplayView(songsDb);
 			Stage currentStage = (Stage) this.instructionLabel.getScene().getWindow();
 			ViewLoader.loadNewSongsDisplayView(currentStage, songsDb);
 		} catch (IOException e1) {
 			e1.printStackTrace();
-			Alert alert = new Alert(AlertType.ERROR, "Failed to load displaying screen", ButtonType.OK);
+			Alert alert = new Alert(AlertType.ERROR, "Failed to load display window", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		} catch (SQLException e1) {
