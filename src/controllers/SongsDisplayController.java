@@ -472,12 +472,12 @@ public class SongsDisplayController {
 //			throw new RuntimeException("Sound volume is not yet selected from songs.db");
 //		}
 		final int speakerSize = 24;
-		this.speakerIcon.setImage(new Image(getClass().getResourceAsStream("/resources/sound-on-icon4.png")));
+		this.speakerIcon.setImage(new Image(getClass().getResourceAsStream("/resources/sound-on-icon.png")));
 		this.speakerIcon.setSmooth(true);
 		this.speakerIcon.setCache(true);
 		this.speakerIcon.setFitHeight(speakerSize);
 		this.speakerIcon.setFitWidth(speakerSize);
-		this.speakerMuteIcon.setImage(new Image(getClass().getResourceAsStream("/resources/mute-icon3.png")));
+		this.speakerMuteIcon.setImage(new Image(getClass().getResourceAsStream("/resources/mute-icon.png")));
 		this.speakerMuteIcon.setSmooth(true);
 		this.speakerMuteIcon.setCache(true);
 		this.speakerMuteIcon.setFitHeight(speakerSize);

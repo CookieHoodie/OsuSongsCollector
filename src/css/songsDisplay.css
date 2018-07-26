@@ -105,39 +105,39 @@
 }
 
 #mediaPlayerPlayButton {
-	-fx-background-image: url(../resources/play-icon3.png); 
+	-fx-background-image: url(../resources/play-icon.png); 
 }
 
 #mediaPlayerPauseButton {
-	-fx-background-image: url(../resources/pause-icon5.png); 
+	-fx-background-image: url(../resources/pause-icon.png); 
 }
 
 #mediaPlayerNextButton {
-	-fx-background-image: url(../resources/next-icon3.png); 
+	-fx-background-image: url(../resources/next-icon.png); 
 }
 
 #mediaPlayerStopButton {
-	-fx-background-image: url(../resources/stop-icon3.png); 
+	-fx-background-image: url(../resources/stop-icon.png); 
 }
 
 #mediaPlayerPreviousButton {
-	-fx-background-image: url(../resources/previous-icon3.png); 	
+	-fx-background-image: url(../resources/previous-icon.png); 	
 }
 
 #mediaPlayerShuffleToggleButton {
-	-fx-background-image: url(../resources/shuffle-icon3.png); 
+	-fx-background-image: url(../resources/shuffle-icon.png); 
 }
 
 #mediaPlayerShuffleToggleButton:selected {
-	-fx-background-image: url(../resources/shuffle-icon-hover3.png); 
+	-fx-background-image: url(../resources/shuffle-icon-selected.png); 
 }
 
 #mediaPlayerRepeatToggleButton {
-	-fx-background-image: url(../resources/repeat-icon5.png); 
+	-fx-background-image: url(../resources/repeat-icon.png); 
 }
 
 #mediaPlayerRepeatToggleButton:selected {
-	-fx-background-image: url(../resources/repeat-icon-hover4.png); 
+	-fx-background-image: url(../resources/repeat-icon-selected.png); 
 }
 
 
