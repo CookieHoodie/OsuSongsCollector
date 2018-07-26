@@ -37,10 +37,10 @@
                      <children>
                         <VBox minWidth="160.0" prefHeight="62.0" prefWidth="227.0">
                            <children>
-                              <Label text="Name" />
-                              <Label text="total" />
-                              <Label text="currently visible" />
-                              <Label fx:id="numOfSelectedSongsLabel" text="selected: (init in controller)" />
+                              <Label fx:id="userNameLabel" text="Name" />
+                              <Label fx:id="totalSongsLabel" text="total: 0" />
+                              <Label fx:id="currentlyVisibleLabel" text="currently visible: 0" />
+                              <Label fx:id="numOfSelectedSongsLabel" text="selected: 0" />
                            </children>
                         </VBox>
                         <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
@@ -200,7 +200,7 @@
                   <items>
                         <MenuItem fx:id="fullBeatmapsUpdateFileMenuItem" mnemonicParsing="false" onAction="#fullBeatmapsUpdate" style="-fx-min-height: 50;" text="Check for new songs" />
                         <MenuItem fx:id="resetAllFileMenuItem" mnemonicParsing="false" onAction="#resetAll" text="Reset all data" />
-                    <MenuItem fx:id="exitFileMenuItem" mnemonicParsing="false" text="Exit" />
+                    <MenuItem fx:id="exitFileMenuItem" mnemonicParsing="false" onAction="#exit" text="Exit" />
                   </items>
                 </Menu>
                   <Menu fx:id="viewMenu" mnemonicParsing="false" text="View">

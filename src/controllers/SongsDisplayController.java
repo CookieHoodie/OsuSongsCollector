@@ -28,7 +28,10 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleLongProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.collections.transformation.SortedList;
@@ -66,6 +69,7 @@ import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaPlayer.Status;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
@@ -86,11 +90,15 @@ public class SongsDisplayController {
 	@FXML private TableColumn<TableViewData, Integer> totalTimeCol;
 	@FXML private TableColumn<TableViewData, Boolean> checkBoxCol;
 	
+	@FXML private Label userNameLabel;
+	@FXML private Label totalSongsLabel;
+	@FXML private Label currentlyVisibleLabel;
+	@FXML private Label numOfSelectedSongsLabel;
+	
 	@FXML private TextField searchBar;
 	@FXML private Button copySongButton;
 	@FXML private Button hideUnhideButton;
 	@FXML private CheckBox selectAllCheckBoxInCheckBoxCol;
-	@FXML private Label numOfSelectedSongsLabel;
 	@FXML private ComboBox<Comparator<TableViewData>> orderByComboBox;
 	
 	@FXML private Menu fileMenu;
@@ -130,7 +138,9 @@ public class SongsDisplayController {
 	@FXML private ToggleButton mediaPlayerShuffleToggleButton;
 	
 	private final String numOfSelectedSongsLabelText = "Selected: ";
-	private SimpleIntegerProperty selectedCounterProperty = new SimpleIntegerProperty(0);
+	private final String totalSongsLabelText = "Total songs: ";
+	private final String currentlyVisibleLabelText = "Currently visible: ";
+	private int numOfSelectedSongs = 0;
 	
 	private MediaPlayer mediaPlayer;
 	private TableViewData currentlyPlayedSong;
@@ -147,19 +157,10 @@ public class SongsDisplayController {
 	private final ImageView speakerIcon = new ImageView();
 	private final ImageView speakerMuteIcon = new ImageView();
 	
-	// and check the corresponding items in controller instead of fxml
 	// TODO: add rotating screen while changing view, searching, etc.
 	// TODO: allow user to select and copy words but not edit
 	
-	
-	// TODO: change back the select listener to its original form (no selectedCounter)
-	// TODO: if nothing is selected, hide the buttons
-	// TODO: fill out the labels (name, currently visible, ...)
-	// TODO: remove and rename the icons png if still using those
-	// TODO: change default toggle button to false for both
-	
-	// TODO: 
-	// 6) add batch to hide and copy songs 
+	// TODO: add batch to hide and copy songs 
 	
 	@FXML private void initialize() {
 		this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
@@ -208,11 +209,7 @@ public class SongsDisplayController {
         this.initMenuItemsListener();
         
         // set selected items to 0
-        this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + this.selectedCounterProperty.get());
-        
-        this.selectedCounterProperty.addListener((obs, oldValue, newValue) -> {
-        	this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + newValue);
-        });
+        this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + this.numOfSelectedSongs);
         
         // focus on search bar on start (runlater or it wont focus)
         Platform.runLater(() -> {
@@ -333,15 +330,20 @@ public class SongsDisplayController {
         			, tableInitDataRs.getString(SqliteDatabase.TableData.SongTag.SONG_TAG_NAME).replaceAll(",", " ")
         			, tableInitDataRs.getString(SqliteDatabase.TableData.BeatmapSet.CREATOR_NAME)
         			);
-        	// TODO: this is flawful! change this implementation alltogether
-        	t.isSelectedProperty().addListener((obs, oldValue, newValue) -> {
-        		if (newValue) {
-        			this.selectedCounterProperty.set(this.selectedCounterProperty.get() + 1);
-        		}
-        		else {
-        			this.selectedCounterProperty.set(this.selectedCounterProperty.get() - 1);
-        		}
-        	});
+        	
+        	t.isSelectedProperty().addListener(new ChangeListener<Boolean>() {
+                @Override
+                public void changed(ObservableValue<? extends Boolean> obs, Boolean wasSelected, Boolean isSelected) {
+                	if (isSelected) {
+                		numOfSelectedSongs++;
+                	}
+                	else {
+                		numOfSelectedSongs--;
+                	}
+                	numOfSelectedSongsLabel.setText(numOfSelectedSongsLabelText + numOfSelectedSongs); 
+                }
+            });
+        	
         	initSongsObsList.add(t);
         }
        
@@ -357,6 +359,11 @@ public class SongsDisplayController {
             pause.playFromStart();
         });
         
+        // whenever the list is filtered, change currentlyVisibleLabel
+        initSongsFilteredList.addListener((ListChangeListener.Change<? extends TableViewData> l) -> {
+        	this.currentlyVisibleLabel.setText(this.currentlyVisibleLabelText + initSongsFilteredList.size());
+        });
+        
         SortedList<TableViewData> initSongsSortedList = new SortedList<TableViewData>(initSongsFilteredList);
         
         // store the references first as the following operation can trigger listener which requires these references
@@ -364,68 +371,105 @@ public class SongsDisplayController {
         this.initSongsFilteredList = initSongsFilteredList;
         this.initSongsSortedList = initSongsSortedList;
         
-        ResultSet configRs = this.songsDb.selectConfig();
-        if (configRs.next()) {
-        	this.pathToOsuDb = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_OSU_DB);
-        	this.pathToSongsFolder = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_SONGS_FOLDER);
-        	double soundVolume = configRs.getDouble(SqliteDatabase.TableData.Config.SOUND_VOLUME);
-        	boolean isSongSourceShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SONG_SOURCE_SHOWN);
-        	boolean isArtistNameShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_ARTIST_NAME_SHOWN);
-        	boolean isArtistNameUnicodeShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_ARTIST_NAME_UNICODE_SHOWN);
-        	boolean isSongTitleShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SONG_TITLE_SHOWN);
-        	boolean isSongTitleUnicodeShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SONG_TITLE_UNICODE_SHOWN);
-        	boolean isCreatorNameShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_CREATOR_NAME_SHOWN);
-        	boolean isTotalTimeShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_TOTAL_TIME_SHOWN);
-        	boolean isIsDownloadedShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_IS_DOWNLOADED_SHOWN);
-        	String ordering = configRs.getString(SqliteDatabase.TableData.Config.ORDERING);
-        	boolean isRepeatToggled = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_REPEAT_TOGGLED);
-        	boolean isShuffleToggled = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SHUFFLE_TOGGLED);
-        	
-        	// ordering is empty only when it's the first time loading the app, 
-        	// so if it's first time, dun overwrite the menuItem as the data from songsDb is defaulted to false
-        	if (!ordering.isEmpty()) {
-        		this.songSourceShowCheckMenuItem.setSelected(isSongSourceShown);
-        		this.artistNameShowCheckMenuItem.setSelected(isArtistNameShown);
-        		this.artistNameUnicodeShowCheckMenuItem.setSelected(isArtistNameUnicodeShown);
-        		this.songTitleShowCheckMenuItem.setSelected(isSongTitleShown);
-        		this.songTitleUnicodeShowCheckMenuItem.setSelected(isSongTitleUnicodeShown);
-        		this.creatorNameShowCheckMenuItem.setSelected(isCreatorNameShown);
-        		this.totalTimeShowCheckMenuItem.setSelected(isTotalTimeShown);
-        		this.isDownloadedShowCheckMenuItem.setSelected(isIsDownloadedShown);
-        	}
-        	
-        	// default comparator
-        	Comparator<TableViewData> lastModificationTimeComparator = new Comparators.LastModificationTimeComparator();
-			@SuppressWarnings("unchecked")
-			ObservableList<Comparator<TableViewData>> orderByComparatorsObsList = FXCollections.observableArrayList(
-			 	new Comparators.SongTitleComparator(),
-			 	new Comparators.ArtistNameComparator(),
-			 	new Comparators.CreatorNameComparator(),
-			 	new Comparators.TotalTimeComparator(),
-			 	lastModificationTimeComparator
-			 );
-			 
-			this.orderByComboBox.setItems(orderByComparatorsObsList);
-			if (!ordering.isEmpty()) {
-				for (Comparator<TableViewData> comparator : orderByComparatorsObsList) {
-			    	if (comparator.toString().equals(ordering)) {
-			    		this.orderByComboBox.getSelectionModel().select(comparator);
-			    		initSongsSortedList.setComparator(comparator);
-			    		break;
-			    	}
-			    }
+        
+        this.totalSongsLabel.setText(this.totalSongsLabelText + initSongsObsList.size());
+        
+        
+        
+        // initialize comboBox (this is initialized here for setting config later)
+        // default comparator
+    	Comparator<TableViewData> lastModificationTimeComparator = new Comparators.LastModificationTimeComparator();
+		@SuppressWarnings("unchecked")
+		ObservableList<Comparator<TableViewData>> orderByComparatorsObsList = FXCollections.observableArrayList(
+		 	new Comparators.SongTitleComparator(),
+		 	new Comparators.ArtistNameComparator(),
+		 	new Comparators.CreatorNameComparator(),
+		 	new Comparators.TotalTimeComparator(),
+		 	lastModificationTimeComparator
+		 );
+		 
+		this.orderByComboBox.setItems(orderByComparatorsObsList);
+        
+		try {
+			// start to load metadata
+			ResultSet metadataRs = this.songsDb.selectMetadata();
+			if (metadataRs.next()) {
+				String userName = metadataRs.getString(SqliteDatabase.TableData.Metadata.PLAYER_NAME);
+				this.userNameLabel.setText(userName);
 			}
-			// for first time loading app
 			else {
-				this.orderByComboBox.getSelectionModel().select(lastModificationTimeComparator);
+				throw new SQLException("Failed to get metadata");
 			}
 			
-			this.initMediaPlayerEssentials(soundVolume, isRepeatToggled, isShuffleToggled);
-	        this.songsTable.setItems(initSongsSortedList);
+			// start to load preferences
+			ResultSet configRs = this.songsDb.selectConfig();
+	        if (configRs.next()) {
+	        	this.pathToOsuDb = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_OSU_DB);
+	        	this.pathToSongsFolder = configRs.getString(SqliteDatabase.TableData.Config.PATH_TO_SONGS_FOLDER);
+	        	double soundVolume = configRs.getDouble(SqliteDatabase.TableData.Config.SOUND_VOLUME);
+	        	boolean isSongSourceShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SONG_SOURCE_SHOWN);
+	        	boolean isArtistNameShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_ARTIST_NAME_SHOWN);
+	        	boolean isArtistNameUnicodeShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_ARTIST_NAME_UNICODE_SHOWN);
+	        	boolean isSongTitleShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SONG_TITLE_SHOWN);
+	        	boolean isSongTitleUnicodeShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SONG_TITLE_UNICODE_SHOWN);
+	        	boolean isCreatorNameShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_CREATOR_NAME_SHOWN);
+	        	boolean isTotalTimeShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_TOTAL_TIME_SHOWN);
+	        	boolean isIsDownloadedShown = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_IS_DOWNLOADED_SHOWN);
+	        	String ordering = configRs.getString(SqliteDatabase.TableData.Config.ORDERING);
+	        	boolean isRepeatToggled = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_REPEAT_TOGGLED);
+	        	boolean isShuffleToggled = configRs.getBoolean(SqliteDatabase.TableData.Config.IS_SHUFFLE_TOGGLED);
+	        	
+	        	// ordering is empty only when it's the first time loading the app, 
+	        	// so if it's first time, dun overwrite the menuItem as the data from songsDb is defaulted to false
+	        	if (!ordering.isEmpty()) {
+	        		// setting these will trigger the listener set in initialize,
+	        		// which in turn trigger the filterList predicate. 
+	        		this.songSourceShowCheckMenuItem.setSelected(isSongSourceShown);
+	        		this.artistNameShowCheckMenuItem.setSelected(isArtistNameShown);
+	        		this.artistNameUnicodeShowCheckMenuItem.setSelected(isArtistNameUnicodeShown);
+	        		this.songTitleShowCheckMenuItem.setSelected(isSongTitleShown);
+	        		this.songTitleUnicodeShowCheckMenuItem.setSelected(isSongTitleUnicodeShown);
+	        		this.creatorNameShowCheckMenuItem.setSelected(isCreatorNameShown);
+	        		this.totalTimeShowCheckMenuItem.setSelected(isTotalTimeShown);
+	        		this.isDownloadedShowCheckMenuItem.setSelected(isIsDownloadedShown);
+	        		
+	        		// so by here, the 'isDownloadedShow' is already accounted for and we can get the currently visible from the list
+	        		this.currentlyVisibleLabel.setText("Currently visible: " + this.initSongsFilteredList.size());
+	        	}
+	        	
+				if (!ordering.isEmpty()) {
+					for (Comparator<TableViewData> comparator : orderByComparatorsObsList) {
+				    	if (comparator.toString().equals(ordering)) {
+				    		this.orderByComboBox.getSelectionModel().select(comparator);
+				    		initSongsSortedList.setComparator(comparator);
+				    		break;
+				    	}
+				    }
+				}
+				// for first time loading app
+				else {
+					this.orderByComboBox.getSelectionModel().select(lastModificationTimeComparator);
+				}
+				
+				this.initMediaPlayerEssentials(soundVolume, isRepeatToggled, isShuffleToggled);
+	        }
+	        else {
+	        	throw new SQLException("Failed to get config data");
+	        }
+		}
+		// if SQLException (ie. the application can still run just that without preferences), then show alert and continue
+        catch (SQLException e) {
+        	Alert alert = new Alert(AlertType.ERROR, "Failed to load preferences", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
+			alert.showAndWait();
         }
-        else {
-        	throw new SQLException("Failed to get config data");
-        }
+		// else throw and don't allow continuing
+		catch (Exception e) {
+			throw e;
+		}
+		
+		// only setItems here to prevent extra work if the observableList is sorted in the config above
+		this.songsTable.setItems(initSongsSortedList);
 	}
 	
 	
@@ -719,52 +763,60 @@ public class SongsDisplayController {
 	}
 	
 	// copySongButton
+	// ! both this and hideUnhide depend on numOfSelectedSongs, so if for any reason the var goes wrong, these methods will not function
 	@FXML private void copySong(ActionEvent event) {
+		if (this.numOfSelectedSongs <= 0) {
+			Alert alert = new Alert(AlertType.INFORMATION, "No Song is chosen!", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
+			alert.showAndWait();
+			return;
+		}
+		
 		Map<String, List<TableViewData>> selectedSongsMap = this.songsTable.getItems().stream()
 				.filter(row -> row.isSelectedProperty().get())
 				.collect(Collectors.groupingBy(row -> row.folderNameProperty().get()));
 		
+		boolean containCopiedSongs = selectedSongsMap.values().stream().anyMatch(list -> list.stream().anyMatch(row -> row.isDownloadedProperty().get()));
+		boolean proceed = true;
+		if (containCopiedSongs) {
+			String warningText = "One or more collected songs are found in your collect list. Are you sure you want to proceed to collect those songs again? (This will result in duplicated songs in the same folder)";
+			Alert duplicatedAlert = new Alert(AlertType.WARNING, warningText, ButtonType.YES, ButtonType.NO);
+			ViewLoader.addStyleToAlert(duplicatedAlert);
+			Optional<ButtonType> result = duplicatedAlert.showAndWait();
+			if (result.isPresent() && result.get() == ButtonType.NO) {
+			    proceed = false;
+			}
+		}
 		
-		if (selectedSongsMap.size() == 0) {
-			Alert alert = new Alert(AlertType.INFORMATION, "No Song is chosen!", ButtonType.OK);
-			ViewLoader.addStyleToAlert(alert);
-			alert.showAndWait();
-		}
-		else {
-			boolean containCopiedSongs = selectedSongsMap.values().stream().anyMatch(list -> list.stream().anyMatch(row -> row.isDownloadedProperty().get()));
-			boolean proceed = true;
-			if (containCopiedSongs) {
-				String warningText = "One or more copied songs are found in your collect list. Are you sure you want to proceed to collect those songs again? (This will result in duplicated songs in the same folder)";
-				Alert duplicatedAlert = new Alert(AlertType.WARNING, warningText, ButtonType.YES, ButtonType.NO);
-				ViewLoader.addStyleToAlert(duplicatedAlert);
-				Optional<ButtonType> result = duplicatedAlert.showAndWait();
-				if (result.isPresent() && result.get() == ButtonType.NO) {
-				    proceed = false;
-				}
+		if (proceed) {
+			try {
+				this.loadSaveToOptionView(selectedSongsMap);
 			}
-			
-			if (proceed) {
-				try {
-					this.loadSaveToOptionView(selectedSongsMap);
-				}
-				catch (SQLException e) {
-					e.printStackTrace();
-					Alert alert = new Alert(AlertType.ERROR, "Error getting data from songs.db", ButtonType.OK);
-					ViewLoader.addStyleToAlert(alert);
-					alert.showAndWait();
-				}
-				catch (Exception e) {
-					e.printStackTrace();
-					Alert alert = new Alert(AlertType.ERROR, "Failed to load songs option screen", ButtonType.OK);
-					ViewLoader.addStyleToAlert(alert);
-					alert.showAndWait();
-				}
+			catch (SQLException e) {
+				e.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Error getting data from songs.db", ButtonType.OK);
+				ViewLoader.addStyleToAlert(alert);
+				alert.showAndWait();
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				Alert alert = new Alert(AlertType.ERROR, "Failed to load songs option screen", ButtonType.OK);
+				ViewLoader.addStyleToAlert(alert);
+				alert.showAndWait();
 			}
 		}
+		
 	}
 	
 	// hideUnhideButton
 	@FXML private void hideUnhideSelectedSongs(ActionEvent event) throws SQLException {
+		if (this.numOfSelectedSongs <= 0) {
+			Alert alert = new Alert(AlertType.INFORMATION, "No Song is chosen!", ButtonType.OK);
+			ViewLoader.addStyleToAlert(alert);
+			alert.showAndWait();
+			return;
+		}
+		
 		try {
 			String[] items = {SqliteDatabase.TableData.BeatmapSet.IS_HIDDEN};
 			this.songsDb.getConn().setAutoCommit(false);
@@ -821,7 +873,6 @@ public class SongsDisplayController {
 			this.hideUnhideButton.setText("Hide");
 			this.isDownloadedShowCheckMenuItem.setVisible(true);
 			this.hideUnhideButton.setVisible(true);
-			this.selectedCounterProperty.set(this.selectedCounterProperty.get());
 		}
 		else if (this.hiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
 			this.hideUnhideButton.setText("Unhide");
@@ -847,6 +898,10 @@ public class SongsDisplayController {
 				this.restartProgram(true);
 			}
 		});
+	}
+	
+	@FXML private void exit(ActionEvent event) {
+		this.currentStage.fireEvent(new WindowEvent(this.currentStage, WindowEvent.WINDOW_CLOSE_REQUEST));
 	}
 	
 	public void restartProgram(boolean deleteSongsDb) {
