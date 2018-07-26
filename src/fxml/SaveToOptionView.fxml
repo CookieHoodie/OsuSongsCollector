@@ -11,6 +11,8 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.effect.BoxBlur?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
@@ -92,10 +94,17 @@
                         </HBox>
                         <ButtonBar prefHeight="111.0" prefWidth="410.0" VBox.vgrow="ALWAYS">
                           <buttons>
-                              <Button fx:id="duplicatedSongsCheckButton" mnemonicParsing="false" onAction="#checkForDuplicatedSongs" styleClass="button-design" text="Check for duplicates �">
+                              <Button fx:id="duplicatedSongsCheckButton" contentDisplay="RIGHT" mnemonicParsing="false" onAction="#checkForDuplicatedSongs" styleClass="button-design" text="Check for duplicates">
                                  <tooltip>
                                     <Tooltip styleClass="tooltip-design" text="Search for possible duplicated songs in the chosen songs list base on similar Artist, Title, and Length" />
                                  </tooltip>
+                                 <graphic>
+                                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../resources/help-icon.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
                               </Button>
                               <Button fx:id="startButton" disable="true" mnemonicParsing="false" onAction="#startCopying" styleClass="button-design" text="Start" />
                           </buttons>

@@ -24,6 +24,7 @@ import application.SqliteDatabase;
 import application.SqliteDatabase.TableData;
 import application.ViewLoader;
 import javafx.animation.PauseTransition;
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -150,21 +151,25 @@ public class SongsDisplayController {
 //	private final String shuffleButtonRepeatText = "∞";
 //	private final String speakerUTFIcon = "🔊";
 //	private final String speakerMuteUTFIcon = "🔇";
-	private final ImageView speakerIcon = new ImageView(new Image(getClass().getResourceAsStream("/resources/sound-on-icon2.png"), 24, 24, true, true));
-	private final ImageView speakerMuteIcon = new ImageView(new Image(getClass().getResourceAsStream("/resources/mute-icon2.png"), 24, 24, true, true));
+	private final ImageView speakerIcon = new ImageView();
+	private final ImageView speakerMuteIcon = new ImageView();
 	
 	// and check the corresponding items in controller instead of fxml
 	// TODO: add rotating screen while changing view, searching, etc.
 	// TODO: allow user to select and copy words but not edit
 	
 	
-	// TODO: change help(?) logo to png and high resolution
-	// TODO: do alert css if possible
 	// TODO: change back the select listener to its original form (no selectedCounter)
 	// TODO: if nothing is selected, hide the buttons
 	// TODO: fill out the labels (name, currently visible, ...)
 	// TODO: remove and rename the icons png if still using those
+	// TODO: change default toggle button to false for both
 	
+	// TODO: 1) remove all unused resources (and also windowTitleBar class), commit
+	// 2) change all resources name to its simplest, and change all FXML node to meaningful names
+	// 3) remove all unused imports
+	// 4) change all titles
+	// 5) remove comments
 	
 	@FXML private void initialize() {
 		this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
@@ -224,6 +229,12 @@ public class SongsDisplayController {
         this.selectedCounterProperty.addListener((obs, oldValue, newValue) -> {
         	this.numOfSelectedSongsLabel.setText(this.numOfSelectedSongsLabelText + newValue);
         });
+        
+        // focus on search bar on start (runlater or it wont focus)
+        Platform.runLater(() -> {
+        	this.testSearchText.requestFocus();
+        });
+        
 	}
 	
 	private void initMenuItemsListener() {
@@ -321,22 +332,6 @@ public class SongsDisplayController {
        
         ObservableList<TableViewData> initSongsObsList = FXCollections.observableArrayList(TableViewData.extractor());
         while (tableInitDataRs.next()) {
-//        	data.add(new TableViewData(
-//        			tableInitDataRs.getInt(SqliteDatabase.TableData.BeatmapSet.BEATMAP_SET_AUTO_ID)
-//					, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_SOURCE)
-//        			, tableInitDataRs.getString(SqliteDatabase.TableData.Artist.ARTIST_NAME)
-//        			, tableInitDataRs.getString(SqliteDatabase.TableData.Artist.ARTIST_NAME_UNICODE)
-//        			, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_TITLE)
-//        			, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_TITLE_UNICODE)
-//        			, tableInitDataRs.getInt(SqliteDatabase.TableData.Beatmap.TOTAL_TIME)
-//        			, tableInitDataRs.getLong(SqliteDatabase.TableData.Beatmap.LAST_MODIFICATION_TIME)
-//        			, tableInitDataRs.getBoolean(SqliteDatabase.TableData.BeatmapSet.IS_DOWNLOADED)
-//        			, tableInitDataRs.getBoolean(SqliteDatabase.TableData.BeatmapSet.IS_HIDDEN)
-//        			, false
-//        			, tableInitDataRs.getString(SqliteDatabase.TableData.BeatmapSet.FOLDER_NAME)
-//        			, tableInitDataRs.getString(SqliteDatabase.TableData.BeatmapSet.AUDIO_NAME)
-//        			, tableInitDataRs.getString(SqliteDatabase.TableData.SongTag.SONG_TAG_NAME)
-//        			));
         	TableViewData t = new TableViewData(
         			tableInitDataRs.getInt(SqliteDatabase.TableData.BeatmapSet.BEATMAP_SET_AUTO_ID)
 					, tableInitDataRs.getString(SqliteDatabase.TableData.Song.SONG_SOURCE)
@@ -370,7 +365,6 @@ public class SongsDisplayController {
         FilteredList<TableViewData> initSongsFilteredList = new FilteredList<TableViewData>(initSongsObsList, new CustomPredicate(""));
         PauseTransition pause = new PauseTransition(Duration.millis(200));
         this.testSearchText.textProperty().addListener((obs, oldValue, newValue) -> {
-        	// TODO: prettify this
         	this.testTable.setDisable(true);
         	pause.setOnFinished(event -> {
         		initSongsFilteredList.setPredicate(new CustomPredicate(newValue));
@@ -464,10 +458,6 @@ public class SongsDisplayController {
         else {
         	throw new SQLException("Failed to get config data");
         }
-       
-//        this.initMediaPlayerEssentials();
-//        this.testTable.setItems(initSongsSortedList);
-        
 	}
 	
 	
@@ -481,11 +471,25 @@ public class SongsDisplayController {
 //		if (this.soundVolume == null) {
 //			throw new RuntimeException("Sound volume is not yet selected from songs.db");
 //		}
+		final int speakerSize = 24;
+		this.speakerIcon.setImage(new Image(getClass().getResourceAsStream("/resources/sound-on-icon4.png")));
+		this.speakerIcon.setSmooth(true);
+		this.speakerIcon.setCache(true);
+		this.speakerIcon.setFitHeight(speakerSize);
+		this.speakerIcon.setFitWidth(speakerSize);
+		this.speakerMuteIcon.setImage(new Image(getClass().getResourceAsStream("/resources/mute-icon3.png")));
+		this.speakerMuteIcon.setSmooth(true);
+		this.speakerMuteIcon.setCache(true);
+		this.speakerMuteIcon.setFitHeight(speakerSize);
+		this.speakerMuteIcon.setFitWidth(speakerSize);
+		
 		// this must be set after querying database so that mediaPlayer later can refer to this value when boot
 		this.mediaPlayerVolumeSlider.setValue(soundVolume);
-		// default is not mute icon
 		if (Math.abs(soundVolume) < 0.01) {
 //			this.mediaPlayerSpeakerLabel.setText(this.speakerMuteUTFIcon);
+			this.mediaPlayerSpeakerLabel.setGraphic(this.speakerMuteIcon);
+		}
+		else {
 			this.mediaPlayerSpeakerLabel.setGraphic(this.speakerIcon);
 		}
 		

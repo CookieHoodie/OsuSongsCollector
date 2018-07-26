@@ -33,9 +33,9 @@
          <center>
             <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
                <children>
-                  <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" styleClass="top-bar">
+                  <HBox alignment="CENTER" prefHeight="80.0" prefWidth="990.0" styleClass="top-bar">
                      <children>
-                        <VBox prefHeight="62.0" prefWidth="227.0">
+                        <VBox minWidth="160.0" prefHeight="62.0" prefWidth="227.0">
                            <children>
                               <Label text="Name" />
                               <Label text="total" />
@@ -44,7 +44,7 @@
                            </children>
                         </VBox>
                         <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
-                        <VBox minWidth="-Infinity">
+                        <VBox alignment="TOP_CENTER" minWidth="-Infinity">
                            <children>
                               <HBox>
                                  <children>
@@ -69,7 +69,7 @@
                               <Insets right="10.0" />
                            </HBox.margin>
                         </VBox>
-                        <VBox minWidth="-Infinity">
+                        <VBox alignment="TOP_CENTER" minWidth="-Infinity">
                            <children>
                               <Button fx:id="hideUnhideButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#hideUnhideSelectedSongs" styleClass="button-design" text="Hide">
                                  <VBox.margin>
@@ -87,67 +87,62 @@
                            </HBox.margin>
                         </VBox>
                         <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
-                        <VBox prefHeight="56.0" prefWidth="272.0">
+                        <VBox alignment="TOP_RIGHT" maxHeight="70.0" maxWidth="350.0" minWidth="275.0" nodeOrientation="LEFT_TO_RIGHT">
                            <children>
-                              <HBox prefHeight="100.0" prefWidth="200.0">
+                              <HBox fillHeight="false" prefHeight="100.0" prefWidth="200.0">
                                  <children>
                                     <Label fx:id="mediaPlayerTitleLabel" text="Song Title" HBox.hgrow="ALWAYS" />
                                  </children>
+                                 <VBox.margin>
+                                    <Insets bottom="5.0" />
+                                 </VBox.margin>
                               </HBox>
-                              <HBox prefHeight="100.0" prefWidth="200.0">
+                              <HBox fillHeight="false" prefHeight="100.0" prefWidth="200.0">
                                  <children>
-                                    <Slider fx:id="mediaPlayerTimeSlider" HBox.hgrow="ALWAYS" />
+                                    <Slider fx:id="mediaPlayerTimeSlider" maxHeight="1.7976931348623157E308" HBox.hgrow="ALWAYS" />
                                     <HBox>
                                        <children>
-                                          <Label fx:id="mediaPlayerSpeakerLabel">
-                                             <graphic>
-                                                <ImageView fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
-                                                   <image>
-                                                      <Image url="@../resources/sound-on-icon2.png" />
-                                                   </image>
-                                                </ImageView>
-                                             </graphic>
-                                          </Label>
-                                          <Slider fx:id="mediaPlayerVolumeSlider" prefHeight="14.0" prefWidth="68.0" />
+                                          <Label fx:id="mediaPlayerSpeakerLabel" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" prefHeight="24.0" prefWidth="24.0" />
+                                          <Slider fx:id="mediaPlayerVolumeSlider" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="14.0" prefWidth="70.0" />
                                        </children>
                                     </HBox>
                                  </children>
                               </HBox>
-                              <HBox prefHeight="49.0" prefWidth="200.0" styleClass="music-player-button-bar">
+                              <HBox fillHeight="false" prefHeight="49.0" prefWidth="200.0" styleClass="music-player-button-bar">
                                  <children>
-                                    <ToggleButton fx:id="mediaPlayerRepeatToggleButton" minWidth="25.0" mnemonicParsing="false" selected="true" styleClass="repeat-button">
+                                    <ToggleButton fx:id="mediaPlayerRepeatToggleButton" mnemonicParsing="false">
                                        <tooltip>
-                                          <Tooltip text="Repeat / No repeat" />
+                                          <Tooltip styleClass="tooltip-design" text="Repeat / No repeat" />
                                        </tooltip>
                                     </ToggleButton>
-                                    <ToggleButton fx:id="mediaPlayerShuffleToggleButton" minWidth="25.0" mnemonicParsing="false" styleClass="shuffle-button">
+                                    <ToggleButton fx:id="mediaPlayerShuffleToggleButton" mnemonicParsing="false">
                                        <tooltip>
-                                          <Tooltip text="Random / Sequential (*lower priority than ∞)" />
+                                          <Tooltip styleClass="tooltip-design" text="Random / Sequential (*lower priority than repeat)" />
                                        </tooltip>
                                     </ToggleButton>
-                                    <Button fx:id="mediaPlayerPreviousButton" minWidth="25.0" mnemonicParsing="false" styleClass="previous-button">
+                                    <Button fx:id="mediaPlayerPreviousButton" mnemonicParsing="false">
                                        <tooltip>
-                                          <Tooltip text="Previous song" />
+                                          <Tooltip styleClass="tooltip-design" text="Previous song" />
                                        </tooltip>
                                     </Button>
-                                  <Button fx:id="mediaPlayerPlayButton" minWidth="25.0" mnemonicParsing="false" styleClass="play-button">
+                                  <Button fx:id="mediaPlayerPlayButton" mnemonicParsing="false">
                                        <tooltip>
-                                          <Tooltip text="Play" />
+                                          <Tooltip styleClass="tooltip-design" text="Play" />
                                        </tooltip>
                                     </Button>
-                                    <Button fx:id="mediaPlayerPauseButton" minWidth="25.0" mnemonicParsing="false" styleClass="pause-button">
+                                    <Button fx:id="mediaPlayerPauseButton" mnemonicParsing="false">
                                        <tooltip>
-                                          <Tooltip text="Pause" />
+                                          <Tooltip styleClass="tooltip-design" text="Pause" />
                                        </tooltip>
                                     </Button>
-                                    <Button fx:id="mediaPlayerStopButton" minWidth="25.0" mnemonicParsing="false" styleClass="stop-button">
+                                    <Button fx:id="mediaPlayerStopButton" mnemonicParsing="false">
                                        <tooltip>
-                                          <Tooltip text="Stop " />
+                                          <Tooltip styleClass="tooltip-design" text="Stop " />
                                        </tooltip>
                                     </Button>
-                                    <Button fx:id="mediaPlayerNextButton" mnemonicParsing="false" prefHeight="24.0" prefWidth="25.0" styleClass="next-button">
+                                    <Button fx:id="mediaPlayerNextButton" mnemonicParsing="false">
                                        <tooltip>
-                                          <Tooltip text="Next song" />
+                                          <Tooltip styleClass="tooltip-design" text="Next song" />
                                        </tooltip>
                                     </Button>
                                  </children>
@@ -159,7 +154,7 @@
                         <Insets bottom="10.0" />
                      </VBox.margin>
                      <padding>
-                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                        <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
                      </padding>
                   </HBox>
                   <TableView fx:id="testTable" editable="true" prefHeight="500.0" prefWidth="800.0" VBox.vgrow="ALWAYS">

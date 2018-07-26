@@ -10,7 +10,6 @@
 }
 
 .image-pane {
-	/*-fx-background-image: url(../resources/dialogBg.jpg);*/
 	-fx-background-image: url(../resources/displayBg.jpg);  
 	-fx-background-size: cover;
 }

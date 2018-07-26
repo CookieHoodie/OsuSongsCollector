@@ -91,74 +91,66 @@
 
 
 /* Music player */
-.music-player-button-bar > .button, .toggle-button {
+.music-player-button-bar .button, .music-player-button-bar .toggle-button {
 	-fx-background-color: transparent;
-	-fx-background-size: 24px 24px;
+	-fx-min-width: 32px;
+	-fx-min-height: 32px;
+	-fx-background-size: 28px 28px;
     -fx-background-repeat: no-repeat;
     -fx-background-position: center;
 }
 
-.play-button {
-	-fx-background-image: url(../resources/play-icon9.png); 
+.music-player-button-bar .button:hover, .music-player-button-bar .toggle-button:hover {
+	-fx-background-size: 32px 32px;
 }
 
-.play-button:hover {
-	-fx-background-image: url(../resources/play-icon-hover.png); 
+#mediaPlayerPlayButton {
+	-fx-background-image: url(../resources/play-icon3.png); 
 }
 
-.pause-button {
-	-fx-background-image: url(../resources/pause-icon4.png); 
+#mediaPlayerPauseButton {
+	-fx-background-image: url(../resources/pause-icon5.png); 
 }
 
-.pause-button:hover {
-	-fx-background-image: url(../resources/pause-icon-hover.png); 
+#mediaPlayerNextButton {
+	-fx-background-image: url(../resources/next-icon3.png); 
 }
 
-.next-button {
-	-fx-background-image: url(../resources/next-icon2.png); 
+#mediaPlayerStopButton {
+	-fx-background-image: url(../resources/stop-icon3.png); 
 }
 
-.next-button:hover {
-	-fx-background-image: url(../resources/next-icon-hover.png); 
+#mediaPlayerPreviousButton {
+	-fx-background-image: url(../resources/previous-icon3.png); 	
 }
 
-.stop-button {
-	-fx-background-image: url(../resources/stop-icon2.png); 
+#mediaPlayerShuffleToggleButton {
+	-fx-background-image: url(../resources/shuffle-icon3.png); 
 }
 
-.stop-button:hover {
-	-fx-background-image: url(../resources/stop-icon-hover.png); 
+#mediaPlayerShuffleToggleButton:selected {
+	-fx-background-image: url(../resources/shuffle-icon-hover3.png); 
 }
 
-.previous-button {
-	-fx-background-image: url(../resources/previous-icon2.png); 
+#mediaPlayerRepeatToggleButton {
+	-fx-background-image: url(../resources/repeat-icon5.png); 
 }
 
-.previous-button:hover {
-	-fx-background-image: url(../resources/previous-icon-hover.png); 
-}
-
-.shuffle-button {
-	-fx-background-image: url(../resources/shuffle-icon2.png); 
-}
-
-.shuffle-button:selected {
-	-fx-background-image: url(../resources/shuffle-icon-hover.png); 
-}
-
-.repeat-button {
-	-fx-background-image: url(../resources/repeat-icon2.png); 
-}
-
-.repeat-button:selected {
-	-fx-background-image: url(../resources/repeat-icon-hover.png); 
-}
-
-.shuffle-button:hover, .repeat-button:hover {
-	-fx-background-size: 22px 22px;
+#mediaPlayerRepeatToggleButton:selected {
+	-fx-background-image: url(../resources/repeat-icon-hover4.png); 
 }
 
 
+/* TODO: change this to name */
+.slider .track {
+	-fx-background-color: -fx-my-menu-color, -fx-my-top-bar-color, -fx-my-menu-color;
+	-fx-background-insets: 0, 1, 2;
+}
+
+.slider .thumb {
+	-fx-background-color: -fx-my-menu-color, -fx-my-top-bar-color;
+	-fx-background-insets: 0, 2;
+}
 /* Table view */
 
 .table-view {

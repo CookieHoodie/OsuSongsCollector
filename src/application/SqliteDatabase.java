@@ -773,7 +773,7 @@ public class SqliteDatabase {
 	
 	public void insertAllData(OsuDbParser osuDb) throws SQLException, InterruptedException {
 		this.insertIntoMetadata(osuDb.getOsuVersion(), osuDb.getFolderCount(), osuDb.getPlayerName(), osuDb.getNumberOfBeatmaps());
-		this.insertIntoConfig(osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "", false, false, false, false, false, false, false, false, "", 50.0, true, false, ComboBoxChoice.NONE.toString(), ComboBoxChoice.NONE.toString());
+		this.insertIntoConfig(osuDb.getPathToOsuDb(), osuDb.getPathToSongsFolder(), "", false, false, false, false, false, false, false, false, "", 50.0, false, false, ComboBoxChoice.NONE.toString(), ComboBoxChoice.NONE.toString());
 		
 		// store rankedIndex if ranked, -1 if is not and -2 if multi-audio
 		List<Integer> rankedList = new ArrayList<Integer>();
