@@ -1,5 +1,8 @@
 package controllers;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import application.OsuDbParser;
 import application.SqliteDatabase;
 import application.ViewLoader;
@@ -11,7 +14,7 @@ import javafx.stage.Stage;
 
 
 public class UpdateDataInSongsDisplayController extends UpdateDataController {
-
+	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	private boolean isSongsUpdated = false;
 	private boolean isBeatmapsDetailsUpdated = false;
 	private SongsDisplayController parentController;
@@ -32,10 +35,13 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 		loadOsuDbTask.setOnFailed(e -> {
 			Throwable e1 = loadOsuDbTask.getException();
 			if (!(e1 instanceof InterruptedException)) {
-				e1.printStackTrace();
+				logger.logp(Level.SEVERE, this.getClass().getName(), "setLoadOsuDbTaskOnHandlers", "Failed to load osu!.db", e1);
 				Alert alert = new Alert(AlertType.ERROR, "Failed to load osu!.db", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
+			}
+			else {
+				logger.logp(Level.WARNING, this.getClass().getName(), "setLoadOsuDbTaskOnHandlers", "loadOsuDbTask is interrupted", e1);
 			}
 		});
 	}
@@ -49,10 +55,13 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 		updateSongsDbTask.setOnFailed(e -> {
 			Throwable e1 = updateSongsDbTask.getException();
 			if (!(e1 instanceof InterruptedException)) {
-				e1.printStackTrace();
+				logger.logp(Level.SEVERE, this.getClass().getName(), "setUpdateSongsDbTaskOnHandlers", "Failed to update data in songs.db", e1);
 				Alert alert = new Alert(AlertType.ERROR, "Failed to update songs list.", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
+			}
+			else {
+				logger.logp(Level.WARNING, this.getClass().getName(), "setUpdateSongsDbTaskOnHandlers", "updateSongsDbTask is interrupted", e1);
 			}
 		});
 	}
@@ -67,10 +76,13 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 		updateBeatmapDetailsTask.setOnFailed(e -> {
 			Throwable e1 = updateBeatmapDetailsTask.getException();
 			if (!(e1 instanceof InterruptedException)) {
-				e1.printStackTrace();
+				logger.logp(Level.SEVERE, this.getClass().getName(), "setUpdateBeatmapDetailsTaskOnHandlers", "Failed to update details in songs.db", e1);
 				Alert alert = new Alert(AlertType.ERROR, "Failed to update beatmaps details.", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
+			}
+			else {
+				logger.logp(Level.WARNING, this.getClass().getName(), "setUpdateBeatmapDetailsTaskOnHandlers", "updateBeatmapDetailsTask is interrupted", e1);
 			}
 		});
 	}
@@ -83,6 +95,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait().ifPresent(response -> {
 				if (response == ButtonType.YES) {
+					logger.logp(Level.INFO, this.getClass().getName(), "promptForUserAction", "Restarting program");
 					this.currentStage.hide();
 					this.parentController.restartProgram(false);
 				}

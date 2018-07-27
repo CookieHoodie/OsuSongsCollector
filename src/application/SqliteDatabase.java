@@ -520,7 +520,7 @@ public class SqliteDatabase {
 				songPStatement.cancel();
 				songTagPStatement.cancel();
 				this.cleanUpThread(deleteSongsDb);
-				throw new InterruptedException("CreateDatabaseTask is interrupted");
+				throw new InterruptedException("CreateDatabaseTask is interrupted at: (" + i + "/" + (dataToInsert.size() - 1) + ") while inserting artist, song, and songTag");
 			}
 			
 			int rankedIndex = rankedList.get(i);
@@ -591,7 +591,7 @@ public class SqliteDatabase {
 			if (Thread.currentThread().isInterrupted()) {
 				beatmapSetPStatement.cancel();
 				this.cleanUpThread(deleteSongsDb);
-				throw new InterruptedException("CreateDatabaseTask is interrupted");
+				throw new InterruptedException("CreateDatabaseTask is interrupted at: (" + i + "/" + (dataToInsert.size() -1) + ") while inserting beatmapSet");
 			}
 			
 			int rankedIndex = rankedList.get(i);
@@ -680,7 +680,7 @@ public class SqliteDatabase {
 				beatmapPStatement.cancel();
 				beatmapSet_SongTagPStatement.cancel();
 				this.cleanUpThread(deleteSongsDb);
-				throw new InterruptedException("CreateDatabaseTask is interrupted");
+				throw new InterruptedException("CreateDatabaseTask is interrupted at: " + i + "/" + (dataToInsert.size() - 1) + ") while inserting beatmap and beatmapSet_songTag");
 			}
 			
 			int rankedIndex = rankedList.get(i);
@@ -884,7 +884,11 @@ public class SqliteDatabase {
 				this.insertDataIntoDb(songsFolder, rankedList, unrankedDataMap, atomizedBeatmapSetMap, atomizedBeatmapSetReferenceDataMap, true);
 			}
 			finally {
-				this.getConn().setAutoCommit(true);
+				// check cuz if the insertDataIntoDb method is interrupted, it closes the db connection and this will throw error
+				if (!Thread.currentThread().isInterrupted()) {
+					this.getConn().setAutoCommit(true);
+				}
+				
 				// if threading, set back to null to prevent inadvertent access later
 				if (this.progressUpdate != null) {
 					this.setProgressUpdate(null);
@@ -910,16 +914,13 @@ public class SqliteDatabase {
 		String selectAllBeatmapSetAutoIDSql = "SELECT " + TableData.BeatmapSet.BEATMAP_SET_AUTO_ID + " FROM " + TableData.BeatmapSet.TABLE_NAME;
 		Statement allBeatmapSetAutoIDStatement = this.getConn().createStatement();
 		
-		System.out.println("Start getting all ID");
-		
+		// getting all ID
 		ResultSet allBeatmapSetAutoIDRs = allBeatmapSetAutoIDStatement.executeQuery(selectAllBeatmapSetAutoIDSql);
 		while (allBeatmapSetAutoIDRs.next()) {
 			int beatmapSetAutoID = allBeatmapSetAutoIDRs.getInt(1);
 			dbRecords.put(beatmapSetAutoID, 0);
 		}
 		
-		
-		System.out.println("Finish getting all ID");
 		
 		
 		String selectBeatmapCountUsingBeatmapSetAutoIDSql = "SELECT COUNT(*) FROM " + TableData.Beatmap.TABLE_NAME 
@@ -952,10 +953,8 @@ public class SqliteDatabase {
 		List<List<Beatmap>> songsFolder = osuDb.getSongsFolder();
 		
 		
-		System.out.println("Start checking for updates");
 		
-		
-		
+		// Start checking for updates
 		for (List<Beatmap> beatmapSet : songsFolder) {
 			// for unranked only
 			// initialize to first audioName
@@ -1072,21 +1071,17 @@ public class SqliteDatabase {
 			this.progressUpdate.accept(1, totalProgress);
 		}
 		
-		System.out.println("Finish");
-		System.out.println("Update list: " + updateList.size());
-		System.out.println("Modified list: " + modifiedList.size());
-		System.out.println("Deleted: " + dbRecords.size());
+		
 		isAnyUpdated = updateList.isEmpty() && modifiedList.isEmpty() && dbRecords.isEmpty() ? false : true;
 		if (Thread.currentThread().isInterrupted()) {
 			// not closing songDb connection here as it might be at an instance where user is already in displaySongs stage
-			throw new InterruptedException("Interrupted while updating data");
+			throw new InterruptedException("Interrupted before starting to update songs");
 		}
 		
 		// even if all is empty, still go till the end to clean up certain resources
 		// wrap in try to clean resources afterwards
 		try {
 			if (!dbRecords.isEmpty()) {
-				System.out.println("Start deleting");
 				// delete
 				String deleteFromBeatmapSetSql = "DELETE FROM " + TableData.BeatmapSet.TABLE_NAME + " WHERE "; 
 				StringJoiner sj = new StringJoiner(" OR ");
@@ -1113,8 +1108,6 @@ public class SqliteDatabase {
 			this.getConn().setAutoCommit(false);
 			
 			if (!modifiedList.isEmpty()) {
-				
-				System.out.println("Start modifying");
 				
 				// modified songs
 				String getBeatmapAutoIDAndDifficultySql = "SELECT " + TableData.Beatmap.BEATMAP_AUTO_ID 
@@ -1177,7 +1170,7 @@ public class SqliteDatabase {
 			}
 			
 			if (Thread.currentThread().isInterrupted()) {
-				throw new InterruptedException("Interrupted while updating data");
+				throw new InterruptedException("Interrupted before inserting new songs");
 			}
 			
 			if (this.progressUpdate != null) {
@@ -1186,7 +1179,6 @@ public class SqliteDatabase {
 			
 			
 			if (!updateList.isEmpty()) {
-				System.out.println("Start inserting");
 				// insert new songs
 				// gather needed info for updating
 				// actually this can be done while checking for updates, but for the sake of
@@ -1248,7 +1240,10 @@ public class SqliteDatabase {
 			}
 		}
 		finally {
-			this.getConn().setAutoCommit(true);
+			if (!Thread.currentThread().isInterrupted()) {
+				this.getConn().setAutoCommit(true);
+			}
+			
 			// if threading, set back to null to prevent inadvertent access later
 			if (this.progressUpdate != null) {
 				this.setProgressUpdate(null);
@@ -1276,7 +1271,6 @@ public class SqliteDatabase {
 		int currentProgress = 0;
 		boolean isAnyUpdated = false;
 		
-		System.out.println("Creating maps");
 		
 		for (Map.Entry<String, List<Beatmap>> entry : osuDbBeatmapsMap.entrySet()) {
 			String folderName = entry.getKey();
@@ -1286,10 +1280,6 @@ public class SqliteDatabase {
 			totalProgress += beatmapsMap.size();
 		}
 		
-//		osuDbBeatmapsMap.forEach((folderName, beatmapSet) -> {
-//			Map<String, Beatmap> beatmapsMap = beatmapSet.stream().collect(Collectors.toMap(Beatmap::getDifficulty, Function.identity()));
-//			nestedMap.put(folderName, beatmapsMap);
-//		});
 		
 		String selectBeatmapSql = "SELECT " + TableData.Beatmap.BEATMAP_AUTO_ID + "," 
 				+ TableData.BeatmapSet.FOLDER_NAME + ","
@@ -1304,9 +1294,7 @@ public class SqliteDatabase {
 		PreparedStatement updateBeatmapPStatement = this.getUpdateBeatmapPStatement(items);
 		Statement stmt = this.getConn().createStatement();
 		
-		System.out.println("updating");
-		
-		
+		// updating
 		try {
 			this.getConn().setAutoCommit(false);
 			ResultSet beatmapRs = stmt.executeQuery(selectBeatmapSql);
@@ -1337,8 +1325,6 @@ public class SqliteDatabase {
 			}
 		}
 		
-		
-		System.out.println("finish");
 		return isAnyUpdated;
 	}
 	

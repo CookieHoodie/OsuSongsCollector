@@ -3,6 +3,8 @@ package controllers;
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import application.Constants;
 import application.Main;
@@ -22,6 +24,7 @@ import javafx.util.Duration;
 public class LoadAndCreateDatabaseController extends LoadingDialogParentController {
 	private String fullPathToOsuDb;
 	private String pathToSongsFolder;
+	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	
 	public void initDataAndStart(Stage currentStage, String fullPathToOsuDb, String pathToSongsFolder) {
 		this.fullPathToOsuDb = fullPathToOsuDb;
@@ -32,11 +35,12 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait().ifPresent(response -> {
 				if (response == ButtonType.YES) {
+					logger.logp(Level.INFO, this.getClass().getName(), "initDataAndStart", "Closing while task is running");
 					this.exec.shutdownNow();
 					try {
 						this.exec.awaitTermination(8, TimeUnit.SECONDS);
 					} catch (InterruptedException e1) {
-						e1.printStackTrace();
+						logger.logp(Level.SEVERE, this.getClass().getName(), "initDataAndStart", "Failed to wait for tasks to finish", e1);
 						Alert corruptionAlert = new Alert(AlertType.ERROR, "Program is interrupted without cleaning up while initializing. Relevant files might have corrupted.", ButtonType.OK);
 						ViewLoader.addStyleToAlert(corruptionAlert);
 						corruptionAlert.show();
@@ -63,7 +67,7 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 				songsDb.createTables();
 				if (Thread.currentThread().isInterrupted()) {
 					songsDb.cleanUpThread(true);
-					throw new InterruptedException("Interrupted while creating songs.db");
+					throw new InterruptedException("Interrupted after creating tables");
 				}
 				songsDb.insertAllData(osuDb);
 				return songsDb;
@@ -78,16 +82,21 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 		
 		loadOsuDbTask.setOnFailed(event -> {
 			Throwable e = loadOsuDbTask.getException();
-			e.printStackTrace();
 			if (e instanceof FileNotFoundException) {
+				logger.logp(Level.SEVERE, this.getClass().getName(), "loadOsuDb", "osu!.db is not found", e);
 				Alert alert = new Alert(AlertType.ERROR, "osu!.db is not found. Please make sure the osu!.exe path chosen is correct!", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}
 			else if (!(e instanceof InterruptedException)) {
+				logger.logp(Level.SEVERE, this.getClass().getName(), "loadOsuDb", "Failed to load osu!.db", e);
 				Alert alert = new Alert(AlertType.ERROR, "Error loading osu!.db", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
-				alert.show();
+				alert.showAndWait();
+			}
+			// InterruptedException
+			else {
+				logger.logp(Level.WARNING, this.getClass().getName(), "loadOsuDb", "loadOsuDbTask is interrupted", e);
 			}
 		});
 		
@@ -106,11 +115,14 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 		this.progressBar.progressProperty().bind(createSongsDbTask.progressProperty());
 		createSongsDbTask.setOnFailed(event -> {
 			Throwable e = createSongsDbTask.getException();
-			e.printStackTrace();
 			if (!(e instanceof InterruptedException)) {
+				logger.logp(Level.SEVERE, this.getClass().getName(), "createSongsDb", "Database operation failed", e);
 				Alert alert = new Alert(AlertType.ERROR, "Failed to store data from osu!.db", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
+			}
+			else {
+				logger.logp(Level.WARNING, this.getClass().getName(), "createSongsDb", "createSongsDbTask is interrupted", e);
 			}
 		});
 		
@@ -121,17 +133,18 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
         	pause.setOnFinished(e -> {
         		SqliteDatabase songsDb = createSongsDbTask.getValue();
         		try {
+        			logger.logp(Level.INFO, this.getClass().getName(), "createSongsDb", "Loading SongsDisplayView");
         			Stage currentStage = (Stage) this.instructionLabel.getScene().getWindow();
         			ViewLoader.loadNewSongsDisplayView(currentStage, songsDb, this.hostServices);
     			}
         		catch (SQLException e1) {
-    				e1.printStackTrace();
+        			logger.logp(Level.SEVERE, this.getClass().getName(), "createSongsDb", "Failed to get table data during loading songsDisplayView", e1);
     				Alert alert = new Alert(AlertType.ERROR, "Failed to retrieve data from songs.db", ButtonType.OK);
     				ViewLoader.addStyleToAlert(alert);
     				alert.showAndWait();
     			}
         		catch (Exception e1) {
-    				e1.printStackTrace();
+        			logger.logp(Level.SEVERE, this.getClass().getName(), "createSongsDb", "Failed to load SongsDisplayView", e1);
     				Alert alert = new Alert(AlertType.ERROR, "Failed to load display window", ButtonType.OK);
     				ViewLoader.addStyleToAlert(alert);
     				alert.showAndWait();

@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import application.Constants;
 import application.SqliteDatabase;
@@ -31,6 +33,7 @@ import javafx.scene.control.TextArea;
 import javafx.stage.Stage;
 
 public class CopySongsController {
+	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	private HostServices hostServices;
 	public void setHostServices(HostServices hostServices) {
 		this.hostServices = hostServices;
@@ -70,9 +73,10 @@ public class CopySongsController {
 			this.cancelButton.setDisable(true);
 		});
 		copySongsTask.setOnFailed(e -> {
+			Throwable e1 = copySongsTask.getException();
 			this.cancelButton.setDisable(true);
-			copySongsTask.getException().printStackTrace();
-			Alert alert = new Alert(AlertType.ERROR, "Error occured while collecting songs: " + copySongsTask.getException().getMessage(), ButtonType.OK);
+			logger.logp(Level.SEVERE, this.getClass().getName(), "startCopying", "Failed to copy songs", e1);
+			Alert alert = new Alert(AlertType.ERROR, "Error occured while collecting songs: " + e1.getMessage(), ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
 		});
@@ -93,6 +97,7 @@ public class CopySongsController {
 		ViewLoader.addStyleToAlert(alert);
 		alert.showAndWait().ifPresent(response -> {
 			if (response == ButtonType.YES) {
+				logger.logp(Level.INFO, this.getClass().getName(), "cancelTaskAlert", "Canceling copySongsTask");
 				this.copySongsTask.cancel();
 			}
 		});
@@ -187,7 +192,7 @@ public class CopySongsController {
 					break;
 				}
 				
-				default: throw new RuntimeException("Invalid options");
+				default: throw new RuntimeException("Invalid filename options");
 			}
 			return fileNamePart;
 		}

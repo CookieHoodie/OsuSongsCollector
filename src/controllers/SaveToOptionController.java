@@ -9,6 +9,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import application.Comparators;
@@ -38,6 +40,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class SaveToOptionController {
+	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	private HostServices hostServices;
 	public void setHostServices(HostServices hostServices) {
 		this.hostServices = hostServices;
@@ -160,7 +163,7 @@ public class SaveToOptionController {
 		}
 		// shouldn't be the case
 		else {
-			throw new SQLException("No metadata available?");
+			throw new SQLException("No config available?");
 		}
 		
 	}
@@ -249,7 +252,7 @@ public class SaveToOptionController {
 		}
 		// runtimeException & SQLException should show similar result to user
 		catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Failed to save chosen path to songs.db", e);
 			Alert alert = new Alert(AlertType.ERROR, "Failed to remember chosen path", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.show();
@@ -271,7 +274,7 @@ public class SaveToOptionController {
 			this.currentStage.setResizable(true);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "Failed to load CopySongsView", e);
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load collect songs window", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
@@ -362,7 +365,7 @@ public class SaveToOptionController {
 			try {
 				this.loadFilterDialogView(dialogObsList);
 			} catch (Exception e) {
-				e.printStackTrace();
+				logger.log(Level.SEVERE, "Failed to load FilterDialogView", e);
 				Alert alert = new Alert(AlertType.ERROR, "Failed to load duplicate check window", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();

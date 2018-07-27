@@ -11,3 +11,8 @@ build.fxbuild
 
 # Project
 songs.db
+
+
+# Logging
+*.log
+*.log.lck

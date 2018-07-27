@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import application.Comparators;
@@ -81,6 +83,8 @@ public class SongsDisplayController {
 	public void setHostServices(HostServices hostServices) {
 		this.hostServices = hostServices;
 	}
+	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+	
 	private SqliteDatabase songsDb;
 	private Stage currentStage;
 	private ObservableList<TableViewData> initSongsObsList;
@@ -309,10 +313,11 @@ public class SongsDisplayController {
 			try {
 				this.updatePreference();
 				this.songsDb.closeConnection();	
+				logger.logp(Level.INFO, this.getClass().getName(), "initData", "Safely saved and exited");
 			} 
 			// catch exceptions as they can prevent window from closing
 			catch (Exception e1) {
-				e1.printStackTrace();
+				logger.logp(Level.SEVERE,  this.getClass().getName(), "initData", "Failed to updatePreference when closed", e1);
 			}
 		});
 		this.initTableView();
@@ -469,6 +474,7 @@ public class SongsDisplayController {
 		}
 		// if SQLException (ie. the application can still run just that without preferences), then show alert and continue
         catch (SQLException e) {
+        	logger.log(Level.WARNING, "Failed to load config from songs.db", e);
         	Alert alert = new Alert(AlertType.ERROR, "Failed to load preferences", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
@@ -651,6 +657,7 @@ public class SongsDisplayController {
 			}
 			catch (MediaException e) {
 				String errorMessage =  "Failed to play " + mp3Path.getFileName().toString() + " (probably due to unsupported format)";
+				logger.log(Level.WARNING, errorMessage, e);
 				Alert alert = new Alert(AlertType.ERROR, errorMessage, ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
@@ -803,13 +810,13 @@ public class SongsDisplayController {
 				this.loadSaveToOptionView(selectedSongsMap);
 			}
 			catch (SQLException e) {
-				e.printStackTrace();
+				logger.log(Level.SEVERE, "Failed to get config from songs.db during loading SaveToOptionView", e);
 				Alert alert = new Alert(AlertType.ERROR, "Error getting data from songs.db", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				logger.log(Level.SEVERE, "Failed to load SaveToOptionView", e);
 				Alert alert = new Alert(AlertType.ERROR, "Failed to load songs option screen", ButtonType.OK);
 				ViewLoader.addStyleToAlert(alert);
 				alert.showAndWait();
@@ -858,7 +865,7 @@ public class SongsDisplayController {
 			this.songsDb.getConn().commit();
 		}
 		catch (SQLException e) {
-			e.printStackTrace();
+			logger.log(Level.WARNING, "Failed to update hidden property in songs.db", e);
 			Alert alert = new Alert(AlertType.ERROR, "Failed to update preference in songs.db", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
@@ -906,6 +913,7 @@ public class SongsDisplayController {
 		ViewLoader.addStyleToAlert(alert);
 		alert.showAndWait().ifPresent(response -> {
 			if (response == ButtonType.YES) {
+				logger.logp(Level.INFO, this.getClass().getName(), "resetAll", "Reseting all data");
 				this.restartProgram(true);
 			}
 		});
@@ -938,7 +946,7 @@ public class SongsDisplayController {
 			newApp.start(new Stage());
 		} 
 		catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "Failed to restart program", e);
 			Alert restartAlert = new Alert(AlertType.ERROR, "Failed to restart", ButtonType.OK);
 			ViewLoader.addStyleToAlert(restartAlert);
 			restartAlert.showAndWait();
@@ -950,7 +958,7 @@ public class SongsDisplayController {
 			this.loadUpdateDataView();
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "Failed to load UpdateDetailsView", e);
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load update window", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();
@@ -1018,6 +1026,9 @@ public class SongsDisplayController {
 					, this.totalTimeShowCheckMenuItem.isSelected(), this.isDownloadedShowCheckMenuItem.isSelected(), ordering, this.mediaPlayerVolumeSlider.getValue()
 					, this.mediaPlayerRepeatToggleButton.isSelected(), this.mediaPlayerShuffleToggleButton.isSelected(), comboBoxPrefix
 					, comboBoxSuffix);
+		}
+		else {
+			throw new SQLException("No config data is found");
 		}
 	}
 	

@@ -3,6 +3,8 @@ package controllers;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import application.Constants;
 import application.Main;
@@ -27,6 +29,8 @@ import javafx.util.Duration;
 // TODO: at the end, ensure only one app can be opened at the same time. Otherwise racing condition can happen in SQL
 // TODO: change all the printStacks to logging
 // TODO: change all fxml api to get rid of warnings
+// TODO: ensure utf-8 by trying to switch ide config to non-utf-8 and see whether the gui still output correctly or not
+// TODO: ensure database pragma is utf-8 also
 
 public class InitScreenController {
 	@FXML private Label welcomeLabel;
@@ -35,6 +39,8 @@ public class InitScreenController {
 	private String pathToOsuDb;
 	private String pathToSongsFolder;
 	private HostServices hostServices;
+	
+	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	
 	public void setHostServices(HostServices hostServices) {
 		this.hostServices = hostServices;
@@ -87,32 +93,34 @@ public class InitScreenController {
 				boolean isUpToDate = checkAllSetService.getValue();
 				if (isUpToDate) {
 					try {
+						logger.logp(Level.INFO, this.getClass().getName(), "startChecking", "Loading songsDisplayView");
 						Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
 						ViewLoader.loadNewSongsDisplayView(currentStage, this.songsDb, this.hostServices);
 					}
 					catch (SQLException e1) {
 						// this exception comes from initTableData method for populating the tableView
-						e1.printStackTrace();
+						logger.logp(Level.SEVERE, this.getClass().getName(), "startChecking", "Failed to get table data during loading songsDisplayView", e1);
 						this.displayAlertAndExit("Failed to retrieve data from songs.db");
 					}
 					catch (Exception e1) {
-						e1.printStackTrace();
+						logger.logp(Level.SEVERE, this.getClass().getName(), "startChecking", "Failed to load songsDisplayView", e1);
 						this.displayAlertAndExit("Failed to load display window");
 					}
 				}
 				else {
 					try {
+						logger.logp(Level.INFO, this.getClass().getName(), "startChecking", "Loading updateDataView");
 						this.loadUpdateDataView();
 					} 
 					catch (Exception e1) {
-						e1.printStackTrace();
+						logger.logp(Level.SEVERE, this.getClass().getName(), "startChecking", "Failed to load updateDataView", e1);
 						this.displayAlertAndExit("Failed to load update window");
 					}
 				}
 			});
 			
 			checkAllSetService.setOnFailed(e -> {
-				checkAllSetService.getException().printStackTrace();
+				logger.logp(Level.SEVERE, this.getClass().getName(), "startChecking", "checkAllSetService failed", checkAllSetService.getException());
 				this.displayAlertAndExit("Corrupted or interrupted when checking for songs added or deleted");
 			});
 			checkAllSetService.start();
@@ -123,10 +131,11 @@ public class InitScreenController {
 			PauseTransition pause = new PauseTransition(Duration.millis(1000));
 	    	pause.setOnFinished(e1 -> {
 	    		try {
+	    			logger.logp(Level.INFO, this.getClass().getName(), "startChecking", "Loading SetSongsFolderPathView");
 	    			this.loadSetSongsFolderPathView();
 	    		}
 				catch (Exception e) {
-					e.printStackTrace();
+					logger.logp(Level.SEVERE, this.getClass().getName(), "startChecking", "Failed to load setSongsFolderPathView", e);
 					this.displayAlertAndExit("Failed to load initialization screen");
 				}
 	    	});
@@ -154,7 +163,6 @@ public class InitScreenController {
 		setSongsFolderPathController.setHostServices(this.hostServices);
 		Scene scene = new Scene(root);
 		Stage primaryStage = (Stage) this.welcomeLabel.getScene().getWindow();
-		setSongsFolderStage.setTitle(primaryStage.getTitle());
 		setSongsFolderStage.setScene(scene);
 		setSongsFolderStage.show();
 		primaryStage.hide();;

@@ -3,6 +3,8 @@ package controllers;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import application.Constants;
 import application.Main;
@@ -28,6 +30,7 @@ public class SetSongsFolderPathController {
 	@FXML private Label instructionLabel;
 	@FXML private Button continueButton;
 	
+	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	private String fullPathToOsuDb;
 	private String pathToSongsFolder;
 	private HostServices hostServices;
@@ -68,6 +71,7 @@ public class SetSongsFolderPathController {
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
 		try {
+			logger.log(Level.INFO, "Loading LoadAndCreateDatabaseView");
 			LoadAndCreateDatabaseController ctr = new LoadAndCreateDatabaseController();
 			loader.setController(ctr);
 			BorderPane root = loader.load();
@@ -78,7 +82,7 @@ public class SetSongsFolderPathController {
 			currentStage.setScene(scene);
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "Failed to load LoadingDialogParentView", e);
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load setup screen", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
 			alert.showAndWait();

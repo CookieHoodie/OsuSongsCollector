@@ -76,7 +76,7 @@ public class OsuDbParser extends OsuReader{
 //    			}
 //    		}
     		if (Thread.currentThread().isInterrupted()) {
-    			throw new InterruptedException("LoadOsuDbTask is interrupted");
+    			throw new InterruptedException("LoadOsuDbTask is interrupted at: (" + i + "/" + (this.numberOfBeatmaps - 1) + ")");
     		}
     		Beatmap beatmap = new Beatmap();
     		this.skipBytes(4);
