@@ -7,7 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import application.Constants;
-import application.Main;
 import application.ViewLoader;
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;

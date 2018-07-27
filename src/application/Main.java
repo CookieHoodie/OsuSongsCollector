@@ -2,7 +2,6 @@ package application;
 	
 import java.io.IOException;
 import java.util.logging.FileHandler;
-import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -21,13 +20,6 @@ import javafx.stage.StageStyle;
 
 
 public class Main extends Application {
-	// centralized constants
-//	public static final String OSU_EXE = "osu!.exe";
-//	public static final String DB_NAME = "songs.db";
-//	public static final String OSU_DB_NAME = "osu! - Copy.db";
-//	public static final String SONGS_FOLDER = "Songs";
-	
-	// TODO: change OSU_DB_NAME, and move all these to corresponding controllers instead of static
 	
 	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	private static FileHandler fh = null;

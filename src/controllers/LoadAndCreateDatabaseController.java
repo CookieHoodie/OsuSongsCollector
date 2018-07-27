@@ -7,12 +7,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import application.Constants;
-import application.Main;
 import application.OsuDbParser;
 import application.SqliteDatabase;
 import application.ViewLoader;
 import javafx.animation.PauseTransition;
-import javafx.application.HostServices;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;

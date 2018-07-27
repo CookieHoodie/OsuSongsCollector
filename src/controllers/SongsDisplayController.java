@@ -162,12 +162,6 @@ public class SongsDisplayController {
 	private String pathToOsuDb;
 	private boolean userChangedTimeSlider = true; // var for detecting user or comp changed slider value
 
-//	private final String playButtonPlayText = "▶";
-//	private final String playButtonPauseText = "⏸";
-//	private final String shuffleButtonShuffleText = "🔀";
-//	private final String shuffleButtonRepeatText = "∞";
-//	private final String speakerUTFIcon = "🔊";
-//	private final String speakerMuteUTFIcon = "🔇";
 	private final ImageView speakerIcon = new ImageView();
 	private final ImageView speakerMuteIcon = new ImageView();
 	
@@ -210,7 +204,6 @@ public class SongsDisplayController {
         		@Override protected void updateItem(TableViewData item, boolean empty) {
         			super.updateItem(item, empty);
     				if (item != null && item.isDownloadedProperty().get()) {
-//    					setStyle("-fx-background-color: linear-gradient(to right, #20bdff, #a5fecb 1%, transparent 1%, transparent 99%, #a5fecb 99%, #20bdff);");
     					setStyle("-fx-background-color: linear-gradient(to right, rgba(116, 235, 213, 0.2), rgba(165, 254, 203, 0.2) , transparent);");
     				}
         			else {

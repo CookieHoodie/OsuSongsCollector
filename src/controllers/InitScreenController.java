@@ -7,7 +7,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import application.Constants;
-import application.Main;
 import application.OsuDbParser;
 import application.SqliteDatabase;
 import application.ViewLoader;
@@ -27,10 +26,10 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 // TODO: at the end, ensure only one app can be opened at the same time. Otherwise racing condition can happen in SQL
-// TODO: change all the printStacks to logging
 // TODO: change all fxml api to get rid of warnings
 // TODO: ensure utf-8 by trying to switch ide config to non-utf-8 and see whether the gui still output correctly or not
 // TODO: ensure database pragma is utf-8 also
+// TODO: ensure after installing the program, permission for creating and deleting file is on.
 
 public class InitScreenController {
 	@FXML private Label welcomeLabel;
