@@ -1,0 +1,21 @@
+.stack-pane-root {
+	-fx-background-image: url("../img/initScreenBg.png");
+	-fx-background-color: transparent;
+	-fx-font-family: "Kristen ITC";
+}
+
+.vbox-parent {
+	-fx-effect: dropshadow(three-pass-box, /*#508ecd */ #4b74dd, 10, 0.5, 0, 0);
+}
+
+.welcome-label {
+	-fx-font-size: 30px;
+}
+
+.author-label {
+	-fx-font-size: 12px;
+}
+
+.label-color {
+	-fx-text-fill: #ffffffed;
+}

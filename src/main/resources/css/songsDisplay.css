@@ -1,0 +1,289 @@
+.root-pane {
+	-fx-font-family: "Century Gothic";
+}
+ 
+/* Menu */
+
+/* MENU BAR + Top-level MENU BUTTONS */
+/*** The menu bar itself ***/    
+.menu-bar {
+    -fx-background-color: -fx-my-menu-color;
+    -fx-spacing: 0;
+    -fx-padding: 0;
+}
+
+.menu-bar .label {
+	-fx-font-weight: bold;
+}
+
+/*** Top-level menu itself (not selected / hovered) ***/
+.menu-bar > .container > .menu-button {
+    /*-fx-background-color: -fx-my-menu-button-color;*/
+}
+
+/*** Top-level menu's label (not selected / hovered) ***/
+.menu-bar > .container > .menu-button > .label {
+    -fx-text-fill: -fx-my-menu-font-color;
+}
+
+/*** Top-level menu's label (disabled) ***/
+.menu-bar > .container > .menu-button > .label:disabled {
+    -fx-opacity: 1.0;
+}
+
+/*** Top-level menu itself (selected / hovered) ***/
+.menu-bar > .container > .menu-button:hover,
+.menu-bar > .container > .menu-button:focused,
+.menu-bar > .container > .menu-button:showing {
+    -fx-background-color: -fx-my-menu-color-highlighted;
+}
+
+/*** Top-level menu's label (selected / hovered) ***/
+.menu-bar > .container > .menu-button:hover > .label,
+.menu-bar > .container > .menu-button:focused > .label,
+.menu-bar > .container > .menu-button:showing > .label {
+    -fx-text-fill: -fx-my-menu-font-color-highlighted;
+}
+
+/* MENU ITEM (children of a MENU BUTTON) */
+/*** The item itself (not hovered / focused) ***/    
+.menu-item {
+    -fx-padding: 7;
+}
+
+/*** The item's label (not hovered / focused) ***/   
+.menu-item .label {
+    -fx-text-fill: -fx-my-menu-font-color;
+}
+
+/*** The item's label (disabled) ***/   
+.menu-item .label:disabled {
+    -fx-opacity: 1.0;
+}    
+
+/*** The item itself (hovered / focused) ***/    
+.menu-item:focused, .menu-item:hovered {
+    -fx-background-color: -fx-my-menu-color-highlighted; 
+    /*-fx-effect: dropshadow(three-pass-box, #32e3d6, 2, 0, 0, 0);*/
+}
+
+/*** The item's label (hovered / focused) ***/  
+.menu-item:focused .label, .menu-item:hovered .label {
+    -fx-text-fill: -fx-my-menu-font-color-highlighted;
+}
+
+/* CONTEXT MENU */
+/*** The context menu that contains a menu's menu items ***/  
+.context-menu {
+    -fx-background-color: -fx-my-menu-item-color;  
+    -fx-padding: 2 0 2 0; /* for better sight */
+}
+
+.check-menu-item:checked, .radio-menu-item:checked, .menu > .right-container > .arrow 
+{
+    -fx-mark-color: -fx-my-menu-color-highlighted ;
+}
+
+.check-menu-item:focused, .radio-menu-item:focused, .menu:focused > .right-container > .arrow 
+{
+    -fx-focused-mark-color: -fx-my-menu-font-color-highlighted ;
+}
+
+
+/* Music player */
+.music-player-button-bar .button, .music-player-button-bar .toggle-button {
+	-fx-background-color: transparent;
+	-fx-min-width: 32px;
+	-fx-min-height: 32px;
+	-fx-background-size: 28px 28px;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+}
+
+.music-player-button-bar .button:hover, .music-player-button-bar .toggle-button:hover {
+	-fx-background-size: 32px 32px;
+}
+
+#mediaPlayerPlayButton {
+	-fx-background-image: url(../img/play-icon.png);
+}
+
+#mediaPlayerPauseButton {
+	-fx-background-image: url(../img/pause-icon.png);
+}
+
+#mediaPlayerNextButton {
+	-fx-background-image: url(../img/next-icon.png);
+}
+
+#mediaPlayerStopButton {
+	-fx-background-image: url(../img/stop-icon.png);
+}
+
+#mediaPlayerPreviousButton {
+	-fx-background-image: url(../img/previous-icon.png);
+}
+
+#mediaPlayerShuffleToggleButton {
+	-fx-background-image: url(../img/shuffle-icon.png);
+}
+
+#mediaPlayerShuffleToggleButton:selected {
+	-fx-background-image: url(../img/shuffle-icon-selected.png);
+}
+
+#mediaPlayerRepeatToggleButton {
+	-fx-background-image: url(../img/repeat-icon.png);
+}
+
+#mediaPlayerRepeatToggleButton:selected {
+	-fx-background-image: url(../img/repeat-icon-selected.png);
+}
+
+
+/* TODO: change this to name */
+.slider .track {
+	-fx-background-color: -fx-my-menu-color, -fx-my-top-bar-color, -fx-my-menu-color;
+	-fx-background-insets: 0, 1, 2;
+}
+
+.slider .thumb {
+	-fx-background-color: -fx-my-menu-color, -fx-my-top-bar-color;
+	-fx-background-insets: 0, 2;
+}
+/* Table view */
+
+.table-view {
+	-fx-background-color: -fx-my-table-color;
+}
+
+/* for when searching */
+.table-view:disabled {
+	-fx-opacity: 0.8;
+}
+
+.table-view .column-header-background *,
+.table-view .column-header-background, 
+.table-view .column-header
+{
+    -fx-background-color: transparent;
+}
+
+/* column header bottom separator */
+.table-view .column-header-background {
+	-fx-border-color: -fx-my-menu-color;
+	-fx-border-width: 0 0 1 0;
+}
+
+/* column header separator */
+.table-view .column-header {
+	-fx-border-color: white;
+	-fx-border-width: 0 1 0 0;
+}
+
+.table-view .table-column {
+	-fx-alignment: center-left;
+	-fx-size: 30px; /* column header size */
+}
+
+/* both are for replacing the overriding effect of above transparent */
+.table-view .check-box:selected > .box > .mark {
+    -fx-background-color: -fx-mark-highlight-color, -fx-mark-color;
+    -fx-background-insets: 1, 0;
+}
+
+.table-view .check-box > .box {
+	-fx-background-color: -fx-outer-border, white;
+    -fx-background-insets: 0,1;
+}
+
+
+#checkBoxCol, #totalTimeCol {
+	-fx-alignment: center;
+	-fx-padding: 0; /* disregard the padding of the other columns as they are centered not aligned left */
+}
+
+.table-row-cell {
+	-fx-background-color: transparent;
+	-fx-cell-size: 35px;
+}
+
+
+.table-row-cell .text {
+	-fx-font-size: 13px;
+}
+
+.table-cell {
+	-fx-padding: 0 0 0 5; /* padding so that text does not stick to the edge of table */
+}
+
+.table-row-cell:selected .text, .table-row-cell .text {
+	-fx-fill: black;
+}
+
+/* enlargement for selected */
+.table-row-cell:selected {
+	-fx-cell-size: 40px;
+}
+
+.table-row-cell:selected, .table-row-cell:filled:hover {
+	-fx-background-color: -fx-my-menu-color !important; /* to override downloaded setStyle in controller */
+	-fx-table-cell-border-color: transparent; 
+}
+
+.table-row-cell:selected .check-box > .box, .table-row-cell:hover .check-box > .box {
+	-fx-background-color: white;
+}
+
+/* checkBoxTableCell ori look */
+.table-row-cell .check-box:focused > .box {
+	-fx-background-color: -fx-shadow-highlight-color, -fx-outer-border, -fx-inner-border;
+	-fx-background-insets: 0 0 -1 0, 0, 1, 2;
+}
+
+.table-view > .virtual-flow > .scroll-bar:vertical,
+.table-view > .virtual-flow > .scroll-bar:vertical > .track,
+.table-view > .virtual-flow > .scroll-bar:vertical > .track-background, 
+.table-view > .virtual-flow > .scroll-bar:horizontal,
+.table-view > .virtual-flow > .scroll-bar:horizontal > .track,
+.table-view > .virtual-flow > .scroll-bar:horizontal > .track-background {
+    -fx-background-color: transparent; 
+}
+
+/* scroll bar color */
+.table-view > .virtual-flow > .scroll-bar:vertical > .thumb {
+	-fx-background-color: linear-gradient(to top, #74ebd5, #acb6e5);
+}
+
+.table-view > .virtual-flow > .scroll-bar:horizontal > .thumb {
+	-fx-background-color: -fx-my-menu-color;
+}
+
+/* scroll bar size */
+.table-view .scroll-bar > .increment-button, 
+.table-view .scroll-bar > .decrement-button {
+    -fx-padding: 0.5em  ;
+}
+
+/* for filterDialog */
+.table-row-cell:disabled .check-box-table-cell, .table-row-cell:disabled .check-box-table-cell .box {
+	-fx-background-color: transparent;
+}
+
+
+/* search bar and stuff */
+.top-bar {
+	-fx-background-color: -fx-my-top-bar-color;
+	-fx-font-size: 13px;
+}
+
+.search-bar-design {
+	-fx-background-color: -fx-my-top-bar-color;
+	-fx-border-color: -fx-my-menu-color;
+	-fx-border-width: 2;
+	-fx-prompt-text-fill: grey;
+}
+
+.search-bar-design:focused {
+	-fx-prompt-text-fill: transparent;
+}

@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.CheckMenuItem?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.RadioMenuItem?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<StackPane minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1024.0" styleClass="root-pane" xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controllers.SongsDisplayController">
+   <children>
+      <StackPane prefHeight="150.0" prefWidth="200.0" styleClass="image-pane" />
+      <BorderPane>
+         <center>
+            <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+               <children>
+                  <HBox alignment="CENTER" prefHeight="80.0" prefWidth="990.0" styleClass="top-bar">
+                     <children>
+                        <VBox minWidth="160.0" prefHeight="62.0" prefWidth="227.0">
+                           <children>
+                              <Label fx:id="userNameLabel" text="Name" />
+                              <Label fx:id="totalSongsLabel" text="total: 0" />
+                              <Label fx:id="currentlyVisibleLabel" text="currently visible: 0" />
+                              <Label fx:id="numOfSelectedSongsLabel" text="selected: 0" />
+                           </children>
+                        </VBox>
+                        <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+                        <VBox alignment="TOP_CENTER" minWidth="-Infinity">
+                           <children>
+                              <HBox>
+                                 <children>
+                                    <Label maxHeight="1.7976931348623157E308" text="Order by:">
+                                       <HBox.margin>
+                                          <Insets right="10.0" />
+                                       </HBox.margin>
+                                    </Label>
+                                    <ComboBox fx:id="orderByComboBox" onAction="#sortSongs" prefWidth="150.0" styleClass="combo-box-design" />
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets bottom="5.0" />
+                                 </VBox.margin>
+                              </HBox>
+                              <TextField fx:id="searchBar" promptText="🔍 Search for..." styleClass="search-bar-design">
+                                 <VBox.margin>
+                                    <Insets top="5.0" />
+                                 </VBox.margin>
+                              </TextField>
+                           </children>
+                           <HBox.margin>
+                              <Insets right="10.0" />
+                           </HBox.margin>
+                        </VBox>
+                        <VBox alignment="TOP_CENTER" minWidth="-Infinity">
+                           <children>
+                              <Button fx:id="hideUnhideButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#hideUnhideSelectedSongs" styleClass="button-design" text="Hide">
+                                 <VBox.margin>
+                                    <Insets bottom="3.0" />
+                                 </VBox.margin>
+                              </Button>
+                              <Button fx:id="copySongButton" alignment="CENTER" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#copySong" styleClass="button-design" text="Collect">
+                                 <VBox.margin>
+                                    <Insets top="3.0" />
+                                 </VBox.margin>
+                              </Button>
+                           </children>
+                           <HBox.margin>
+                              <Insets left="10.0" />
+                           </HBox.margin>
+                        </VBox>
+                        <Region prefHeight="200.0" prefWidth="200.0" HBox.hgrow="ALWAYS" />
+                        <VBox alignment="TOP_RIGHT" maxHeight="70.0" maxWidth="350.0" minWidth="275.0" nodeOrientation="LEFT_TO_RIGHT">
+                           <children>
+                              <HBox fillHeight="false" prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <Label fx:id="mediaPlayerTitleLabel" text="Song Title" HBox.hgrow="ALWAYS" />
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets bottom="5.0" />
+                                 </VBox.margin>
+                              </HBox>
+                              <HBox fillHeight="false" prefHeight="100.0" prefWidth="200.0">
+                                 <children>
+                                    <Slider fx:id="mediaPlayerTimeSlider" maxHeight="1.7976931348623157E308" HBox.hgrow="ALWAYS" />
+                                    <HBox>
+                                       <children>
+                                          <Label fx:id="mediaPlayerSpeakerLabel" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" prefHeight="24.0" prefWidth="24.0" />
+                                          <Slider fx:id="mediaPlayerVolumeSlider" maxHeight="1.7976931348623157E308" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="14.0" prefWidth="70.0" />
+                                       </children>
+                                    </HBox>
+                                 </children>
+                              </HBox>
+                              <HBox fillHeight="false" prefHeight="49.0" prefWidth="200.0" styleClass="music-player-button-bar">
+                                 <children>
+                                    <ToggleButton fx:id="mediaPlayerRepeatToggleButton" mnemonicParsing="false">
+                                       <tooltip>
+                                          <Tooltip styleClass="tooltip-design" text="Repeat / No repeat" />
+                                       </tooltip>
+                                    </ToggleButton>
+                                    <ToggleButton fx:id="mediaPlayerShuffleToggleButton" mnemonicParsing="false">
+                                       <tooltip>
+                                          <Tooltip styleClass="tooltip-design" text="Random / Sequential (*lower priority than repeat)" />
+                                       </tooltip>
+                                    </ToggleButton>
+                                    <Button fx:id="mediaPlayerPreviousButton" mnemonicParsing="false">
+                                       <tooltip>
+                                          <Tooltip styleClass="tooltip-design" text="Previous song" />
+                                       </tooltip>
+                                    </Button>
+                                  <Button fx:id="mediaPlayerPlayButton" mnemonicParsing="false">
+                                       <tooltip>
+                                          <Tooltip styleClass="tooltip-design" text="Play" />
+                                       </tooltip>
+                                    </Button>
+                                    <Button fx:id="mediaPlayerPauseButton" mnemonicParsing="false">
+                                       <tooltip>
+                                          <Tooltip styleClass="tooltip-design" text="Pause" />
+                                       </tooltip>
+                                    </Button>
+                                    <Button fx:id="mediaPlayerStopButton" mnemonicParsing="false">
+                                       <tooltip>
+                                          <Tooltip styleClass="tooltip-design" text="Stop " />
+                                       </tooltip>
+                                    </Button>
+                                    <Button fx:id="mediaPlayerNextButton" mnemonicParsing="false">
+                                       <tooltip>
+                                          <Tooltip styleClass="tooltip-design" text="Next song" />
+                                       </tooltip>
+                                    </Button>
+                                 </children>
+                              </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                     <VBox.margin>
+                        <Insets bottom="10.0" />
+                     </VBox.margin>
+                     <padding>
+                        <Insets bottom="7.0" left="7.0" right="7.0" top="7.0" />
+                     </padding>
+                  </HBox>
+                  <TableView fx:id="songsTable" editable="true" prefHeight="500.0" prefWidth="800.0" VBox.vgrow="ALWAYS">
+                     <columns>
+                        <TableColumn fx:id="songSourceCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Source" />
+                        <TableColumn fx:id="artistNameCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Artist" />
+                        <TableColumn fx:id="artistNameUnicodeCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Artist (Unicode)" visible="false" />
+                        <TableColumn fx:id="songTitleCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Song Title" />
+                        <TableColumn fx:id="songTitleUnicodeCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Song Title (Unicode)" visible="false" />
+                        <TableColumn fx:id="creatorNameCol" editable="false" minWidth="20.0" prefWidth="200.0" sortable="false" text="Creator" visible="false" />
+                        <TableColumn fx:id="totalTimeCol" editable="false" minWidth="20.0" prefWidth="100.0" sortable="false">
+                           <graphic>
+                              <Label contentDisplay="RIGHT" text="Length">
+                                 <graphic>
+                                    <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                                       <image>
+                                          <Image url="@../img/help-icon.png" />
+                                       </image>
+                                    </ImageView>
+                                 </graphic>
+                                 <tooltip>
+                                    <Tooltip styleClass="tooltip-design" text="This length corresponds to the length of beatmap in osu!. Real mp3 length may be longer than this." />
+                                 </tooltip>
+                              </Label>
+                           </graphic></TableColumn>
+                        <TableColumn fx:id="checkBoxCol" minWidth="20.0" prefWidth="100.0" sortable="false">
+                           <graphic>
+                              <CheckBox fx:id="selectAllCheckBoxInCheckBoxCol" alignment="CENTER" mnemonicParsing="false" nodeOrientation="RIGHT_TO_LEFT" onAction="#selectUnselectAll" text="Select all" />
+                           </graphic>
+                        </TableColumn>
+                     </columns>
+                  </TableView>
+               </children>
+               <BorderPane.margin>
+                  <Insets left="17.0" right="17.0" top="17.0" />
+               </BorderPane.margin>
+            </VBox>
+         </center>
+         <top>
+            <MenuBar BorderPane.alignment="CENTER">
+              <menus>
+                <Menu fx:id="fileMenu" mnemonicParsing="false" text="File">
+                  <items>
+                        <MenuItem fx:id="fullBeatmapsUpdateFileMenuItem" mnemonicParsing="false" onAction="#fullBeatmapsUpdate" style="-fx-min-height: 50;" text="Check for new songs" />
+                        <MenuItem fx:id="resetAllFileMenuItem" mnemonicParsing="false" onAction="#resetAll" text="Reset all data" />
+                    <MenuItem fx:id="exitFileMenuItem" mnemonicParsing="false" onAction="#exit" text="Exit" />
+                  </items>
+                </Menu>
+                  <Menu fx:id="viewMenu" mnemonicParsing="false" text="View">
+                    <items>
+                      <Menu fx:id="showMenuInViewMenu" mnemonicParsing="false" text="Show">
+                           <items>
+                              <CheckMenuItem fx:id="songSourceShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Source" />
+                              <CheckMenuItem fx:id="artistNameShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Artist" />
+                              <CheckMenuItem fx:id="artistNameUnicodeShowCheckMenuItem" mnemonicParsing="false" text="Artist (Unicode)" />
+                              <CheckMenuItem fx:id="songTitleShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Song Title" />
+                              <CheckMenuItem fx:id="songTitleUnicodeShowCheckMenuItem" mnemonicParsing="false" text="Song Title (Unicode)" />
+                              <CheckMenuItem fx:id="creatorNameShowCheckMenuItem" mnemonicParsing="false" text="Creator" />
+                              <CheckMenuItem fx:id="totalTimeShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Length" />
+                              <CheckMenuItem fx:id="isDownloadedShowCheckMenuItem" mnemonicParsing="false" selected="true" text="Collected Songs" />
+                           </items>
+                      </Menu>
+                        <Menu fx:id="displayMenuInViewMenu" mnemonicParsing="false" text="Display">
+                          <items>
+                              <RadioMenuItem fx:id="unhiddenSongsRadioMenuItemInDisplayMenu" mnemonicParsing="false" onAction="#displaySongs" selected="true" text="Unhidden songs">
+                                 <toggleGroup>
+                                    <ToggleGroup fx:id="displayToggleGroup" />
+                                 </toggleGroup>
+                              </RadioMenuItem>
+                              <RadioMenuItem fx:id="hiddenSongsRadioMenuItemInDisplayMenu" mnemonicParsing="false" onAction="#displaySongs" text="Hidden songs" toggleGroup="$displayToggleGroup" />
+                              <RadioMenuItem fx:id="downloadedSongsRadioMenuItemInDisplayMenu" mnemonicParsing="false" onAction="#displaySongs" text="Collected songs" toggleGroup="$displayToggleGroup" />
+                          </items>
+                        </Menu>
+                    </items>
+                  </Menu>
+                <Menu fx:id="helpMenu" mnemonicParsing="false" text="Help">
+                  <items>
+                        <MenuItem mnemonicParsing="false" text="How to use" />
+                        <MenuItem fx:id="imageMenuItemInHelpMenu" mnemonicParsing="false" onAction="#openImageLink" text="Background image source (Anmi)" />
+                        <MenuItem fx:id="donateButtonInHelpMenu" mnemonicParsing="false" onAction="#openDonateLink" text="Donate" />
+                  </items>
+                </Menu>
+              </menus>
+            </MenuBar>
+         </top>
+         <bottom>
+            <HBox alignment="CENTER" BorderPane.alignment="CENTER">
+               <children>
+                  <Hyperlink onAction="#openImageLink" text="Background image by Anmi (Pixiv)">
+                     <HBox.margin>
+                        <Insets right="10.0" />
+                     </HBox.margin>
+                  </Hyperlink>
+                  <Hyperlink fx:id="donateHyperlink" onAction="#openDonateLink" text="Donate to support this program">
+                     <HBox.margin>
+                        <Insets left="10.0" />
+                     </HBox.margin>
+                  </Hyperlink>
+               </children>
+               <BorderPane.margin>
+                  <Insets bottom="5.0" top="5.0" />
+               </BorderPane.margin>
+            </HBox>
+         </bottom>
+      </BorderPane>
+   </children>
+   <stylesheets>
+      <URL value="@../css/shared.css" />
+      <URL value="@../css/songsDisplay.css" />
+   </stylesheets>
+</StackPane>
