@@ -282,12 +282,16 @@ public class SaveToOptionController {
 	}
 	
 	// TODO: might consider adding option for user to choose all duplicated Name instead of examining the totalTIme
-	// and option for user to choose longest, shortest, etc.
+	// TODO: and option for user to choose longest, shortest, etc.
+	// TODO: and label to indicate how many is unselected and how many is left
 	@FXML private void checkForDuplicatedSongs(ActionEvent event) {
 		// add data into map with Song as key
-		// if similar song, the value (list) size will be > 1
+		// if similar song, the duplicatedMap value (list) size will be > 1
 		Map<Song, List<TableViewData>> duplicatedMap = new HashMap<>();
 		for (List<TableViewData> rowList : this.selectedSongsMap.values()) {
+		    // only certain super rare unranked maps will have rowList.size() > 1,
+            // and they will have same artistName and songTitle but different mp3,
+            // which makes the below algorithm to not work, so ignore those
 			if (rowList.size() == 1) {
 				TableViewData row = rowList.get(0);
 				Song s = new Song(row.artistNameProperty().get().toLowerCase(), row.songTitleProperty().get().toLowerCase());

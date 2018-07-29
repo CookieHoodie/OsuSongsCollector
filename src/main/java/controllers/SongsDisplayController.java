@@ -828,34 +828,31 @@ public class SongsDisplayController {
 		}
 		
 		try {
+            // (!! if the hide unhide button isn't hidden in 'Collected songs' view, this will cause unknown behaviour)
+		    final int batchSize = 500;
+		    int hiddenCount = 0;
 			String[] items = {SqliteDatabase.TableData.BeatmapSet.IS_HIDDEN};
 			this.songsDb.getConn().setAutoCommit(false);
 			PreparedStatement updateBeatmapSetBooleanPStatement = this.songsDb.getUpdateBeatmapSetBooleanPStatement(items);
-			if (this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
-				Boolean[] results = {true};
-				// !! iterate over obsList instead of filteredList 
-				// otherwise because of the nature of filteredList, index out of bound error and stuff will occur.
-				for (TableViewData row : this.initSongsObsList) {
-					if (row.isSelectedProperty().get()) {
-						row.isSelectedProperty().set(false);
-						row.isHiddenProperty().set(true);
-						this.songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, row.beatmapSetAutoIDProperty().get(), results);
-					}
-				}
-			}
-			else if (this.hiddenSongsRadioMenuItemInDisplayMenu.isSelected()) {
-				Boolean[] results = {false};
-				for (TableViewData row : this.initSongsObsList) {
-					if (row.isSelectedProperty().get()) {
-						row.isSelectedProperty().set(false);
-						row.isHiddenProperty().set(false);
-						this.songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, row.beatmapSetAutoIDProperty().get(), results);
-					}
-				}
-			}
+			Boolean[] results = { this.unhiddenSongsRadioMenuItemInDisplayMenu.isSelected() };
+			for (int i = 0; i < this.initSongsObsList.size(); i++) {
+			    TableViewData row = this.initSongsObsList.get(i);
+			    if (row.isSelectedProperty().get()) {
+			        row.isSelectedProperty().set(false);
+			        row.isHiddenProperty().set(results[0]);
+                    this.songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, row.beatmapSetAutoIDProperty().get(), results);
+                    hiddenCount++;
+                    if (hiddenCount % batchSize == 0) {
+                        updateBeatmapSetBooleanPStatement.executeBatch();
+                        this.songsDb.getConn().commit();
+                    }
+                }
+            }
+
+            updateBeatmapSetBooleanPStatement.executeBatch();
+            this.songsDb.getConn().commit();
 			this.selectAllCheckBoxInCheckBoxCol.setSelected(false);
-			updateBeatmapSetBooleanPStatement.executeBatch();
-			this.songsDb.getConn().commit();
+
 		}
 		catch (SQLException e) {
 			logger.log(Level.WARNING, "Failed to update hidden property in songs.db", e);

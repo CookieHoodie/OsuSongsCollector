@@ -58,6 +58,12 @@ public class FilterDialogController {
 		for (SimplifiedTableViewData row : this.displayTable.getItems()) {
 			if (!row.isSelectedProperty().get()) {
 				if (!row.folderNameProperty().get().isEmpty()) {
+				    // unselect the obsList to reflect the change in tableView
+                    // supposedly the 'this.selectedSongsMap.get(row.folderNameProperty().get())' is list of size 1
+                    // loop through it just in case of any logic error
+				    for (TableViewData oriRow : this.selectedSongsMap.get(row.folderNameProperty().get())) {
+				        oriRow.isSelectedProperty().set(false);
+                    }
 					this.selectedSongsMap.remove(row.folderNameProperty().get());
 				}
 			}

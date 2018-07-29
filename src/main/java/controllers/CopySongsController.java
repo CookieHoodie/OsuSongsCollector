@@ -218,6 +218,8 @@ public class CopySongsController {
 		@Override
         protected Void call() throws Exception {
 			updateProgress(0, 1);
+			final int batchSize = 500;
+			int copiedCount = 0;
 			int totalProgress = this.selectedSongsListInTask.size();
 			String[] items = {SqliteDatabase.TableData.BeatmapSet.IS_DOWNLOADED};
 			Boolean[] results = {true};
@@ -272,14 +274,23 @@ public class CopySongsController {
 							songsDb.getConn().commit();
 							throw e;
 						}
-						songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, beatmapSetAutoID, results);
-						
+
 						Platform.runLater(() -> {
 							row.isDownloadedProperty().set(true);
 							row.isSelectedProperty().set(false);
-						}); 
+						});
+
 						updateProgress(i + 1, totalProgress);
 						this.putMessageToQueue("(" + (i+1) + "/" + totalProgress + ") " + fileName);
+
+                        songsDb.addUpdateBeatmapSetBatch(updateBeatmapSetBooleanPStatement, beatmapSetAutoID, results);
+
+                        // use copiedCount instead of 'i' as i can skip if the mp3 does not exist
+                        copiedCount++;
+                        if (copiedCount % batchSize == 0) {
+                            updateBeatmapSetBooleanPStatement.executeBatch();
+                            songsDb.getConn().commit();
+                        }
 					}
 					else {
 						this.putMessageToQueue(i + " songs are collected, " + (totalProgress - i) + " are cancelled.");
