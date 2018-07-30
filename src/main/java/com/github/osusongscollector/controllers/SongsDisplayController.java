@@ -1,4 +1,4 @@
-package controllers;
+package com.github.osusongscollector.controllers;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -19,11 +19,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import application.Comparators;
-import application.Constants;
-import application.Main;
-import application.SqliteDatabase;
-import application.ViewLoader;
+import com.github.osusongscollector.application.Comparators;
+import com.github.osusongscollector.application.Constants;
+import com.github.osusongscollector.application.Main;
+import com.github.osusongscollector.application.SqliteDatabase;
+import com.github.osusongscollector.application.ViewLoader;
 import javafx.animation.PauseTransition;
 import javafx.application.HostServices;
 import javafx.application.Platform;
@@ -465,7 +465,7 @@ public class SongsDisplayController {
 	        	throw new SQLException("Failed to get config data");
 	        }
 		}
-		// if SQLException (ie. the application can still run just that without preferences), then show alert and continue
+		// if SQLException (ie. the com.github.osusongscollector.application can still run just that without preferences), then show alert and continue
         catch (SQLException e) {
         	logger.log(Level.WARNING, "Failed to load config from songs.db", e);
         	Alert alert = new Alert(AlertType.ERROR, "Failed to load preferences", ButtonType.OK);
@@ -490,12 +490,12 @@ public class SongsDisplayController {
 	
 	private void initMediaPlayerEssentials(double soundVolume, boolean isRepeatToggled, boolean isShuffleToggled) {
 		final int speakerSize = 24;
-		this.speakerIcon.setImage(new Image(getClass().getResourceAsStream("/img/sound-on-icon.png")));
+		this.speakerIcon.setImage(new Image(getClass().getResourceAsStream("/com/github/osusongscollector/img/sound-on-icon.png")));
 		this.speakerIcon.setSmooth(true);
 		this.speakerIcon.setCache(true);
 		this.speakerIcon.setFitHeight(speakerSize);
 		this.speakerIcon.setFitWidth(speakerSize);
-		this.speakerMuteIcon.setImage(new Image(getClass().getResourceAsStream("/img/mute-icon.png")));
+		this.speakerMuteIcon.setImage(new Image(getClass().getResourceAsStream("/com/github/osusongscollector/img/mute-icon.png")));
 		this.speakerMuteIcon.setSmooth(true);
 		this.speakerMuteIcon.setCache(true);
 		this.speakerMuteIcon.setFitHeight(speakerSize);
@@ -960,7 +960,7 @@ public class SongsDisplayController {
 		updateDetailsStage.setTitle("Update Songs Data");
 		updateDetailsStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
+		loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/LoadingDialogParentView.fxml"));
 		UpdateDataInSongsDisplayController ctr = new UpdateDataInSongsDisplayController();
 		loader.setController(ctr);
 		BorderPane root = loader.load();
@@ -988,7 +988,7 @@ public class SongsDisplayController {
 		});
 		
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/SaveToOptionView.fxml"));
+		loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/SaveToOptionView.fxml"));
 		BorderPane root = loader.load();
 		Scene scene = new Scene(root);
 		SaveToOptionController ctr = loader.<SaveToOptionController>getController();

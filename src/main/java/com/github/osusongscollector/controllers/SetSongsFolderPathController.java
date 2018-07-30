@@ -1,4 +1,4 @@
-package controllers;
+package com.github.osusongscollector.controllers;
 
 import java.io.File;
 import java.io.IOException;
@@ -6,8 +6,8 @@ import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import application.Constants;
-import application.ViewLoader;
+import com.github.osusongscollector.application.Constants;
+import com.github.osusongscollector.application.ViewLoader;
 import javafx.application.HostServices;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -68,7 +68,7 @@ public class SetSongsFolderPathController {
 	@FXML
 	private void setupDatabaseNewScene(ActionEvent event) {
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
+		loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/LoadingDialogParentView.fxml"));
 		try {
 			logger.log(Level.INFO, "Loading LoadAndCreateDatabaseView");
 			LoadAndCreateDatabaseController ctr = new LoadAndCreateDatabaseController();

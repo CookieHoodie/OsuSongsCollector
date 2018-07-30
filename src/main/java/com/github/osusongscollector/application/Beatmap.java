@@ -1,4 +1,4 @@
-package application;
+package com.github.osusongscollector.application;
 
 public class Beatmap {
 	private String artistName;

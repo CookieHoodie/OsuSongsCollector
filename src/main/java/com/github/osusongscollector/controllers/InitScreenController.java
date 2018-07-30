@@ -1,4 +1,4 @@
-package controllers;
+package com.github.osusongscollector.controllers;
 
 import java.io.IOException;
 import java.sql.ResultSet;
@@ -6,10 +6,10 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import application.Constants;
-import application.OsuDbParser;
-import application.SqliteDatabase;
-import application.ViewLoader;
+import com.github.osusongscollector.application.Constants;
+import com.github.osusongscollector.application.OsuDbParser;
+import com.github.osusongscollector.application.SqliteDatabase;
+import com.github.osusongscollector.application.ViewLoader;
 import javafx.animation.PauseTransition;
 import javafx.application.HostServices;
 import javafx.concurrent.Service;
@@ -26,10 +26,9 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 // TODO: at the end, ensure only one app can be opened at the same time. Otherwise racing condition can happen in SQL
-// TODO: change all fxml api to get rid of warnings
-// TODO: ensure utf-8 by trying to switch ide config to non-utf-8 and see whether the gui still output correctly or not
-// TODO: ensure database pragma is utf-8 also
 // TODO: ensure after installing the program, permission for creating and deleting file is on.
+// TODO: add version to help
+// TODO: ensure songs.db and log is in the correct directory
 
 public class InitScreenController {
 	@FXML private Label welcomeLabel;
@@ -156,7 +155,7 @@ public class InitScreenController {
 		setSongsFolderStage.setTitle("Configuration");
 		setSongsFolderStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/SetSongsFolderPathView.fxml"));
+		loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/SetSongsFolderPathView.fxml"));
 		BorderPane root = loader.load();
 		SetSongsFolderPathController setSongsFolderPathController = loader.<SetSongsFolderPathController>getController();
 		setSongsFolderPathController.setHostServices(this.hostServices);
@@ -172,7 +171,7 @@ public class InitScreenController {
 		updateDataStage.setTitle("Update Songs Data");
 		updateDataStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/LoadingDialogParentView.fxml"));
+		loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/LoadingDialogParentView.fxml"));
 		UpdateDataController ctr = new UpdateDataController();
 		loader.setController(ctr);
 		BorderPane root = loader.load();

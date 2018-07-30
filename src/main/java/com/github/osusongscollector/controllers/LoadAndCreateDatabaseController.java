@@ -1,4 +1,4 @@
-package controllers;
+package com.github.osusongscollector.controllers;
 
 import java.io.FileNotFoundException;
 import java.sql.SQLException;
@@ -6,10 +6,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import application.Constants;
-import application.OsuDbParser;
-import application.SqliteDatabase;
-import application.ViewLoader;
+import com.github.osusongscollector.application.Constants;
+import com.github.osusongscollector.application.OsuDbParser;
+import com.github.osusongscollector.application.SqliteDatabase;
+import com.github.osusongscollector.application.ViewLoader;
 import javafx.animation.PauseTransition;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;

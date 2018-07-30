@@ -1,8 +1,8 @@
-package application;
+package com.github.osusongscollector.application;
 
 import java.util.Comparator;
 
-import controllers.SongsDisplayController.TableViewData;
+import com.github.osusongscollector.controllers.SongsDisplayController.TableViewData;
 
 public class Comparators {
 	public static class SongTitleComparator implements Comparator<TableViewData> {

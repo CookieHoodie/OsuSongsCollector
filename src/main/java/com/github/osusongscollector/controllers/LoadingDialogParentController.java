@@ -1,9 +1,9 @@
-package controllers;
+package com.github.osusongscollector.controllers;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import application.OsuDbParser;
+import com.github.osusongscollector.application.OsuDbParser;
 import javafx.application.HostServices;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;

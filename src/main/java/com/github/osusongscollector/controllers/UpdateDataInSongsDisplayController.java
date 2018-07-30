@@ -1,11 +1,11 @@
-package controllers;
+package com.github.osusongscollector.controllers;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import application.OsuDbParser;
-import application.SqliteDatabase;
-import application.ViewLoader;
+import com.github.osusongscollector.application.OsuDbParser;
+import com.github.osusongscollector.application.SqliteDatabase;
+import com.github.osusongscollector.application.ViewLoader;
 import javafx.concurrent.Task;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;

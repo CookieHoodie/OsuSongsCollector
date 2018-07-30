@@ -1,4 +1,4 @@
-package controllers;
+package com.github.osusongscollector.controllers;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,11 +13,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import application.Comparators;
-import application.SqliteDatabase;
-import application.ViewLoader;
-import controllers.FilterDialogController.SimplifiedTableViewData;
-import controllers.SongsDisplayController.TableViewData;
+import com.github.osusongscollector.application.Comparators;
+import com.github.osusongscollector.application.SqliteDatabase;
+import com.github.osusongscollector.application.ViewLoader;
+import com.github.osusongscollector.controllers.FilterDialogController.SimplifiedTableViewData;
+import com.github.osusongscollector.controllers.SongsDisplayController.TableViewData;
 import javafx.application.HostServices;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -263,7 +263,7 @@ public class SaveToOptionController {
 		
 		try {
 			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(getClass().getResource("/fxml/CopySongsView.fxml"));
+			loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/CopySongsView.fxml"));
 			StackPane root = loader.load();
 			Scene scene = new Scene(root);
 			CopySongsController ctr = loader.<CopySongsController>getController();
@@ -394,7 +394,7 @@ public class SaveToOptionController {
 		dialogStage.initModality(Modality.WINDOW_MODAL);
 		dialogStage.initOwner(this.currentStage);
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(getClass().getResource("/fxml/FilterDialogView.fxml"));
+		loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/FilterDialogView.fxml"));
 		StackPane root = loader.load();
 		Scene scene = new Scene(root);
 		FilterDialogController ctr = loader.<FilterDialogController>getController();

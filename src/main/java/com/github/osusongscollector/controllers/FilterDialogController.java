@@ -1,9 +1,9 @@
-package controllers;
+package com.github.osusongscollector.controllers;
 
 import java.util.List;
 import java.util.Map;
 
-import controllers.SongsDisplayController.TableViewData;
+import com.github.osusongscollector.controllers.SongsDisplayController.TableViewData;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;

@@ -1,9 +1,9 @@
-package application;
+package com.github.osusongscollector.application;
 
 import java.io.IOException;
 import java.sql.SQLException;
 
-import controllers.SongsDisplayController;
+import com.github.osusongscollector.controllers.SongsDisplayController;
 import javafx.application.HostServices;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -23,7 +23,7 @@ public class ViewLoader {
 		Stage songsDisplayStage = new Stage();
 		songsDisplayStage.setTitle("osu! Songs Collector");
 		FXMLLoader loader = new FXMLLoader();
-		loader.setLocation(ViewLoader.class.getResource("/fxml/SongsDisplayView.fxml"));
+		loader.setLocation(ViewLoader.class.getResource("/com/github/osusongscollector/fxml/SongsDisplayView.fxml"));
 		StackPane root = loader.load();
 		Scene scene = new Scene(root);
 		SongsDisplayController ctr = loader.<SongsDisplayController>getController();
@@ -38,8 +38,8 @@ public class ViewLoader {
 	
 	public static void addStyleToAlert(Alert alert) {
 		DialogPane dialogPane = alert.getDialogPane();
-		dialogPane.getStylesheets().addAll(ViewLoader.class.getResource("/css/shared.css").toExternalForm(),
-				ViewLoader.class.getResource("/css/simpleDialog.css").toExternalForm());
+		dialogPane.getStylesheets().addAll(ViewLoader.class.getResource("/com/github/osusongscollector/css/shared.css").toExternalForm(),
+				ViewLoader.class.getResource("/com/github/osusongscollector/css/simpleDialog.css").toExternalForm());
 		dialogPane.getStyleClass().addAll("root-pane", "bigger-font");
 		Label headerLabel = (Label) ((GridPane) dialogPane.getChildren().get(0)).getChildren().get(0);
 		headerLabel.getStyleClass().add("instruction-label");

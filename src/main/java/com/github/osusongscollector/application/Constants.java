@@ -1,4 +1,4 @@
-package application;
+package com.github.osusongscollector.application;
 
 public class Constants {
 	public static final String OSU_EXE = "osu!.exe";

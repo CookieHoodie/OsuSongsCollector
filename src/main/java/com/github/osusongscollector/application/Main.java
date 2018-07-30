@@ -1,12 +1,13 @@
-package application;
+package com.github.osusongscollector.application;
 	
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import controllers.InitScreenController;
+import com.github.osusongscollector.controllers.InitScreenController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -23,7 +24,7 @@ public class Main extends Application {
 	
 	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	private static FileHandler fh = null;
-	
+
 	@Override
 	public void start(Stage primaryStage) {
 		this.setupLogger();
@@ -31,7 +32,7 @@ public class Main extends Application {
 		
 		try {
 			FXMLLoader loader = new FXMLLoader();
-			loader.setLocation(getClass().getResource("/fxml/InitScreenView.fxml"));
+			loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/InitScreenView.fxml"));
 //			BorderPane root = loader.load();
 			StackPane root = loader.load();
 			Scene scene = new Scene(root);
@@ -40,7 +41,7 @@ public class Main extends Application {
 			primaryStage.setScene(scene);
 			primaryStage.show();
 			// show the screen 1st, then start the checking progress
-			// and handle subsequent processes in the controllers
+			// and handle subsequent processes in the com.github.osusongscollector.controllers
 			InitScreenController initScreenController = loader.<InitScreenController>getController();
 			initScreenController.setHostServices(getHostServices());
 			initScreenController.startChecking();
@@ -70,6 +71,6 @@ public class Main extends Application {
 	}
 	
 	public static void main(String[] args) {
-		launch(args);
+        launch(args);
 	}
 }

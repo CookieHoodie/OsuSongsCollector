@@ -1,4 +1,4 @@
-package application;
+package com.github.osusongscollector.application;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;

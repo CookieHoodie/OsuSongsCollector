@@ -1,4 +1,4 @@
-package controllers;
+package com.github.osusongscollector.controllers;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,11 +13,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import application.Constants;
-import application.SqliteDatabase;
-import application.ViewLoader;
-import controllers.SaveToOptionController.ComboBoxChoice;
-import controllers.SongsDisplayController.TableViewData;
+import com.github.osusongscollector.application.Constants;
+import com.github.osusongscollector.application.SqliteDatabase;
+import com.github.osusongscollector.application.ViewLoader;
+import com.github.osusongscollector.controllers.SaveToOptionController.ComboBoxChoice;
+import com.github.osusongscollector.controllers.SongsDisplayController.TableViewData;
 import javafx.animation.AnimationTimer;
 import javafx.application.HostServices;
 import javafx.application.Platform;

@@ -1,4 +1,4 @@
-package application;
+package com.github.osusongscollector.application;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,10 +22,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import controllers.SaveToOptionController.ComboBoxChoice;
+import com.github.osusongscollector.controllers.SaveToOptionController.ComboBoxChoice;
 
 
-// TODO: if any modification to the table (ie. add or delete fields) in the future, bear in mind
+// REMINDER: if any modification to the table (ie. add or delete fields) in the future, bear in mind
 // to use insert but not change them directly otherwise error will happen and user will have to delete 
 // songsDb which loses their data
 
@@ -58,7 +58,7 @@ public class SqliteDatabase {
 			throw new FileNotFoundException("Database is not yet created");
 		}
         this.setConn(DriverManager.getConnection(this.URL));
-        // turn on foreign key constraint
+        // turn on foreign key constraint on every connection as it is off by default
         Statement stmt = this.getConn().createStatement();
         stmt.execute("PRAGMA foreign_keys = ON");
 	}
@@ -75,6 +75,9 @@ public class SqliteDatabase {
 	public void createDatabase() throws SQLException {
 		this.setConn(DriverManager.getConnection(this.URL));
         this.setDbExist(true);
+        // ensure encoding use is utf-8
+		Statement stmt = this.getConn().createStatement();
+		stmt.execute("PRAGMA encoding = 'UTF-8'");
 	}
 	
 	public void createTables() throws SQLException {
