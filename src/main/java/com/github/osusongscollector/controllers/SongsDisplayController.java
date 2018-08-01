@@ -366,7 +366,10 @@ public class SongsDisplayController {
         	});
             pause.playFromStart();
         });
-        
+
+        // init this when started
+		this.currentlyVisibleLabel.setText(this.currentlyVisibleLabelText + initSongsFilteredList.size());
+
         // whenever the list is filtered, change currentlyVisibleLabel
         initSongsFilteredList.addListener((ListChangeListener.Change<? extends TableViewData> l) -> {
         	this.currentlyVisibleLabel.setText(this.currentlyVisibleLabelText + initSongsFilteredList.size());
