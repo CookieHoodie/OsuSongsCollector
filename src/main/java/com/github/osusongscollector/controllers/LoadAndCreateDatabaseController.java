@@ -1,6 +1,8 @@
 package com.github.osusongscollector.controllers;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -59,7 +61,8 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 			@Override
 			protected SqliteDatabase call() throws Exception {
 				updateProgress(0, 1);
-				SqliteDatabase songsDb = new SqliteDatabase(Constants.DB_NAME);
+				String fileLocation = Paths.get(new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getParent() , Constants.DB_NAME).toString();
+				SqliteDatabase songsDb = new SqliteDatabase(fileLocation);
 				songsDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork));
 				songsDb.createDatabase();
 				songsDb.createTables();

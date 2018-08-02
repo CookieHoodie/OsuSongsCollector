@@ -1,6 +1,9 @@
 package com.github.osusongscollector.controllers;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.logging.Level;
@@ -83,7 +86,13 @@ public class InitScreenController {
 	
 	public void startChecking() {
 		// 1st quick check if songs db is ald created (not created means 1st time use)
-		this.songsDb = new SqliteDatabase(Constants.DB_NAME);
+		String fileLocation = Constants.DB_NAME;
+		try {
+			fileLocation = Paths.get(new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getParent() , Constants.DB_NAME).toString();
+		} catch (URISyntaxException e) {
+			logger.log(Level.SEVERE, "Failed to locate path of running jar");
+		}
+		this.songsDb = new SqliteDatabase(fileLocation);
 		// if db exists, check for any new songs or deleted songs
 		if (songsDb.isDbExist()) {
 			CheckOsuDbUpdateService checkAllSetService = new CheckOsuDbUpdateService();

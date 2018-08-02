@@ -1,7 +1,10 @@
 package com.github.osusongscollector.application;
 	
+import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -9,6 +12,7 @@ import java.util.logging.SimpleFormatter;
 
 import com.github.osusongscollector.controllers.InitScreenController;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -30,7 +34,7 @@ public class Main extends Application {
 		this.setupLogger();
 		logger.log(Level.INFO, "Launching program");
 		
-		try {
+        try {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/InitScreenView.fxml"));
 //			BorderPane root = loader.load();
@@ -59,16 +63,17 @@ public class Main extends Application {
 		try {
 			// it's not null if this program is restarted. So if log file already exist, don't create another one
 			if (fh == null) {
-				fh = new FileHandler("runtime.log", false);
+                String fileLocation = Paths.get(new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getParent() , "runtime.log").toString();
+				fh = new FileHandler(fileLocation, false);
 				fh.setFormatter(new SimpleFormatter());
 				logger.addHandler(fh);
 				logger.setLevel(Level.INFO);
 			}
 		}
-		catch (SecurityException | IOException e) {
+		catch (SecurityException | IOException | URISyntaxException e) {
 			e.printStackTrace();
 		}
-	}
+    }
 	
 	public static void main(String[] args) {
         launch(args);

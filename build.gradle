@@ -3,6 +3,10 @@ plugins {
     id 'application'
 }
 
+jar {
+    exclude('songs.db', 'runtime.log', 'runtime.log.lck')
+}
+
 mainClassName = "com.github.osusongscollector.application.Main"
 
 compileJava.options.encoding = 'UTF-8'
