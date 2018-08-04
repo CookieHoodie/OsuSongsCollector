@@ -24,14 +24,12 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
 // TODO: at the end, ensure only one app can be opened at the same time. Otherwise racing condition can happen in SQL
-// TODO: ensure after installing the program, permission for creating and deleting file is on.
-// TODO: add version to help
-// TODO: ensure songs.db and log is in the correct directory
 
 public class InitScreenController {
 	@FXML private Label welcomeLabel;
@@ -160,7 +158,9 @@ public class InitScreenController {
 	}
 	
 	private void loadSetSongsFolderPathView() throws IOException {
+        Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
 		Stage setSongsFolderStage = new Stage();
+		setSongsFolderStage.getIcons().addAll(currentStage.getIcons());
 		setSongsFolderStage.setTitle("Configuration");
 		setSongsFolderStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
@@ -176,7 +176,9 @@ public class InitScreenController {
 	}
 	
 	private void loadUpdateDataView() throws IOException {
+        Stage currentStage = (Stage) this.welcomeLabel.getScene().getWindow();
 		Stage updateDataStage = new Stage();
+		updateDataStage.getIcons().addAll(currentStage.getIcons());
 		updateDataStage.setTitle("Update Songs Data");
 		updateDataStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();

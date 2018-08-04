@@ -11,6 +11,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -21,6 +22,8 @@ public class ViewLoader {
 	// hide currentStage and open up new SongsDisplay stage, setting title, starting music by default
 	public static void loadNewSongsDisplayView(Stage currentStage, SqliteDatabase connectedSongsDb, HostServices hostServices) throws SQLException, IOException {
 		Stage songsDisplayStage = new Stage();
+        songsDisplayStage.getIcons().addAll(currentStage.getIcons());
+		songsDisplayStage.getIcons().add(new Image(ViewLoader.class.getResourceAsStream("/com/github/osusongscollector/img/osc-logo.png")));
 		songsDisplayStage.setTitle("osu! Songs Collector");
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(ViewLoader.class.getResource("/com/github/osusongscollector/fxml/SongsDisplayView.fxml"));

@@ -1,12 +1,12 @@
 package com.github.osusongscollector.application;
 
 public class Constants {
+	public static final String VERSION = "1.0.0";
 	public static final String OSU_EXE = "osu!.exe";
 	public static final String DB_NAME = "songs.db";
-	// TODO: change OSU_DB_NAME
-	public static final String OSU_DB_NAME = "osu! - Copy.db";
+	public static final String OSU_DB_NAME = "osu!.db";
 	public static final String SONGS_FOLDER = "Songs";
-	// TODO: change this to webpage that shows link can contributors
-	public static final String DONATE_LINK = "https://paypal.me/CookieHoodie/0USD";
-	public static final String IMAGE_LINK = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id=54238596";
+	public static final String DONATE_LINK = "https://cookiehoodie.github.io/osu-songs-collector/#donate";
+	public static final String IMAGE_LINK = "https://github.com/CookieHoodie/osu-songs-collector/wiki/Background-Image-Used";
+	public static final String USER_MANUAL_LINK = "https://github.com/CookieHoodie/osu-songs-collector/wiki/User-Manual";
 }

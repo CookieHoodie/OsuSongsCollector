@@ -18,6 +18,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.image.Image;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -35,6 +36,7 @@ public class Main extends Application {
 		logger.log(Level.INFO, "Launching program");
 		
         try {
+			primaryStage.getIcons().add(new Image(Main.class.getResourceAsStream("/com/github/osusongscollector/img/osc-logo.png")));
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(getClass().getResource("/com/github/osusongscollector/fxml/InitScreenView.fxml"));
 //			BorderPane root = loader.load();

@@ -149,8 +149,6 @@ public class SongsDisplayController {
 	@FXML private ToggleButton mediaPlayerRepeatToggleButton;
 	@FXML private ToggleButton mediaPlayerShuffleToggleButton;
 	
-	@FXML private Hyperlink donateHyperlink;
-	
 	private final String numOfSelectedSongsLabelText = "Selected: ";
 	private final String totalSongsLabelText = "Total songs: ";
 	private final String currentlyVisibleLabelText = "Currently visible: ";
@@ -167,8 +165,7 @@ public class SongsDisplayController {
 	
 	// TODO: add rotating screen while changing view, searching, etc.
 	// TODO: allow user to select and copy words but not edit
-	
-	// TODO: add batch to hide and copy songs 
+
 	
 	@FXML private void initialize() {
 		this.songSourceCol.setCellValueFactory(new PropertyValueFactory<TableViewData, String>("songSource"));
@@ -915,11 +912,23 @@ public class SongsDisplayController {
 	@FXML private void openDonateLink(ActionEvent event) {
 		this.hostServices.showDocument(Constants.DONATE_LINK);
 	}
-	
+
 	@FXML private void openImageLink(ActionEvent event) {
 		this.hostServices.showDocument(Constants.IMAGE_LINK);
 	}
-	
+
+	@FXML private void showUserManual(ActionEvent event) {
+	    this.hostServices.showDocument(Constants.USER_MANUAL_LINK);
+    }
+
+	@FXML private void showAboutDialog(ActionEvent event) {
+	    Alert alert = new Alert(AlertType.INFORMATION);
+	    ViewLoader.addStyleToAlert(alert);
+	    alert.setHeaderText("About");
+	    alert.setContentText("Version: " + Constants.VERSION);
+	    alert.show();
+    }
+
 	// file menu exit menuitem
 	@FXML private void exit(ActionEvent event) {
 		this.currentStage.fireEvent(new WindowEvent(this.currentStage, WindowEvent.WINDOW_CLOSE_REQUEST));
@@ -949,8 +958,7 @@ public class SongsDisplayController {
 	@FXML private void fullBeatmapsUpdate(ActionEvent event) {
 		try {
 			this.loadUpdateDataView();
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			logger.log(Level.SEVERE, "Failed to load UpdateDetailsView", e);
 			Alert alert = new Alert(AlertType.ERROR, "Failed to load update window", ButtonType.OK);
 			ViewLoader.addStyleToAlert(alert);
@@ -960,6 +968,7 @@ public class SongsDisplayController {
 	
 	private void loadUpdateDataView() throws IOException {
 		Stage updateDetailsStage = new Stage();
+		updateDetailsStage.getIcons().addAll(this.currentStage.getIcons());
 		updateDetailsStage.setTitle("Update Songs Data");
 		updateDetailsStage.setResizable(false);
 		FXMLLoader loader = new FXMLLoader();
@@ -979,6 +988,7 @@ public class SongsDisplayController {
 	
 	private void loadSaveToOptionView(Map<String, List<TableViewData>> selectedSongsMap) throws SQLException, IOException {
 		Stage saveToOptionStage = new Stage();
+		saveToOptionStage.getIcons().addAll(this.currentStage.getIcons());
 		saveToOptionStage.setTitle("Options");
 		saveToOptionStage.setResizable(false);
 		// pretty save to use this here as the new stage opened is not minimizable

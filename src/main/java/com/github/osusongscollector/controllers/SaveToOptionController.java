@@ -390,6 +390,7 @@ public class SaveToOptionController {
 	
 	private void loadFilterDialogView(ObservableList<SimplifiedTableViewData> dialogObsList) throws IOException {
 		Stage dialogStage = new Stage();
+		dialogStage.getIcons().addAll(this.currentStage.getIcons());
 		dialogStage.setTitle("Duplicate check");
 		dialogStage.initModality(Modality.WINDOW_MODAL);
 		dialogStage.initOwner(this.currentStage);
