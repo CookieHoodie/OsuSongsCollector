@@ -1,8 +1,5 @@
 package com.github.osusongscollector.controllers;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.github.osusongscollector.application.OsuDbParser;
 import com.github.osusongscollector.application.SqliteDatabase;
 import com.github.osusongscollector.application.ViewLoader;
@@ -11,6 +8,9 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class UpdateDataInSongsDisplayController extends UpdateDataController {

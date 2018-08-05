@@ -1,14 +1,14 @@
 package com.github.osusongscollector.controllers;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import com.github.osusongscollector.application.OsuDbParser;
 import javafx.application.HostServices;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public abstract class LoadingDialogParentController {
 	protected HostServices hostServices;

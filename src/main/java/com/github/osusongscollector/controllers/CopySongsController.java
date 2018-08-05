@@ -1,5 +1,20 @@
 package com.github.osusongscollector.controllers;
 
+import com.github.osusongscollector.application.Constants;
+import com.github.osusongscollector.application.SqliteDatabase;
+import com.github.osusongscollector.application.ViewLoader;
+import com.github.osusongscollector.controllers.SaveToOptionController.ComboBoxChoice;
+import com.github.osusongscollector.controllers.SongsDisplayController.TableViewData;
+import javafx.animation.AnimationTimer;
+import javafx.application.HostServices;
+import javafx.application.Platform;
+import javafx.concurrent.Task;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.stage.Stage;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,25 +27,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import com.github.osusongscollector.application.Constants;
-import com.github.osusongscollector.application.SqliteDatabase;
-import com.github.osusongscollector.application.ViewLoader;
-import com.github.osusongscollector.controllers.SaveToOptionController.ComboBoxChoice;
-import com.github.osusongscollector.controllers.SongsDisplayController.TableViewData;
-import javafx.animation.AnimationTimer;
-import javafx.application.HostServices;
-import javafx.application.Platform;
-import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextArea;
-import javafx.stage.Stage;
 
 public class CopySongsController {
 	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);

@@ -1,8 +1,8 @@
 package com.github.osusongscollector.application;
 
-import java.util.Comparator;
-
 import com.github.osusongscollector.controllers.SongsDisplayController.TableViewData;
+
+import java.util.Comparator;
 
 public class Comparators {
 	public static class SongTitleComparator implements Comparator<TableViewData> {
@@ -14,7 +14,7 @@ public class Comparators {
 			return "Song Title";
 		}
 	}
-	
+
 	public static class ArtistNameComparator implements Comparator<TableViewData> {
 		@Override public int compare(TableViewData row1, TableViewData row2) {
 			return row1.artistNameProperty().get().toLowerCase().compareTo(row2.artistNameProperty().get().toLowerCase());

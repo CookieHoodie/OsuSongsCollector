@@ -1,13 +1,5 @@
 package com.github.osusongscollector.controllers;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.nio.file.Paths;
-import java.sql.SQLException;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.github.osusongscollector.application.Constants;
 import com.github.osusongscollector.application.OsuDbParser;
 import com.github.osusongscollector.application.SqliteDatabase;
@@ -19,6 +11,15 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class LoadAndCreateDatabaseController extends LoadingDialogParentController {
@@ -61,7 +62,13 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 			@Override
 			protected SqliteDatabase call() throws Exception {
 				updateProgress(0, 1);
-				String fileLocation = Paths.get(new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getParent() , Constants.DB_NAME).toString();
+                String fileLocation = Constants.DB_NAME;
+				try {
+				    fileLocation = Paths.get(new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getParent() , Constants.DB_NAME).toString();
+                }
+                catch (URISyntaxException e) {
+				    logger.log(Level.WARNING, "Failed to locate path of running jar", e);
+                }
 				SqliteDatabase songsDb = new SqliteDatabase(fileLocation);
 				songsDb.setThreadData((workDone, totalWork) -> updateProgress(workDone, totalWork));
 				songsDb.createDatabase();

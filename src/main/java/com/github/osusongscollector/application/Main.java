@@ -1,14 +1,4 @@
 package com.github.osusongscollector.application;
-	
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 
 import com.github.osusongscollector.controllers.InitScreenController;
 import javafx.application.Application;
@@ -24,15 +14,66 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.net.URISyntaxException;
+import java.nio.channels.FileLock;
+import java.nio.file.Paths;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
 
 public class Main extends Application {
 	
 	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	private static FileHandler fh = null;
 
+	public void init() {
+        String fileLocation = "lockfile.txt";
+        try {
+            fileLocation = Paths.get(new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getParent() , "lockfile.txt").toString();
+        } catch (URISyntaxException e) {
+            logger.log(Level.WARNING, "Failed to locate path of running jar", e);
+        }
+        // if another instance is already on, exit
+        if (!lockInstance(fileLocation)) {
+            Platform.exit();
+        }
+
+        setupLogger();
+	}
+
+    private static boolean lockInstance(final String lockFile) {
+        try {
+            final File file = new File(lockFile);
+            final RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+            final FileLock fileLock = randomAccessFile.getChannel().tryLock();
+            if (fileLock != null) {
+                Runtime.getRuntime().addShutdownHook(new Thread() {
+                    public void run() {
+                        try {
+                            fileLock.release();
+                            randomAccessFile.close();
+                            file.delete();
+                        }
+                        catch (Exception e) {
+                            logger.log(Level.WARNING, "Lock file is not deleted", e);
+                        }
+                    }
+                });
+                return true;
+            }
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to create lockfile", e);
+        }
+        return false;
+    }
+
 	@Override
 	public void start(Stage primaryStage) {
-		this.setupLogger();
 		logger.log(Level.INFO, "Launching program");
 		
         try {
@@ -61,23 +102,29 @@ public class Main extends Application {
 		
 	}
 	
-	private void setupLogger() {
+	private static void setupLogger() {
 		try {
 			// it's not null if this program is restarted. So if log file already exist, don't create another one
 			if (fh == null) {
-                String fileLocation = Paths.get(new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getParent() , "runtime.log").toString();
-				fh = new FileHandler(fileLocation, false);
+                String fileLocation = "runtime.log";
+                try {
+                    fileLocation = Paths.get(new File(Main.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParent() , "runtime.log").toString();
+                } catch (URISyntaxException e) {
+                    logger.log(Level.WARNING, "Failed to locate path of running jar", e);
+                }
+
+                fh = new FileHandler(fileLocation, false);
 				fh.setFormatter(new SimpleFormatter());
 				logger.addHandler(fh);
 				logger.setLevel(Level.INFO);
 			}
 		}
-		catch (SecurityException | IOException | URISyntaxException e) {
-			e.printStackTrace();
+		catch (SecurityException | IOException e) {
+			logger.log(Level.WARNING, "Failed to assign file handler", e);
 		}
     }
 	
 	public static void main(String[] args) {
-        launch(args);
+		launch(args);
 	}
 }

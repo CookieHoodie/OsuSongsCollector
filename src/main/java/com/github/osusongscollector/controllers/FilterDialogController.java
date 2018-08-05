@@ -1,8 +1,5 @@
 package com.github.osusongscollector.controllers;
 
-import java.util.List;
-import java.util.Map;
-
 import com.github.osusongscollector.controllers.SongsDisplayController.TableViewData;
 import javafx.beans.Observable;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -17,6 +14,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.util.Callback;
+
+import java.util.List;
+import java.util.Map;
 
 public class FilterDialogController {
 	private Map<String, List<TableViewData>> selectedSongsMap;

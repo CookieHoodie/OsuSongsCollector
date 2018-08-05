@@ -1,13 +1,5 @@
 package com.github.osusongscollector.controllers;
 
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.github.osusongscollector.application.Beatmap;
 import com.github.osusongscollector.application.OsuDbParser;
 import com.github.osusongscollector.application.SqliteDatabase;
@@ -19,6 +11,14 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.IOException;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class UpdateDataController extends LoadingDialogParentController {

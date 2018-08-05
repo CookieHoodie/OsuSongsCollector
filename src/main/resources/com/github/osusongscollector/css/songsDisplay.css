@@ -205,7 +205,7 @@
 
 .table-row-cell {
 	-fx-background-color: transparent;
-	-fx-cell-size: 35px;
+	-fx-cell-size: 40px;
 }
 
 
@@ -223,7 +223,7 @@
 
 /* enlargement for selected */
 .table-row-cell:selected {
-	-fx-cell-size: 40px;
+	-fx-cell-size: 45px;
 }
 
 .table-row-cell:selected, .table-row-cell:filled:hover {

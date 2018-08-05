@@ -1,28 +1,14 @@
 package com.github.osusongscollector.application;
 
+import com.github.osusongscollector.controllers.SaveToOptionController.ComboBoxChoice;
+
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringJoiner;
-import java.util.TreeMap;
+import java.sql.*;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import com.github.osusongscollector.controllers.SaveToOptionController.ComboBoxChoice;
 
 
 // REMINDER: if any modification to the table (ie. add or delete fields) in the future, bear in mind

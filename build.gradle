@@ -1,10 +1,41 @@
+buildscript {
+    dependencies {
+        classpath group: 'de.dynamicfiles.projects.gradle.plugins', name: 'javafx-gradle-plugin', version: '8.8.2'
+    }
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
 plugins {
     id 'java'
     id 'application'
 }
 
+apply plugin: 'javafx-gradle-plugin'
+
 jar {
-    exclude('songs.db', 'runtime.log', 'runtime.log.lck')
+    exclude('songs.db', 'runtime.log', 'runtime.log.1', 'runtime.log.lck')
+}
+
+jfx {
+    verbose = true
+    mainClass = "com.github.osusongscollector.application.Main"
+    jfxMainAppJarName = "osc.jar"
+
+    // gradle jfxNative
+    identifier = "com.github.osusongscollector.osc"
+    vendor = "CH"
+    bundler = "exe"
+    nativeReleaseVersion = "1.0.0"
+    needShortcut = true
+    needMenu = true
+    bundleArguments = [
+            installdirChooser: 'true',
+    ]
+    appName = "osu! Songs Collector" // this is used for files below "src/main/deploy", e.g. "src/main/deploy/package/windows/project.ico"
 }
 
 mainClassName = "com.github.osusongscollector.application.Main"
@@ -14,8 +45,8 @@ compileTestJava.options.encoding = 'UTF-8'
 
 version '1.0.0'
 
-sourceCompatibility = 1.9
-targetCompatibility = 1.9
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
     mavenCentral()

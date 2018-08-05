@@ -1,8 +1,5 @@
 package com.github.osusongscollector.application;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
 import com.github.osusongscollector.controllers.SongsDisplayController;
 import javafx.application.HostServices;
 import javafx.fxml.FXMLLoader;
@@ -16,6 +13,9 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.sql.SQLException;
+
 
 // class for reuse purpose. Loaders which only associate with one controller (ie. no repeated code) are not included here
 public class ViewLoader {
@@ -23,7 +23,6 @@ public class ViewLoader {
 	public static void loadNewSongsDisplayView(Stage currentStage, SqliteDatabase connectedSongsDb, HostServices hostServices) throws SQLException, IOException {
 		Stage songsDisplayStage = new Stage();
         songsDisplayStage.getIcons().addAll(currentStage.getIcons());
-		songsDisplayStage.getIcons().add(new Image(ViewLoader.class.getResourceAsStream("/com/github/osusongscollector/img/osc-logo.png")));
 		songsDisplayStage.setTitle("osu! Songs Collector");
 		FXMLLoader loader = new FXMLLoader();
 		loader.setLocation(ViewLoader.class.getResource("/com/github/osusongscollector/fxml/SongsDisplayView.fxml"));

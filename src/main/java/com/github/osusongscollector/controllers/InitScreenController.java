@@ -1,14 +1,5 @@
 package com.github.osusongscollector.controllers;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.github.osusongscollector.application.Constants;
 import com.github.osusongscollector.application.OsuDbParser;
 import com.github.osusongscollector.application.SqliteDatabase;
@@ -24,10 +15,18 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.image.Image;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 // TODO: at the end, ensure only one app can be opened at the same time. Otherwise racing condition can happen in SQL
 
@@ -88,7 +87,7 @@ public class InitScreenController {
 		try {
 			fileLocation = Paths.get(new File(this.getClass().getProtectionDomain().getCodeSource().getLocation().toURI()).getParent() , Constants.DB_NAME).toString();
 		} catch (URISyntaxException e) {
-			logger.log(Level.SEVERE, "Failed to locate path of running jar");
+			logger.log(Level.WARNING, "Failed to locate path of running jar");
 		}
 		this.songsDb = new SqliteDatabase(fileLocation);
 		// if db exists, check for any new songs or deleted songs
