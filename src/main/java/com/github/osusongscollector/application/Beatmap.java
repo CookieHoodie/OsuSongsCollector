@@ -6,10 +6,10 @@ public class Beatmap {
 	private String songTitle;
 	private String songTitleUnicode;
 	private String creatorName;
-	private String difficulty;
+//	private String difficulty;
 	private String audioFileName;
 //	private String MD5Hash;
-//	private String nameOfOsuFile;
+	private String nameOfOsuFile;
 	private Byte rankedStatus;
 	private long lastModificationTime;
 //	private float AR;
@@ -63,12 +63,12 @@ public class Beatmap {
 	public void setCreatorName(String creatorName) {
 		this.creatorName = creatorName;
 	}
-	public String getDifficulty() {
-		return difficulty;
-	}
-	public void setDifficulty(String difficulty) {
-		this.difficulty = difficulty;
-	}
+//	public String getDifficulty() {
+//		return difficulty;
+//	}
+//	public void setDifficulty(String difficulty) {
+//		this.difficulty = difficulty;
+//	}
 	public String getAudioFileName() {
 		return audioFileName;
 	}
@@ -81,12 +81,12 @@ public class Beatmap {
 //	public void setMD5Hash(String mD5Hash) {
 //		MD5Hash = mD5Hash;
 //	}
-//	public String getNameOfOsuFile() {
-//		return nameOfOsuFile;
-//	}
-//	public void setNameOfOsuFile(String nameOfOsuFile) {
-//		this.nameOfOsuFile = nameOfOsuFile;
-//	}
+	public String getNameOfOsuFile() {
+		return nameOfOsuFile;
+	}
+	public void setNameOfOsuFile(String nameOfOsuFile) {
+		this.nameOfOsuFile = nameOfOsuFile;
+	}
 	public Byte getRankedStatus() {
 		return rankedStatus;
 	}

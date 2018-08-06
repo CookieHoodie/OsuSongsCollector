@@ -85,13 +85,13 @@ public class OsuDbParser extends OsuReader{
 			beatmap.setSongTitle(this.readString());
 			beatmap.setSongTitleUnicode(this.readString());
 			beatmap.setCreatorName(this.readString());
-			beatmap.setDifficulty(this.readString());
-//			this.skipString();
+//			beatmap.setDifficulty(this.readString());
+			this.skipString();
 			beatmap.setAudioFileName(this.readString());
 //			beatmap.setMD5Hash(this.readString());
 			this.skipString();
-//			beatmap.setNameOfOsuFile(this.readString());
-			this.skipString();
+			beatmap.setNameOfOsuFile(this.readString());
+//			this.skipString();
 			beatmap.setRankedStatus(this.readByte());
 			this.skipBytes(6); // short * 3
 			beatmap.setLastModificationTime(this.readDate());

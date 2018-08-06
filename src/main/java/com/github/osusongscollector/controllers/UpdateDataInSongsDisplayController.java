@@ -43,6 +43,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			else {
 				logger.logp(Level.WARNING, this.getClass().getName(), "setLoadOsuDbTaskOnHandlers", "loadOsuDbTask is interrupted", e1);
 			}
+			this.currentStage.hide();
 		});
 	}
 	
@@ -63,6 +64,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			else {
 				logger.logp(Level.WARNING, this.getClass().getName(), "setUpdateSongsDbTaskOnHandlers", "updateSongsDbTask is interrupted", e1);
 			}
+			this.currentStage.hide();
 		});
 	}
 	
@@ -84,6 +86,7 @@ public class UpdateDataInSongsDisplayController extends UpdateDataController {
 			else {
 				logger.logp(Level.WARNING, this.getClass().getName(), "setUpdateBeatmapDetailsTaskOnHandlers", "updateBeatmapDetailsTask is interrupted", e1);
 			}
+			this.currentStage.hide();
 		});
 	}
 	

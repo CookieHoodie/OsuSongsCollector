@@ -25,11 +25,13 @@ import java.util.logging.Logger;
 public class LoadAndCreateDatabaseController extends LoadingDialogParentController {
 	private String fullPathToOsuDb;
 	private String pathToSongsFolder;
+	private Stage currentStage;
 	private final static Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
 	
 	public void initDataAndStart(Stage currentStage, String fullPathToOsuDb, String pathToSongsFolder) {
 		this.fullPathToOsuDb = fullPathToOsuDb;
 		this.pathToSongsFolder = pathToSongsFolder;
+		this.currentStage = currentStage;
 		currentStage.setOnCloseRequest(e -> {
 			// show alert to user to reconfirm exit
 			Alert alert = new Alert(AlertType.WARNING, "Unexpected results can happen if the window is closed now. Close anyway?", ButtonType.YES, ButtonType.NO);
@@ -106,6 +108,7 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 			else {
 				logger.logp(Level.WARNING, this.getClass().getName(), "loadOsuDb", "loadOsuDbTask is interrupted", e);
 			}
+			this.currentStage.hide();
 		});
 		
 		loadOsuDbTask.setOnSucceeded(e -> {
@@ -132,6 +135,7 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
 			else {
 				logger.logp(Level.WARNING, this.getClass().getName(), "createSongsDb", "createSongsDbTask is interrupted", e);
 			}
+			this.currentStage.hide();
 		});
 		
 		createSongsDbTask.setOnSucceeded(event -> {
@@ -142,8 +146,7 @@ public class LoadAndCreateDatabaseController extends LoadingDialogParentControll
         		SqliteDatabase songsDb = createSongsDbTask.getValue();
         		try {
         			logger.logp(Level.INFO, this.getClass().getName(), "createSongsDb", "Loading SongsDisplayView");
-        			Stage currentStage = (Stage) this.instructionLabel.getScene().getWindow();
-        			ViewLoader.loadNewSongsDisplayView(currentStage, songsDb, this.hostServices);
+        			ViewLoader.loadNewSongsDisplayView(this.currentStage, songsDb, this.hostServices);
     			}
         		catch (SQLException e1) {
         			logger.logp(Level.SEVERE, this.getClass().getName(), "createSongsDb", "Failed to get table data during loading songsDisplayView", e1);

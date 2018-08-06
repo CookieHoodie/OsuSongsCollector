@@ -29,7 +29,7 @@ jfx {
     identifier = "com.github.osusongscollector.osc"
     vendor = "CH"
     bundler = "exe"
-    nativeReleaseVersion = "1.0.0"
+    nativeReleaseVersion = "1.0.1"
     needShortcut = true
     needMenu = true
     bundleArguments = [
@@ -43,7 +43,7 @@ mainClassName = "com.github.osusongscollector.application.Main"
 compileJava.options.encoding = 'UTF-8'
 compileTestJava.options.encoding = 'UTF-8'
 
-version '1.0.0'
+version '1.0.1'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
