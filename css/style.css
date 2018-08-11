@@ -110,9 +110,9 @@ p.lead {
 
 .btn-primary {
     border-radius: 3px;
-    background-image: -moz-linear-gradient( 122deg, #e54595 0%, #fd378e 100%);
-    background-image: -webkit-linear-gradient( 122deg, #e54595 0%, #fd378e 100%);
-    background-image: -ms-linear-gradient( 122deg, #e54595 0%, #fd378e 100%);
+    background-image: -moz-linear-gradient(to left, #6892bd, #6892bd);
+    background-image: -webkit-linear-gradient(to left, #6892bd, #6892bd);
+    background-image: -ms-linear-gradient(to left, #6892bd, #6892bd);
     background-image: linear-gradient(to left, #6892bd, #6892bd);
     box-shadow: 0px 9px 32px 0px rgba(0, 0, 0, 0.2);
     font-weight: 500;
@@ -186,9 +186,9 @@ p.lead {
 
 .nav-menu.is-scrolling,
 .nav-menu.menu-is-open {
-    background-color: rgb(74, 13, 143);
-    background: -moz-linear-gradient(135deg, rgb(74, 13, 143) 0%, rgb(250, 42, 143) 100%);
-    background: -webkit-linear-gradient(135deg, rgb(74, 13, 143) 0%, rgb(250, 42, 143) 100%);
+    background-color: #74ebd5;
+    background: -moz-linear-gradient(15deg, #74ebd5, #acb6e5);
+    background: -webkit-linear-gradient(15deg, #74ebd5, #acb6e5);
     background: linear-gradient(15deg, #74ebd5, #acb6e5);
     -webkit-box-shadow: 0px 5px 23px 0px rgba(0, 0, 0, 0.1);
     -moz-box-shadow: 0px 5px 23px 0px rgba(0, 0, 0, 0.1);
@@ -240,9 +240,9 @@ header {
 }
 
 .bg-gradient {
-    background-image: -moz-linear-gradient( 135deg, rgba(60, 8, 118, 0.8) 0%, rgba(250, 0, 118, 0.8) 100%);
-    background-image: -webkit-linear-gradient( 135deg, rgba(60, 8, 118, 0.8) 0%, rgba(250, 0, 118, 0.8) 100%);
-    background-image: -ms-linear-gradient( 135deg, rgba(60, 8, 118, 0.8) 0%, rgba(250, 0, 118, 0.8) 100%);
+    background-image: -moz-linear-gradient(15deg, #74ebd5, #acb6e5);
+    background-image: -webkit-linear-gradient(15deg, #74ebd5, #acb6e5);
+    background-image: -ms-linear-gradient(15deg, #74ebd5, #acb6e5);
     background-image: linear-gradient(15deg, #74ebd5, #acb6e5);
 }
 
@@ -285,9 +285,9 @@ header {
 ----------------------*/
 
 .gradient-fill:before {
-    color: #fc73b4;
-    background: -moz-linear-gradient(top, #9477b4 0%, #fc73b4 100%);
-    background: -webkit-linear-gradient(top, #9477b4 0%, #fc73b4 100%);
+    color: #74ebd5;
+    background: -moz-linear-gradient(15deg, #74ebd5, #acb6e5);
+    background: -webkit-linear-gradient(15deg, #74ebd5, #acb6e5);
     background: linear-gradient(15deg, #74ebd5, #acb6e5);
     -webkit-background-clip: text;
     background-clip: text;
@@ -314,9 +314,9 @@ header {
     content: "";
     position: absolute;
     width: 3px;
-    color: #fc73b4;
-    background: -moz-linear-gradient(top, #9477b4 0%, #fc73b4 100%);
-    background: -webkit-linear-gradient(top, #9477b4 0%, #fc73b4 100%);
+    color: #74ebd5;
+    background: -moz-linear-gradient(15deg, #74ebd5, #acb6e5);
+    background: -webkit-linear-gradient(15deg, #74ebd5, #acb6e5);
     background: linear-gradient(15deg, #74ebd5, #acb6e5);
     top: 0;
     bottom: 0;
@@ -371,9 +371,9 @@ header {
 }
 
 .ui-steps li:hover .circle-icon {
-    background-image: -moz-linear-gradient( 122deg, #e6388e 0%, #fb378e 100%);
-    background-image: -webkit-linear-gradient( 122deg, #e6388e 0%, #fb378e 100%);
-    background-image: -ms-linear-gradient( 122deg, #e6388e 0%, #fb378e 100%);
+    background-image: -moz-linear-gradient(15deg, #74ebd5, #acb6e5);
+    background-image: -webkit-linear-gradient(15deg, #74ebd5, #acb6e5);
+    background-image: -ms-linear-gradient(15deg, #74ebd5, #acb6e5);
     background-image: linear-gradient(15deg, #74ebd5, #acb6e5);
     box-shadow: 0px 9px 32px 0px rgba(0, 0, 0, 0.09);
     color: #FFF;
