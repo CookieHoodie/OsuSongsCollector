@@ -11,6 +11,6 @@ To download, go to [releases](https://github.com/CookieHoodie/osu-songs-collecto
 
 # Contribute
 
-Anyone is welcomed to fork and contribute to this project (although you'll have to deal with my poorly designed code) to help improve it. 
+Anyone is welcomed to fork and contribute to this project to help improve it. 
 
 You can also [donate](https://cookiehoodie.github.io/osu-songs-collector/#donate) to support the program.
